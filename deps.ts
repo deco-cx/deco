@@ -73,9 +73,30 @@ export type {
   SamplingResult,
 } from "npm:@opentelemetry/sdk-trace-base@1.25.1";
 export { NodeTracerProvider } from "npm:@opentelemetry/sdk-trace-node@1.25.1";
+// Stable semantic conventions (OTel semconv) — use these instead of hardcoded
+// attribute/metric name strings.
 export {
-  SemanticResourceAttributes,
-} from "npm:@opentelemetry/semantic-conventions@1.25.1";
+  ATTR_ERROR_TYPE,
+  ATTR_HTTP_REQUEST_METHOD,
+  ATTR_HTTP_RESPONSE_STATUS_CODE,
+  ATTR_HTTP_ROUTE,
+  ATTR_SERVER_ADDRESS,
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+  ATTR_URL_PATH,
+  ATTR_URL_QUERY,
+  ATTR_URL_SCHEME,
+  ATTR_USER_AGENT_ORIGINAL,
+  METRIC_HTTP_SERVER_REQUEST_DURATION,
+} from "npm:@opentelemetry/semantic-conventions@1.37.0";
+// Incubating (not yet stable) semantic conventions.
+export {
+  ATTR_CLOUD_PROVIDER,
+  ATTR_CLOUD_REGION,
+  ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
+  ATTR_HTTP_REQUEST_BODY_SIZE,
+  ATTR_SERVICE_INSTANCE_ID,
+} from "npm:@opentelemetry/semantic-conventions@1.37.0/incubating";
 
 export {
   ExplicitBucketHistogramAggregation,

@@ -3,6 +3,12 @@ import { Logger } from "@std/log/logger";
 import { Context, context } from "../../deco.ts";
 import denoJSON from "../../deno.json" with { type: "json" };
 import {
+  ATTR_CLOUD_PROVIDER,
+  ATTR_CLOUD_REGION,
+  ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
+  ATTR_SERVICE_INSTANCE_ID,
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
   BatchSpanProcessor,
   FetchInstrumentation,
   NodeTracerProvider,
@@ -11,7 +17,6 @@ import {
   ParentBasedSampler,
   registerInstrumentations,
   Resource,
-  SemanticResourceAttributes,
 } from "../../deps.ts";
 import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 import { DebugSampler } from "./samplers/debug.ts";
@@ -34,20 +39,14 @@ const apps_ver = tryGetVersionOf("apps/") ??
 
 export const resource = Resource.default().merge(
   new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: Deno.env.get(ENV_SITE_NAME) ??
-      "deco",
-    [SemanticResourceAttributes.SERVICE_VERSION]:
-      Context.active().deploymentId ??
-        Deno.hostname(),
-    [SemanticResourceAttributes.SERVICE_INSTANCE_ID]: crypto.randomUUID(),
-    [SemanticResourceAttributes.CLOUD_PROVIDER]: context.platform,
+    [ATTR_SERVICE_NAME]: Deno.env.get(ENV_SITE_NAME) ?? "deco",
+    [ATTR_SERVICE_VERSION]: Context.active().deploymentId ?? Deno.hostname(),
+    [ATTR_SERVICE_INSTANCE_ID]: crypto.randomUUID(),
+    [ATTR_CLOUD_PROVIDER]: context.platform,
     "deco.runtime.version": denoJSON.version,
     "deco.apps.version": apps_ver,
-    [SemanticResourceAttributes.CLOUD_REGION]: Deno.env.get("DENO_REGION") ??
-      "unknown",
-    [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: Deno.env.get(
-        "DECO_ENV_NAME",
-      )
+    [ATTR_CLOUD_REGION]: Deno.env.get("DENO_REGION") ?? "unknown",
+    [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: Deno.env.get("DECO_ENV_NAME")
       ? `env-${Deno.env.get("DECO_ENV_NAME")}`
       : "production",
   }),

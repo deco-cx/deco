@@ -1,6 +1,12 @@
 import { type Exception, ValueType } from "../../deps.ts";
 import { tracer } from "../../observability/otel/config.ts";
 import { meter } from "../../observability/otel/metrics.ts";
+import {
+  ATTR_DECO_CACHE_ENGINE,
+  ATTR_DECO_CACHE_RESULT,
+  ATTR_DECO_CACHE_STATUS,
+  METRIC_DECO_CACHE_HITS,
+} from "../../observability/otel/conventions.ts";
 import { inFuture } from "./utils.ts";
 
 export interface CacheMetrics {
@@ -8,7 +14,7 @@ export interface CacheMetrics {
   total: number;
   hits: number;
 }
-const cacheHit = meter.createCounter("cache_hit", {
+const cacheHit = meter.createCounter(METRIC_DECO_CACHE_HITS, {
   unit: "1",
   valueType: ValueType.DOUBLE,
 });
@@ -38,17 +44,17 @@ export const withInstrumentation = (
         put: cacheImpl.put.bind(cacheImpl),
         match: async (req, opts) => {
           const span = tracer.startSpan("cache-match", {
-            attributes: { engine },
+            attributes: { [ATTR_DECO_CACHE_ENGINE]: engine },
           });
           try {
             const isMatch = await cacheImpl.match(req, opts);
             //there is an edge case where there is no expires header, but technically our loader always sets it
             const result = getCacheStatus(isMatch);
 
-            span.setAttribute("cache_status", result);
+            span.setAttribute(ATTR_DECO_CACHE_STATUS, result);
             cacheHit.add(1, {
-              result,
-              engine,
+              [ATTR_DECO_CACHE_RESULT]: result,
+              [ATTR_DECO_CACHE_ENGINE]: engine,
             });
             return isMatch;
           } catch (err) {
