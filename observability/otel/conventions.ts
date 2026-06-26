@@ -18,3 +18,12 @@ export const ATTR_DECO_OPERATION_ERROR = "deco.operation.error";
 export const ATTR_DECO_CACHE_ENGINE = "deco.cache.engine";
 // Cache outcome: hit | stale | miss (| bypass). Same key on span + metric.
 export const ATTR_DECO_CACHE_STATUS = "deco.cache.status";
+
+// Vendored copies of EXPERIMENTAL (incubating) OTel semconv attribute names.
+// OTel recommends libraries NOT import from `@opentelemetry/.../incubating`
+// (the entry point is unstable across versions); copy the values instead.
+// Sourced from @opentelemetry/semantic-conventions 1.37.0/incubating.
+export const ATTR_CLOUD_PROVIDER = "cloud.provider";
+export const ATTR_CLOUD_REGION = "cloud.region";
+export const ATTR_DEPLOYMENT_ENVIRONMENT_NAME = "deployment.environment.name";
+export const ATTR_SERVICE_INSTANCE_ID = "service.instance.id";

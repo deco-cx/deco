@@ -3,10 +3,6 @@ import { Logger } from "@std/log/logger";
 import { Context, context } from "../../deco.ts";
 import denoJSON from "../../deno.json" with { type: "json" };
 import {
-  ATTR_CLOUD_PROVIDER,
-  ATTR_CLOUD_REGION,
-  ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
-  ATTR_SERVICE_INSTANCE_ID,
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
   BatchSpanProcessor,
@@ -18,6 +14,12 @@ import {
   registerInstrumentations,
   Resource,
 } from "../../deps.ts";
+import {
+  ATTR_CLOUD_PROVIDER,
+  ATTR_CLOUD_REGION,
+  ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
+  ATTR_SERVICE_INSTANCE_ID,
+} from "./conventions.ts";
 import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 import { DebugSampler } from "./samplers/debug.ts";
 import { type SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";
@@ -40,7 +42,9 @@ const apps_ver = tryGetVersionOf("apps/") ??
 export const resource = Resource.default().merge(
   new Resource({
     [ATTR_SERVICE_NAME]: Deno.env.get(ENV_SITE_NAME) ?? "deco",
-    [ATTR_SERVICE_VERSION]: Context.active().deploymentId ?? Deno.hostname(),
+    // Version of the deployed artifact (the deployment revision), falling back
+    // to the framework version — NOT the hostname (that is instance identity).
+    [ATTR_SERVICE_VERSION]: Context.active().deploymentId ?? denoJSON.version,
     [ATTR_SERVICE_INSTANCE_ID]: crypto.randomUUID(),
     [ATTR_CLOUD_PROVIDER]: context.platform,
     "deco.runtime.version": denoJSON.version,

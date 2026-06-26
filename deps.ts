@@ -89,14 +89,10 @@ export {
   ATTR_USER_AGENT_ORIGINAL,
   METRIC_HTTP_SERVER_REQUEST_DURATION,
 } from "npm:@opentelemetry/semantic-conventions@1.37.0";
-// Incubating (not yet stable) semantic conventions.
-export {
-  ATTR_CLOUD_PROVIDER,
-  ATTR_CLOUD_REGION,
-  ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
-  ATTR_HTTP_REQUEST_BODY_SIZE,
-  ATTR_SERVICE_INSTANCE_ID,
-} from "npm:@opentelemetry/semantic-conventions@1.37.0/incubating";
+// Incubating (experimental) semconv names are NOT re-exported here — OTel
+// advises libraries against depending on the unstable `/incubating` entry
+// point. The few we need are vendored as plain constants in
+// observability/otel/conventions.ts.
 
 export {
   ExplicitBucketHistogramAggregation,
