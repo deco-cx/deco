@@ -186,6 +186,54 @@ Deno.test("resolve", async (t) => {
     },
   );
 
+  await t.step(
+    "an array where every item is hidden becomes empty (not a hole array)",
+    async () => {
+      const resolverMap = {
+        resolve: (data: unknown) => context.resolve(data),
+        hiddenFlag: (): unknown => undefined,
+      };
+      const result = await resolve<{ items: unknown[] }>(
+        {
+          items: [
+            { __resolveType: "hiddenFlag" },
+            { __resolveType: "hiddenFlag" },
+          ],
+          __resolveType: "resolve",
+        },
+        { ...context, resolvers: resolverMap as unknown as ResolverMap },
+      );
+      assertEquals(result, { items: [] });
+    },
+  );
+
+  await t.step(
+    "hidden items are dropped at every array depth (nested arrays)",
+    async () => {
+      // The fix relies on the filter firing at each array level via recursion,
+      // and on ordering being preserved when the first element is dropped.
+      const resolverMap = {
+        resolve: (data: unknown) => context.resolve(data),
+        hiddenFlag: (): unknown => undefined,
+        keep: (p: { label: string }) => p,
+      };
+      const result = await resolve<{ groups: unknown[][] }>(
+        {
+          groups: [
+            [
+              { __resolveType: "hiddenFlag" },
+              { label: "A", __resolveType: "keep" },
+            ],
+            [{ __resolveType: "hiddenFlag" }],
+          ],
+          __resolveType: "resolve",
+        },
+        { ...context, resolvers: resolverMap as unknown as ResolverMap },
+      );
+      assertEquals(result, { groups: [[{ label: "A" }], []] });
+    },
+  );
+
   await t.step("resolves object with no resolvable fields", async () => {
     type TestType = {
       foo: string;

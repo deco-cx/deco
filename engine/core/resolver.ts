@@ -424,13 +424,17 @@ const resolvePropsWithHints = async <
   }
 
   if (!type) {
-    // Drop array items that resolved to `undefined` — a hidden array item is a
-    // multivariate flag gated by a `never` matcher, and flag.ts returns
-    // `undefined` when no variant matched. Left in place it survives as a hole
-    // (and serializes to `null` in JSON), which the consuming section renders
-    // as an empty card. A `null` from a resolver is a legitimate value and is
-    // kept — only the `undefined` "not present" sentinel is filtered.
-    if (Array.isArray(mutableProps)) {
+    // Compact `undefined` out of resolved arrays. An array element that resolved
+    // to `undefined` is a "not present" value (the motivating case: a hidden
+    // item — a multivariate flag gated by a `never` matcher, which flag.ts
+    // resolves to `undefined` when no variant matched). Object properties that
+    // resolve to `undefined` already vanish under `JSON.stringify`, but an
+    // `undefined` array element serializes to a `null` hole that the consuming
+    // section renders as an empty card — so filter it, making arrays consistent
+    // with object props. A resolver returning `null` is a legitimate value and
+    // is kept. `includes` first so the common (nothing-to-drop) case skips the
+    // reallocation the surrounding hot path deliberately avoids.
+    if (Array.isArray(mutableProps) && mutableProps.includes(undefined)) {
       return mutableProps.filter((item) => item !== undefined) as T;
     }
     return mutableProps;
