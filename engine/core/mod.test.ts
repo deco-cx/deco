@@ -153,6 +153,39 @@ Deno.test("resolve", async (t) => {
     });
   });
 
+  await t.step(
+    "drops hidden array items (resolver -> undefined) but keeps null",
+    async () => {
+      // A hidden array item is a multivariate flag gated by a `never` matcher;
+      // flag.ts returns `undefined` when no variant matched. Such items must be
+      // dropped from the array, not left as holes (which serialize to `null`
+      // and render as empty cards). A resolver returning `null` is a legitimate
+      // value and is kept.
+      const resolverMap = {
+        resolve: (data: unknown) => context.resolve(data),
+        hiddenFlag: (): unknown => undefined,
+        nullFlag: (): unknown => null,
+        keep: (p: { label: string }) => p,
+      };
+      const result = await resolve<{ items: unknown[] }>(
+        {
+          items: [
+            { label: "A", __resolveType: "keep" },
+            { __resolveType: "hiddenFlag" },
+            { label: "B", __resolveType: "keep" },
+            { __resolveType: "nullFlag" },
+            { __resolveType: "hiddenFlag" },
+          ],
+          __resolveType: "resolve",
+        },
+        { ...context, resolvers: resolverMap as unknown as ResolverMap },
+      );
+      assertEquals(result, {
+        items: [{ label: "A" }, { label: "B" }, null],
+      });
+    },
+  );
+
   await t.step("resolves object with no resolvable fields", async () => {
     type TestType = {
       foo: string;
