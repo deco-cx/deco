@@ -28,11 +28,6 @@ import type {
   Input,
   MiddlewareHandler,
 } from "./deps.ts";
-import {
-  buildClientCookieScript,
-  injectScriptIntoHtml,
-  stripFrameworkSetCookies,
-} from "./clientCookies.ts";
 import { setLogger } from "./fetch/fetchLog.ts";
 import { liveness } from "./middlewares/liveness.ts";
 import type { Deco, State } from "./mod.ts";
@@ -150,6 +145,12 @@ export interface PageCacheDecisionInput {
   isPageCacheAllowed: boolean;
   /** false iff some loader vetoed caching (cache:"no-store" or null cache key). */
   shouldCacheFromVary: boolean;
+  /**
+   * Framework cookie names (`deco_matcher_*`, `deco_segment`) already present on
+   * the REQUEST. Used to emit the `Deco-Cache-Vary-Cookies` hint so a cached,
+   * already-bucketed response varies by the visitor's variant cookie.
+   */
+  requestFrameworkCookies?: readonly string[];
 }
 
 /**
@@ -182,12 +183,27 @@ export const applyPageCacheDecision = (
     return;
   }
 
+  // A framework Set-Cookie on THIS response means a sticky variant was just
+  // assigned (e.g. an A/B coin flip in the random matcher). That draw is
+  // non-deterministic, so caching the response would bake one visitor's variant
+  // into a shared cache entry and hand it to every subsequent cold visitor —
+  // collapsing the traffic split (the first cold draw becomes everyone's
+  // variant within the cache window). Only responses whose variant was read
+  // back from an existing request cookie (no framework Set-Cookie emitted) are
+  // safe to share from cache.
+  if (frameworkSetCookieNames(headers).length > 0) {
+    headers.set("Cache-Control", NO_STORE);
+    return;
+  }
+
   if (!headers.has("Cache-Control")) {
     headers.set("Cache-Control", PAGE_CACHE_CONTROL);
   }
-  const frameworkNames = frameworkSetCookieNames(headers);
-  if (frameworkNames.length > 0) {
-    headers.set("Deco-Cache-Vary-Cookies", frameworkNames.join(", "));
+  // Vary the shared entry by the variant cookie the visitor already carries, so
+  // returning (already-bucketed) users are served their own variant from cache.
+  const varyNames = input.requestFrameworkCookies ?? [];
+  if (varyNames.length > 0) {
+    headers.set("Deco-Cache-Vary-Cookies", [...varyNames].join(", "));
   }
 };
 
@@ -512,45 +528,27 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       const isHtmlResponse = contentType.includes("text/html");
       const isPageCacheAllowed = ctx.var.bag?.has(PAGE_CACHE_ALLOWED_KEY) ===
           true && isHtmlResponse;
+      // Framework cookies the visitor ALREADY carries — the vary hint for a
+      // cacheable (already-bucketed) response is derived from these, not from
+      // the response Set-Cookies (a fresh Set-Cookie makes the page no-store).
+      const requestFrameworkCookies = Object.keys(
+        getCookies(ctx.req.raw.headers),
+      ).filter(isFrameworkCookieName);
       applyPageCacheDecision(newHeaders, {
         flags: ctx.var?.flags ?? [],
         isPageCacheAllowed,
         shouldCacheFromVary: ctx.var?.vary?.shouldCache !== false,
+        requestFrameworkCookies,
       });
-
-      // CDNs (e.g. Cloudflare with `cache: true`) strip Set-Cookie from
-      // cached responses for safety. Mirror framework Set-Cookies into an
-      // inline `<script>document.cookie=...</script>` so matcher/segment
-      // stickiness survives CDN-stripped headers. Gated on status=200 + HTML
-      // so we never inject into redirects or error pages (which may carry
-      // reflected input).
-      const cookieScript = (responseStatus === 200 && isHtmlResponse)
-        ? buildClientCookieScript(newHeaders)
-        : null;
 
       // for some reason hono deletes content-type when response is not fresh.
       // which means that sometimes it will fail as headers are immutable.
       // so I'm first setting it to undefined and just then set the entire response again
       ctx.res = undefined;
-      if (cookieScript) {
-        const html = await initialResponse.text();
-        // Script captured the framework cookies; remove the now-redundant
-        // Set-Cookie headers so CDNs under `respect_origin` cache mode treat
-        // the response as non-personalized and cache cold-visit responses.
-        // The Deco-Cache-Vary-Cookies hint header (set by applyPageCacheDecision
-        // above) is preserved so operators still know which cookies belong in
-        // the custom cache key.
-        stripFrameworkSetCookies(newHeaders);
-        ctx.res = new Response(injectScriptIntoHtml(html, cookieScript), {
-          status: responseStatus,
-          headers: newHeaders,
-        });
-      } else {
-        ctx.res = new Response(initialResponse.body, {
-          status: responseStatus,
-          headers: newHeaders,
-        });
-      }
+      ctx.res = new Response(initialResponse.body, {
+        status: responseStatus,
+        headers: newHeaders,
+      });
     },
   ];
 };

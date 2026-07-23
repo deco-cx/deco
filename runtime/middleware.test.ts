@@ -1,12 +1,7 @@
-import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { setCookie } from "../utils/cookies.ts";
 import { DECO_MATCHER_PREFIX } from "../blocks/matcher.ts";
 import { applyPageCacheDecision, DECO_SEGMENT } from "./middleware.ts";
-import {
-  buildClientCookieScript,
-  injectScriptIntoHtml,
-  stripFrameworkSetCookies,
-} from "./clientCookies.ts";
 
 const matcherCookie = `${DECO_MATCHER_PREFIX}1234567890_0.5`;
 
@@ -24,12 +19,34 @@ Deno.test("no matcher, no Set-Cookie → public cache-control", () => {
   assertEquals(headers.get("Deco-Cache-Vary-Cookies"), null);
 });
 
-Deno.test("matcher Set-Cookie only → public cache-control + hint header", () => {
+Deno.test("fresh sticky assignment (framework Set-Cookie) → no-store", () => {
+  // A framework Set-Cookie means the variant was just drawn this request (e.g.
+  // the random matcher's coin flip). Caching it would share that single draw
+  // with every cold visitor and break the traffic split, so it must be no-store
+  // even though the cookie itself is framework-owned.
   const headers = new Headers({ "Content-Type": "text/html" });
   setCookie(headers, { name: matcherCookie, value: "abc@1", path: "/" });
   setCookie(headers, { name: DECO_SEGMENT, value: "%7B%7D", path: "/" });
 
   applyPageCacheDecision(headers, pageInput);
+
+  assertEquals(
+    headers.get("Cache-Control"),
+    "no-store, no-cache, must-revalidate",
+  );
+  assertEquals(headers.get("Deco-Cache-Vary-Cookies"), null);
+});
+
+Deno.test("returning visitor: framework cookie in request, no Set-Cookie → public + vary hint", () => {
+  // The variant was read back from the request cookie (no new Set-Cookie), so
+  // the response is deterministic and safe to cache — varying by the cookies the
+  // visitor already carries.
+  const headers = new Headers({ "Content-Type": "text/html" });
+
+  applyPageCacheDecision(headers, {
+    ...pageInput,
+    requestFrameworkCookies: [matcherCookie, DECO_SEGMENT],
+  });
 
   const cc = headers.get("Cache-Control") ?? "";
   assert(cc.startsWith("public,"), `expected public Cache-Control, got: ${cc}`);
@@ -43,6 +60,25 @@ Deno.test("matcher Set-Cookie only → public cache-control + hint header", () =
     hint.includes(DECO_SEGMENT),
     `expected hint to include deco_segment, got: ${hint}`,
   );
+});
+
+Deno.test("returning visitor with a fresh re-assignment (Set-Cookie) → no-store", () => {
+  // Even if the visitor already carries a variant cookie, a NEW framework
+  // Set-Cookie means the variant changed/was re-drawn this request → not
+  // cacheable, regardless of the request cookies.
+  const headers = new Headers({ "Content-Type": "text/html" });
+  setCookie(headers, { name: matcherCookie, value: "abc@1", path: "/" });
+
+  applyPageCacheDecision(headers, {
+    ...pageInput,
+    requestFrameworkCookies: [matcherCookie],
+  });
+
+  assertEquals(
+    headers.get("Cache-Control"),
+    "no-store, no-cache, must-revalidate",
+  );
+  assertEquals(headers.get("Deco-Cache-Vary-Cookies"), null);
 });
 
 Deno.test("foreign Set-Cookie → no-store (safety preserved)", () => {
@@ -131,224 +167,3 @@ Deno.test(
     );
   },
 );
-
-// ---------- buildClientCookieScript ----------
-
-Deno.test("buildClientCookieScript: matcher cookie only → one document.cookie setter", () => {
-  const headers = new Headers();
-  setCookie(headers, { name: matcherCookie, value: "abc@1", path: "/" });
-
-  const script = buildClientCookieScript(headers);
-  assert(script !== null, "expected a script");
-  assertStringIncludes(script, `<script>document.cookie=`);
-  assertStringIncludes(script, matcherCookie);
-  assertStringIncludes(script, "abc@1");
-  assertStringIncludes(script, "path=/");
-  assertStringIncludes(script, "max-age=2592000");
-  assertStringIncludes(script, "samesite=Lax");
-  // Exactly one document.cookie= setter
-  assertEquals(script.match(/document\.cookie=/g)?.length, 1);
-});
-
-Deno.test("buildClientCookieScript: matcher + segment → two setters", () => {
-  const headers = new Headers();
-  setCookie(headers, { name: matcherCookie, value: "abc@1", path: "/" });
-  setCookie(
-    headers,
-    { name: DECO_SEGMENT, value: '{"active":["foo"]}', path: "/" },
-    { encode: true },
-  );
-
-  const script = buildClientCookieScript(headers);
-  assert(script !== null, "expected a script");
-  assertEquals(script.match(/document\.cookie=/g)?.length, 2);
-  assertStringIncludes(script, matcherCookie);
-  assertStringIncludes(script, DECO_SEGMENT);
-});
-
-Deno.test("buildClientCookieScript: only foreign Set-Cookie → null", () => {
-  const headers = new Headers();
-  setCookie(headers, { name: "cart_count", value: "3", path: "/" });
-
-  assertEquals(buildClientCookieScript(headers), null);
-});
-
-Deno.test("buildClientCookieScript: no Set-Cookie → null", () => {
-  assertEquals(buildClientCookieScript(new Headers()), null);
-});
-
-Deno.test("buildClientCookieScript: escapes < and > to defend against </script> breakout", () => {
-  // Defense-in-depth. Today the framework's own emissions can never put `<`
-  // in the cookie value (deco_segment is URL-encoded + base64-encoded by
-  // setCookie({encode:true}); deco_matcher_* is base64 + "@" + digit). But
-  // the `sessionKey()` callback is operator-defined and lands in the cookie
-  // NAME unprocessed. If an operator returned `</script>` from sessionKey
-  // (or any future framework cookie carries `<`), our escape must defend.
-  const headers = new Headers();
-  headers.append(
-    "Set-Cookie",
-    `${DECO_MATCHER_PREFIX}999_</script><x>=v; Path=/`,
-  );
-
-  const script = buildClientCookieScript(headers);
-  assert(script !== null);
-  // The script tag must close exactly once at the end.
-  assertEquals(script.match(/<\/script>/g)?.length, 1);
-  assert(
-    !script.slice(0, -"</script>".length).includes("</script>"),
-    "no nested </script> closer",
-  );
-  // The injected `<` bytes are escaped as <.
-  assertStringIncludes(script, "\\u003c");
-});
-
-Deno.test("buildClientCookieScript: segment URL-encoded base64 value preserved verbatim", () => {
-  // Segment is set with { encode: true } → btoa(encodeURIComponent(value)).
-  // We MUST inject the wire-form bytes so that on the next request the browser
-  // sends back the same string the server reads with getCookies().
-  const headers = new Headers();
-  const seg = '{"active":["abc","def"]}';
-  setCookie(headers, { name: DECO_SEGMENT, value: seg, path: "/" }, {
-    encode: true,
-  });
-
-  const wireValue = headers
-    .getSetCookie()
-    .find((c) => c.startsWith(`${DECO_SEGMENT}=`))!
-    .split(";")[0]
-    .split("=")[1];
-
-  const script = buildClientCookieScript(headers);
-  assert(script !== null);
-  assertStringIncludes(script, `${DECO_SEGMENT}=${wireValue}`);
-});
-
-// ---------- injectScriptIntoHtml ----------
-
-const SCRIPT = "<script>X</script>";
-
-Deno.test("injectScriptIntoHtml: injects before </head>", () => {
-  const html = "<html><head><title>t</title></head><body>b</body></html>";
-  const out = injectScriptIntoHtml(html, SCRIPT);
-  assertStringIncludes(out, `<title>t</title>${SCRIPT}</head>`);
-});
-
-Deno.test("injectScriptIntoHtml: falls back to </body> when no </head>", () => {
-  const html = "<html><body>b</body></html>";
-  const out = injectScriptIntoHtml(html, SCRIPT);
-  assertStringIncludes(out, `b${SCRIPT}</body>`);
-});
-
-Deno.test("injectScriptIntoHtml: appends when no </head> or </body>", () => {
-  const html = "loose text";
-  assertEquals(injectScriptIntoHtml(html, SCRIPT), `loose text${SCRIPT}`);
-});
-
-Deno.test("injectScriptIntoHtml: prefers first </head> (handles embedded HTML)", () => {
-  // SVG foreignObject etc. could contain a nested </head>. We must not target
-  // the LAST one — the document's real </head> is always the FIRST one.
-  const html =
-    "<html><head><meta /></head><body><svg><foreignObject><html><head></head></html></foreignObject></svg></body></html>";
-  const out = injectScriptIntoHtml(html, SCRIPT);
-  // Script lands in the document head, not the foreignObject head.
-  const firstHeadClose = out.indexOf("</head>");
-  assertEquals(
-    out.slice(firstHeadClose - SCRIPT.length, firstHeadClose),
-    SCRIPT,
-  );
-});
-
-// ---------- stripFrameworkSetCookies ----------
-
-Deno.test("stripFrameworkSetCookies: removes deco_matcher_* and deco_segment, keeps foreign", () => {
-  const headers = new Headers();
-  setCookie(headers, { name: matcherCookie, value: "abc@1", path: "/" });
-  setCookie(
-    headers,
-    { name: DECO_SEGMENT, value: '{"active":["foo"]}', path: "/" },
-    { encode: true },
-  );
-  setCookie(headers, { name: "cart_count", value: "3", path: "/" });
-  setCookie(headers, { name: "session_id", value: "xyz", path: "/" });
-
-  stripFrameworkSetCookies(headers);
-
-  const names = headers.getSetCookie().map((raw) => {
-    const eq = raw.indexOf("=");
-    return raw.slice(0, eq);
-  });
-  assertEquals(names.sort(), ["cart_count", "session_id"]);
-});
-
-Deno.test("stripFrameworkSetCookies: no-op when there are no Set-Cookie headers", () => {
-  const headers = new Headers({ "Content-Type": "text/html" });
-  stripFrameworkSetCookies(headers);
-  assertEquals(headers.getSetCookie().length, 0);
-  assertEquals(headers.get("Content-Type"), "text/html");
-});
-
-Deno.test("stripFrameworkSetCookies: no-op when only foreign Set-Cookies present", () => {
-  const headers = new Headers();
-  setCookie(headers, { name: "cart_count", value: "3", path: "/" });
-  setCookie(headers, { name: "session_id", value: "xyz", path: "/" });
-
-  stripFrameworkSetCookies(headers);
-
-  assertEquals(headers.getSetCookie().length, 2);
-});
-
-Deno.test("flow: build script captures cookies, strip removes them, hint header preserved", () => {
-  // Simulate the production middleware flow:
-  // 1. applyPageCacheDecision runs first — sets the Deco-Cache-Vary-Cookies hint.
-  // 2. buildClientCookieScript reads the framework Set-Cookies into a <script>.
-  // 3. stripFrameworkSetCookies removes the now-redundant headers.
-  // Final state: hint header preserved, script has the original cookie bytes,
-  // response has no framework Set-Cookies.
-  const headers = new Headers({ "Content-Type": "text/html" });
-  setCookie(headers, { name: matcherCookie, value: "abc@1", path: "/" });
-  setCookie(
-    headers,
-    { name: DECO_SEGMENT, value: '{"active":["foo"]}', path: "/" },
-    { encode: true },
-  );
-  setCookie(headers, { name: "cart_count", value: "3", path: "/" });
-
-  // Step 1: apply page-cache decision (this also sets the hint header).
-  // Foreign Set-Cookie present → cache disqualified → no-store. So we test
-  // the hint header path with foreign cookie removed.
-  // Build a separate headers object without the foreign cookie, run the
-  // decision so the hint header is set, then add back the foreign cookie
-  // and proceed.
-  const headersForDecision = new Headers({ "Content-Type": "text/html" });
-  setCookie(headersForDecision, {
-    name: matcherCookie,
-    value: "abc@1",
-    path: "/",
-  });
-  setCookie(
-    headersForDecision,
-    { name: DECO_SEGMENT, value: '{"active":["foo"]}', path: "/" },
-    { encode: true },
-  );
-  applyPageCacheDecision(headersForDecision, pageInput);
-  const hint = headersForDecision.get("Deco-Cache-Vary-Cookies");
-  assert(hint !== null, "expected hint header from applyPageCacheDecision");
-
-  // Step 2: build the script from the (now decided) headers.
-  const script = buildClientCookieScript(headersForDecision);
-  assert(script !== null);
-  assertStringIncludes(script, matcherCookie);
-  assertStringIncludes(script, DECO_SEGMENT);
-
-  // Step 3: strip framework Set-Cookies — script already captured them.
-  stripFrameworkSetCookies(headersForDecision);
-
-  // Verify final state.
-  const remaining = headersForDecision.getSetCookie();
-  assertEquals(remaining.length, 0, "expected no Set-Cookies remaining");
-  assertEquals(
-    headersForDecision.get("Deco-Cache-Vary-Cookies"),
-    hint,
-    "hint header must survive the strip",
-  );
-});
