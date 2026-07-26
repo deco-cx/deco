@@ -15,41 +15,67 @@ const ideviceToDevice: Record<string, Device> = {
   embedded: "desktop",
 };
 
-export const deviceOf = (request: Request) => {
-  const url = new URL(request.url);
-  const ua: string | null = request.headers.get("user-agent") || "";
-  // use cf hint at first and then fallback to user-agent parser.
-  const cfDeviceHint: string | null = request.headers.get("cf-device-type") ||
-    "";
+const deviceCache = new WeakMap<Request, Device>();
 
-  const device = cfDeviceHint ||
-    (ua && new UAParser(ua).getDevice().type) ||
-    url.searchParams.get("deviceHint") ||
-    "desktop"; // console, mobile, tablet, smarttv, wearable, embedded
+export const deviceOf = (request: Request): Device => {
+  const cached = deviceCache.get(request);
+  if (cached !== undefined) return cached;
 
-  const normalizedDevice = ideviceToDevice[device] ?? "desktop";
+  const cfDeviceHint = request.headers.get("cf-device-type") || "";
+  let device: string;
 
-  return normalizedDevice;
+  if (cfDeviceHint) {
+    device = cfDeviceHint;
+  } else {
+    const ua = request.headers.get("user-agent") || "";
+    if (ua) {
+      device = new UAParser(ua).getDevice().type || "";
+    } else {
+      device = "";
+    }
+    if (!device) {
+      const qIdx = request.url.indexOf("?");
+      if (qIdx !== -1) {
+        const params = new URLSearchParams(request.url.slice(qIdx));
+        device = params.get("deviceHint") || "desktop";
+      } else {
+        device = "desktop";
+      }
+    }
+  }
+
+  const result = ideviceToDevice[device] ?? "desktop";
+  deviceCache.set(request, result);
+  return result;
 };
 
 const UABotParser = new UAParser(Bots);
 
 const KNOWN_BOTS = ["Google-InspectionTool"];
 
-export const isBot = (req: Request) => {
+const botCache = new WeakMap<Request, boolean>();
+
+export const isBot = (req: Request): boolean => {
+  const cached = botCache.get(req);
+  if (cached !== undefined) return cached;
+
+  let result = false;
+
   const fromCloudFlare = req.headers.get("cf-verified-bot");
-
   if (fromCloudFlare === "true") {
-    return true;
+    result = true;
+  } else if (
+    KNOWN_BOTS.some((bot) => req.headers.get("user-agent")?.includes(bot))
+  ) {
+    result = true;
+  } else {
+    const ua = req.headers.get("user-agent") || "";
+    const browser = UABotParser.setUA(ua).getBrowser() as unknown as {
+      type: string;
+    };
+    result = browser.type === "bot";
   }
 
-  if (KNOWN_BOTS.some((bot) => req.headers.get("user-agent")?.includes(bot))) {
-    return true;
-  }
-
-  const ua = req.headers.get("user-agent") || "";
-  const browser = UABotParser.setUA(ua).getBrowser() as unknown as {
-    type: string;
-  };
-  return browser.type === "bot";
+  botCache.set(req, result);
+  return result;
 };
