@@ -21,7 +21,7 @@ export const setLogger = (loggerLike: typeof logger) => logger = loggerLike;
  * automatically. Recording seconds here would land every observation in the
  * first bucket.
  *
- * Cardinality: `server.address` is the host, never the path — a storefront
+ * Cardinality: `server.address` is the hostname, never the path — a storefront
  * talks to a handful of hosts (measured: 6 on a large VTEX store). Status is
  * bucketed into a class rather than the raw code, keeping this at roughly
  * 6 hosts x 5 classes per site.
@@ -39,15 +39,22 @@ const statusClass = (status: number): string =>
   status >= 500 ? "5xx" : status >= 400 ? "4xx" : status >= 300 ? "3xx" : "2xx";
 
 /**
- * Host of the request, or null when it cannot be derived. Returning null keeps
- * a malformed input from turning into a metric label — and from throwing inside
- * the fetch path, which would be a far worse failure than a missing sample.
+ * Hostname of the request, or null when it cannot be derived. Returning null
+ * keeps a malformed input from turning into a metric label — and from throwing
+ * inside the fetch path, which would be a far worse failure than a missing
+ * sample.
+ *
+ * `hostname`, not `host`: `host` appends a non-default port, so
+ * `example.com:8080` and `example.com` would become two labels for one host and
+ * inflate the very cardinality this metric is careful about. It also matches
+ * semconv, where `server.address` is the address alone and `server.port` is a
+ * separate attribute.
  */
 const hostOf = (input: string | Request | URL): string | null => {
   try {
-    if (typeof input === "string") return new URL(input).host;
-    if (input instanceof URL) return input.host;
-    return new URL(input.url).host;
+    if (typeof input === "string") return new URL(input).hostname;
+    if (input instanceof URL) return input.hostname;
+    return new URL(input.url).hostname;
   } catch {
     return null;
   }
