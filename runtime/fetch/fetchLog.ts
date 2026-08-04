@@ -49,12 +49,20 @@ const statusClass = (status: number): string =>
  * inflate the very cardinality this metric is careful about. It also matches
  * semconv, where `server.address` is the address alone and `server.port` is a
  * separate attribute.
+ *
+ * The empty-string case is folded into null on purpose. Authority-less schemes
+ * — `data:`, `blob:`, `file:` — parse fine but have no hostname, and recording
+ * them would create a meaningless `server.address=""` series instead of simply
+ * not sampling a call that never crossed the network.
  */
 const hostOf = (input: string | Request | URL): string | null => {
   try {
-    if (typeof input === "string") return new URL(input).hostname;
-    if (input instanceof URL) return input.hostname;
-    return new URL(input.url).hostname;
+    const url = typeof input === "string"
+      ? new URL(input)
+      : input instanceof URL
+      ? input
+      : new URL(input.url);
+    return url.hostname || null;
   } catch {
     return null;
   }
