@@ -188,6 +188,13 @@ const wrapLoader = (
   }: LoaderModule,
   resolveChain: FieldResolver[],
   release: DecofileProvider,
+  /**
+   * The block key — the loader's module path, e.g.
+   * `vtex/loaders/legacy/productListingPage.ts`. Used as the metric label
+   * instead of `ctx.resolverId`, which carries the full resolve chain and is
+   * unbounded. See the `loader` constant below.
+   */
+  blockKey: string,
 ) => {
   const [cacheMaxAge, mode] = typeof cache === "string"
     ? [MAX_AGE_S, cache]
@@ -208,7 +215,21 @@ const wrapLoader = (
       req: Request,
       ctx: FnContext<State, any>,
     ): Promise<ReturnType<typeof handler>> => {
-      const loader = ctx.resolverId || "unknown";
+      // Metric label. Deliberately the block key and NOT `ctx.resolverId`:
+      // resolverId carries the full resolve chain, e.g.
+      // `Categories@sections.variants.1.value.5.sections.0.section.page`, so
+      // every section position of every variant of every page becomes its own
+      // time series. Measured in production that reached 3,684 distinct values
+      // on a single site and 21,849 across the fleet, against a documented
+      // budget of 1,000 per site and 100 fleet-wide — and `loader_cache` alone
+      // became 76.6% of all rows in otel_metrics_sum.
+      //
+      // The block key is bounded by the number of loader modules in the app,
+      // which is what the @decocms/start runtime already uses for the
+      // equivalent metric (13 distinct values fleet-wide). The chain is not
+      // lost: it still travels on error logs, where high cardinality is fine
+      // because they are read by point lookup rather than aggregated.
+      const loader = blockKey || ctx.resolverId || "unknown";
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
 
@@ -365,7 +386,7 @@ const loaderBlock: Block<LoaderModule> = {
     wrapCaughtErrors,
     (props: TProps, ctx: HttpContext<{ global: any } & RequestState>) =>
       applyProps(
-        wrapLoader(mod, ctx.resolveChain, ctx.context.state.release),
+        wrapLoader(mod, ctx.resolveChain, ctx.context.state.release, key),
       )(
         props,
         ctx,
