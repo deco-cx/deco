@@ -238,6 +238,34 @@ Deno.test("resolveDraftDecofile", async (t) => {
     assertEquals(fetches, 2);
   });
 
+  await t.step(
+    "does not collide two sources sharing a version label",
+    async () => {
+      clearDraftCache();
+      const bodies: Record<string, unknown> = {
+        "studio.decocms.com/api/a/decofile/vm/main": { src: "a" },
+        "studio.decocms.com/api/b/decofile/vm/main": { src: "b" },
+      };
+      const fetchImpl = ((url: string) => {
+        const u = new URL(String(url));
+        return Promise.resolve(jsonResponse(bodies[`${u.host}${u.pathname}`]));
+      }) as unknown as typeof fetch;
+      const a = await resolveDraftDecofile({
+        pointer: "studio.decocms.com/api/a/decofile/vm/main@v1",
+        env: ENV_ON,
+        fetchImpl,
+      });
+      const b = await resolveDraftDecofile({
+        pointer: "studio.decocms.com/api/b/decofile/vm/main@v1",
+        env: ENV_ON,
+        fetchImpl,
+      });
+      // Same version label "v1", different path → must NOT serve a's cache for b.
+      assertEquals(a, { src: "a" });
+      assertEquals(b, { src: "b" });
+    },
+  );
+
   await t.step("bounds the cache (cap 3)", async () => {
     clearDraftCache();
     let fetches = 0;
@@ -360,6 +388,16 @@ Deno.test("draftPointerFromRequest", async (t) => {
       null,
     );
   });
+
+  await t.step(
+    "returns null (never throws) on a malformed cookie value",
+    () => {
+      const req = new Request("https://preview.example/p", {
+        headers: { cookie: "__deco_draft=%E0%A4%A" },
+      });
+      assertEquals(draftPointerFromRequest(req), null);
+    },
+  );
 });
 
 Deno.test("resolveDraftForRequest", async (t) => {

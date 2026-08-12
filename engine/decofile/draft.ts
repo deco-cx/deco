@@ -234,26 +234,35 @@ export function isDraftPreviewEnabled(env?: EnvLike): boolean {
 }
 
 /**
- * Version cache. Bounded on purpose: a decofile is routinely multi-megabyte,
- * so an unbounded map keyed by version would grow with every save until the
- * process died. Content-addressed, so a hit is always correct.
+ * Draft cache. Bounded on purpose: a decofile is routinely multi-megabyte, so
+ * an unbounded map would grow with every save until the process died.
+ *
+ * Keyed by the FULL source identity (`<host><path>@<version>`), not the version
+ * alone: `version` is a branch-head sha in production (globally unique), but the
+ * type accepts any short label (`v1`, a branch id) and one runtime can be
+ * pointed at more than one draft source. Keying on host+path+version makes a
+ * hit correct even when two sources reuse a version label.
  */
-const MAX_CACHED_VERSIONS = 3;
-const byVersion = new Map<string, Record<string, unknown>>();
+const MAX_CACHED_DRAFTS = 3;
+const byKey = new Map<string, Record<string, unknown>>();
 
-function cacheDraft(version: string, blocks: Record<string, unknown>): void {
-  byVersion.delete(version);
-  byVersion.set(version, blocks);
-  while (byVersion.size > MAX_CACHED_VERSIONS) {
-    const oldest = byVersion.keys().next().value;
+function draftCacheKey(p: DraftPointer): string {
+  return `${p.host}${p.path}@${p.version}`;
+}
+
+function cacheDraft(key: string, blocks: Record<string, unknown>): void {
+  byKey.delete(key);
+  byKey.set(key, blocks);
+  while (byKey.size > MAX_CACHED_DRAFTS) {
+    const oldest = byKey.keys().next().value;
     if (oldest === undefined) break;
-    byVersion.delete(oldest);
+    byKey.delete(oldest);
   }
 }
 
-/** Test seam — drops every cached version. */
+/** Test seam — drops every cached draft. */
 export function clearDraftCache(): void {
-  byVersion.clear();
+  byKey.clear();
 }
 
 export interface ResolveDraftOptions {
@@ -286,7 +295,8 @@ export async function resolveDraftDecofile(
   const origin = previewApiOriginForHost(parsed.host, env);
   if (!origin) return null;
 
-  const cached = byVersion.get(parsed.version);
+  const key = draftCacheKey(parsed);
+  const cached = byKey.get(key);
   if (cached) return cached;
 
   const doFetch = options.fetchImpl ?? fetch;
@@ -312,7 +322,7 @@ export async function resolveDraftDecofile(
     return null;
   }
 
-  cacheDraft(parsed.version, blocks);
+  cacheDraft(key, blocks);
   return blocks;
 }
 
@@ -339,7 +349,15 @@ function readCookieValue(
     const eq = part.indexOf("=");
     if (eq === -1) continue;
     if (part.slice(0, eq).trim() === name) {
-      return decodeURIComponent(part.slice(eq + 1).trim());
+      const raw = part.slice(eq + 1).trim();
+      // A malformed `%` sequence makes `decodeURIComponent` throw; a bad cookie
+      // must degrade to "no draft", never surface as an error to direct
+      // callers of the exported reader.
+      try {
+        return decodeURIComponent(raw);
+      } catch {
+        return null;
+      }
     }
   }
   return null;
