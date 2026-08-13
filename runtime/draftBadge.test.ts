@@ -4,11 +4,21 @@ import { buildDraftBadge, injectBeforeBodyEnd } from "./draftBadge.ts";
 Deno.test("buildDraftBadge", async (t) => {
   const P = "studio.decocms.com/api/fila/decofile/vm-1/main?token=tok.abc@v1";
 
-  await t.step("renders the badge container and exit control", () => {
+  await t.step("renders the pill, deco mark, and menu controls", () => {
     const out = buildDraftBadge(P);
     assertStringIncludes(out, 'id="__deco-draft-badge"');
-    assertStringIncludes(out, "?__draft=off"); // exit link
-    assertStringIncludes(out, "data-share"); // copy-link button
+    assertStringIncludes(out, "Preview mode"); // pill label
+    assertStringIncludes(out, "data:image/png;base64,"); // deco mark
+    assertStringIncludes(out, "Exit preview");
+    assertStringIncludes(out, "Share preview");
+    assertStringIncludes(out, "data-exit");
+    assertStringIncludes(out, "data-share");
+  });
+
+  await t.step("exit sets ?__draft=off; share pins the pointer", () => {
+    const out = buildDraftBadge(P);
+    assertStringIncludes(out, '"__draft","off"'); // exit
+    assertStringIncludes(out, 'searchParams.set("__draft",p)'); // share
   });
 
   await t.step("starts hidden and reveals only when unframed", () => {
