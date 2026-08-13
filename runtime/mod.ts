@@ -14,9 +14,11 @@ import {
 import {
   applyDraftCookie,
   DRAFT_QUERY_PARAM,
+  draftPointerFromRequest,
   resolveDraftForRequest,
 } from "../engine/decofile/draft.ts";
 import { fromJSON } from "../engine/decofile/fetcher.ts";
+import { DRAFT_PREVIEW_KEY } from "./draftBadge.ts";
 import { siteNameFromEnv } from "../engine/manifest/manifest.ts";
 import { randomSiteName } from "../engine/manifest/utils.ts";
 import { newContext, type PreactComponent, type Resolvable } from "../mod.ts";
@@ -267,6 +269,12 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       // out of search results.
       state.vary.shouldCache = false;
       response.headers.set("x-robots-tag", "noindex, nofollow");
+      // Carry the active pointer to the middleware so it can inject the draft
+      // badge into the HTML response. Bag, not a header: the pointer stays
+      // server-side (the cookie is HttpOnly) and never touches the wire except
+      // inside the badge's own copy-link handler.
+      const activePointer = draftPointerFromRequest(request);
+      if (activePointer) state.bag.set(DRAFT_PREVIEW_KEY, activePointer);
     }
     // Persist the pointer into a cookie so client-fetched sections
     // (`/deco/render`, `/deco/invoke`) carry the same draft; `off` clears it.

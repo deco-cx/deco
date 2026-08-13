@@ -33,6 +33,11 @@ import {
   injectScriptIntoHtml,
   stripFrameworkSetCookies,
 } from "./clientCookies.ts";
+import {
+  buildDraftBadge,
+  DRAFT_PREVIEW_KEY,
+  injectBeforeBodyEnd,
+} from "./draftBadge.ts";
 import { setLogger } from "./fetch/fetchLog.ts";
 import { liveness } from "./middlewares/liveness.ts";
 import type { Deco, State } from "./mod.ts";
@@ -524,24 +529,38 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       // stickiness survives CDN-stripped headers. Gated on status=200 + HTML
       // so we never inject into redirects or error pages (which may carry
       // reflected input).
-      const cookieScript = (responseStatus === 200 && isHtmlResponse)
+      const injectable = responseStatus === 200 && isHtmlResponse;
+      const cookieScript = injectable
         ? buildClientCookieScript(newHeaders)
+        : null;
+      // Draft badge: the always-on "you are viewing a draft" signal, injected
+      // only when this request is bound to a draft (the pointer is stashed in
+      // the bag by prepareState). Self-contained HTML+JS, hidden in iframes.
+      const draftPointer = injectable
+        ? ctx.var.bag?.get(DRAFT_PREVIEW_KEY)
+        : undefined;
+      const draftBadge = typeof draftPointer === "string"
+        ? buildDraftBadge(draftPointer)
         : null;
 
       // for some reason hono deletes content-type when response is not fresh.
       // which means that sometimes it will fail as headers are immutable.
       // so I'm first setting it to undefined and just then set the entire response again
       ctx.res = undefined;
-      if (cookieScript) {
-        const html = await initialResponse.text();
-        // Script captured the framework cookies; remove the now-redundant
-        // Set-Cookie headers so CDNs under `respect_origin` cache mode treat
-        // the response as non-personalized and cache cold-visit responses.
-        // The Deco-Cache-Vary-Cookies hint header (set by applyPageCacheDecision
-        // above) is preserved so operators still know which cookies belong in
-        // the custom cache key.
-        stripFrameworkSetCookies(newHeaders);
-        ctx.res = new Response(injectScriptIntoHtml(html, cookieScript), {
+      if (cookieScript || draftBadge) {
+        let html = await initialResponse.text();
+        if (cookieScript) {
+          // Script captured the framework cookies; remove the now-redundant
+          // Set-Cookie headers so CDNs under `respect_origin` cache mode treat
+          // the response as non-personalized and cache cold-visit responses.
+          // The Deco-Cache-Vary-Cookies hint header (set by
+          // applyPageCacheDecision above) is preserved so operators still know
+          // which cookies belong in the custom cache key.
+          stripFrameworkSetCookies(newHeaders);
+          html = injectScriptIntoHtml(html, cookieScript);
+        }
+        if (draftBadge) html = injectBeforeBodyEnd(html, draftBadge);
+        ctx.res = new Response(html, {
           status: responseStatus,
           headers: newHeaders,
         });
