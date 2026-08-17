@@ -230,6 +230,13 @@ const wrapLoader = (
       // lost: it still travels on error logs, where high cardinality is fine
       // because they are read by point lookup rather than aggregated.
       const loader = blockKey || ctx.resolverId || "unknown";
+      // Cache identity, kept as the resolve chain on purpose — this is NOT the
+      // metric label. The default `cacheKey` is `noop`, which returns "", so for
+      // a loader that opts into caching without declaring a `cacheKey` the
+      // resolve chain is the only thing separating two instances of the same
+      // block. Labelling the metric with `blockKey` must not collapse that, or
+      // one section would serve another's cached result.
+      const cacheResolver = ctx.resolverId || "unknown";
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
 
@@ -279,7 +286,7 @@ const wrapLoader = (
           return await handler(props, req, ctx);
         }
 
-        ctx.vary?.push(loader, cacheKeyValue);
+        ctx.vary?.push(cacheResolver, cacheKeyValue);
         RequestContext?.signal?.throwIfAborted();
 
         const cache = maybeCache;
@@ -300,7 +307,7 @@ const wrapLoader = (
         timing?.end();
 
         const cacheKeyUrl = `https://localhost/?${new URLSearchParams({
-          resolver: loader,
+          resolver: cacheResolver,
           revision: revisionID,
           cacheKey: cacheKeyValue,
         })}`;
