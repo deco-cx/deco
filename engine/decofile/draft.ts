@@ -182,7 +182,7 @@ export function previewApiOriginForHost(
  * (possibly drafted) release: an allowlist readable through the draft could be
  * rewritten by the very draft it gates.
  */
-const G = globalThis as { __decoDraftHosts?: string[] };
+const G = globalThis as { __decoDraftHosts?: string[]; __decoSiteHost?: string };
 
 /** Install the site-declared preview hosts. Called at setup by the site app. */
 export function setDraftPreviewHosts(hosts: readonly unknown[]): void {
@@ -193,19 +193,42 @@ export function setDraftPreviewHosts(hosts: readonly unknown[]): void {
 }
 
 /**
+ * Register the deco-hosted preview domain, derived from the resolved site name
+ * (`opts.site ?? DECO_SITE_NAME ?? …`, resolved by the runtime at setup).
+ *
+ * Always allowed to render drafts and MERGED with the site-block/env list
+ * rather than replacing it: `<site>.deco.site` is deco-operated infra, so a
+ * signed draft grant can preview there out of the box, while a custom
+ * production domain — never inferred here — stays inert. Fed from the trusted
+ * setup-time site name, never from the request or a draft.
+ */
+export function setDecoSiteHost(site: string | null | undefined): void {
+  const s = (site ?? "").trim().toLowerCase();
+  G.__decoSiteHost = s ? `${s}.deco.site` : undefined;
+}
+
+/**
  * Hosts allowed to render drafts.
  *
  * The site block is the expected source — the opt-in lives in the repo,
  * reviewed in a PR, versioned with branches. `DECO_ALLOWED_PREVIEW_HOSTS`
  * REPLACES it when set: an operational escape hatch (kill a bad value without
  * a deploy, add a machine-specific port) — not the primary configuration.
+ *
+ * The deco-hosted preview domain (`<site>.deco.site`, via `setDecoSiteHost`)
+ * is always ADDED on top, so a signed draft grant can preview on deco-operated
+ * infra without any per-site config.
  */
 function readAllowedHosts(env: EnvLike): string[] {
   const fromEnv = (env.DECO_ALLOWED_PREVIEW_HOSTS ?? "")
     .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
-  return fromEnv.length > 0 ? fromEnv : (G.__decoDraftHosts ?? []);
+  const configured = fromEnv.length > 0 ? fromEnv : (G.__decoDraftHosts ?? []);
+  const siteHost = G.__decoSiteHost;
+  return siteHost && !configured.includes(siteHost)
+    ? [...configured, siteHost]
+    : configured;
 }
 
 /**

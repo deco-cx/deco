@@ -22,5 +22,6 @@ export {
   previewApiOriginForHost,
   resolveDraftDecofile,
   resolveDraftForRequest,
+  setDecoSiteHost,
   setDraftPreviewHosts,
 } from "./decofile/draft.ts";

@@ -16,6 +16,7 @@ import {
   DRAFT_QUERY_PARAM,
   draftPointerFromRequest,
   resolveDraftForRequest,
+  setDecoSiteHost,
 } from "../engine/decofile/draft.ts";
 import { fromJSON } from "../engine/decofile/fetcher.ts";
 import { DRAFT_PREVIEW_KEY } from "./draftBadge.ts";
@@ -86,7 +87,12 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
   static async init<TAppManifest extends AppManifest = AppManifest>(
     opts?: DecoOptions<TAppManifest>,
   ): Promise<Deco<TAppManifest>> {
-    const site = opts?.site ?? siteNameFromEnv() ?? randomSiteName();
+    const resolvedSite = opts?.site ?? siteNameFromEnv();
+    const site = resolvedSite ?? randomSiteName();
+    // Allow drafts to preview on the deco-hosted `<site>.deco.site` domain out
+    // of the box. Skipped for the random dev fallback (an unnamed site is not a
+    // preview host); a custom production domain is never inferred.
+    setDecoSiteHost(resolvedSite);
     const decofile = opts?.decofile ?? (await getProvider());
     const manifest = opts?.manifest ??
       (await import(toFileUrl(join(Deno.cwd(), "manifest.gen.ts")).href).then(
