@@ -19,12 +19,17 @@ export const deviceOf = (request: Request) => {
   const url = new URL(request.url);
   const ua: string | null = request.headers.get("user-agent") || "";
   // use cf hint at first and then fallback to user-agent parser.
-  const cfDeviceHint: string | null = request.headers.get("cf-device-type") ||
-    "";
+  const cfDeviceHint: string | null =
+    request.headers.get("cf-device-type") || "";
 
-  const device = cfDeviceHint ||
-    (ua && new UAParser(ua).getDevice().type) ||
+  // `deviceHint` is an explicit override, only ever present when a tool (e.g.
+  // the Studio preview) forces a device. Real client traffic never carries it,
+  // so it takes priority: otherwise `cf-device-type` (the requesting browser's
+  // real device) wins behind Cloudflare and the override is silently ignored.
+  const device =
     url.searchParams.get("deviceHint") ||
+    cfDeviceHint ||
+    (ua && new UAParser(ua).getDevice().type) ||
     "desktop"; // console, mobile, tablet, smarttv, wearable, embedded
 
   const normalizedDevice = ideviceToDevice[device] ?? "desktop";
