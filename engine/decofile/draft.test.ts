@@ -10,6 +10,7 @@ import {
   previewApiOriginForHost,
   resolveDraftDecofile,
   resolveDraftForRequest,
+  setDecoSiteHost,
   setDraftPreviewHosts,
 } from "./draft.ts";
 
@@ -348,6 +349,80 @@ Deno.test("site-block preview hosts", async (t) => {
       assertEquals(isDraftHostAllowed("fila.vtex.app", env), false);
     } finally {
       setDraftPreviewHosts([]);
+    }
+  });
+});
+
+Deno.test("deco-hosted preview domain (setDecoSiteHost)", async (t) => {
+  await t.step("infers <site>.deco.site and enables the feature", () => {
+    setDecoSiteHost("als-storefront");
+    try {
+      assertEquals(isDraftPreviewEnabled({}), true);
+      assertEquals(isDraftHostAllowed("als-storefront.deco.site", {}), true);
+      assertEquals(isDraftHostAllowed("other.deco.site", {}), false);
+      // A custom production domain is never inferred.
+      assertEquals(isDraftHostAllowed("www.als-storefront.com", {}), false);
+    } finally {
+      setDecoSiteHost(null);
+    }
+  });
+
+  await t.step("is merged ON TOP of the site block, not replacing it", () => {
+    setDraftPreviewHosts(["fila.vtex.app"]);
+    setDecoSiteHost("als-storefront");
+    try {
+      assertEquals(isDraftHostAllowed("fila.vtex.app", {}), true);
+      assertEquals(isDraftHostAllowed("als-storefront.deco.site", {}), true);
+    } finally {
+      setDraftPreviewHosts([]);
+      setDecoSiteHost(null);
+    }
+  });
+
+  await t.step("is merged ON TOP of the env escape hatch too", () => {
+    setDecoSiteHost("als-storefront");
+    try {
+      const env = { DECO_ALLOWED_PREVIEW_HOSTS: "other.example" };
+      assertEquals(isDraftHostAllowed("other.example", env), true);
+      assertEquals(isDraftHostAllowed("als-storefront.deco.site", env), true);
+    } finally {
+      setDecoSiteHost(null);
+    }
+  });
+
+  await t.step("a blank/null site name registers no host", () => {
+    setDecoSiteHost("   ");
+    try {
+      assertEquals(isDraftPreviewEnabled({}), false);
+    } finally {
+      setDecoSiteHost(null);
+    }
+  });
+
+  await t.step("undefined (the random dev fallback) registers no host", () => {
+    // runtime/mod.ts passes `resolvedSite` (undefined when the site name falls
+    // back to randomSiteName) straight through — an unnamed site is not armed.
+    setDecoSiteHost(undefined);
+    try {
+      assertEquals(isDraftPreviewEnabled({}), false);
+    } finally {
+      setDecoSiteHost(null);
+    }
+  });
+
+  await t.step("DECO_ALLOWED_PREVIEW_HOSTS=none kills the inferred host", () => {
+    setDraftPreviewHosts(["fila.vtex.app"]);
+    setDecoSiteHost("als-storefront");
+    try {
+      // The kill switch wins over the inferred host AND the site block, so a
+      // bad rollout can be stopped without a deploy.
+      const env = { DECO_ALLOWED_PREVIEW_HOSTS: "none" };
+      assertEquals(isDraftPreviewEnabled(env), false);
+      assertEquals(isDraftHostAllowed("als-storefront.deco.site", env), false);
+      assertEquals(isDraftHostAllowed("fila.vtex.app", env), false);
+    } finally {
+      setDraftPreviewHosts([]);
+      setDecoSiteHost(null);
     }
   });
 });

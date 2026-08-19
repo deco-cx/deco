@@ -182,7 +182,7 @@ export function previewApiOriginForHost(
  * (possibly drafted) release: an allowlist readable through the draft could be
  * rewritten by the very draft it gates.
  */
-const G = globalThis as { __decoDraftHosts?: string[] };
+const G = globalThis as { __decoDraftHosts?: string[]; __decoSiteHost?: string };
 
 /** Install the site-declared preview hosts. Called at setup by the site app. */
 export function setDraftPreviewHosts(hosts: readonly unknown[]): void {
@@ -193,19 +193,53 @@ export function setDraftPreviewHosts(hosts: readonly unknown[]): void {
 }
 
 /**
+ * Register the deco-hosted preview domain, derived from the resolved site name
+ * (`opts.site ?? DECO_SITE_NAME ?? …`, resolved by the runtime at setup).
+ *
+ * MERGED with the site-block/env list rather than replacing it: `<site>.deco.site`
+ * is deco-operated infra, so a signed draft grant can preview there out of the
+ * box, while a custom production domain — never inferred here — stays inert.
+ * Fed from the trusted setup-time site name, never from the request or a draft.
+ *
+ * Threat model, now that a named site is no longer inert by default: the
+ * request host is spoofable on a direct-to-origin request (the edge is trusted
+ * to set `x-forwarded-host`), so for a named site the SIGNED `?__draft=` grant
+ * is the sole remaining gate — host-scoping only bounds blast radius. Set
+ * `DECO_ALLOWED_PREVIEW_HOSTS=none` to kill preview entirely, including this
+ * inferred host, without a deploy.
+ */
+export function setDecoSiteHost(site: string | null | undefined): void {
+  const s = (site ?? "").trim().toLowerCase();
+  G.__decoSiteHost = s ? `${s}.deco.site` : undefined;
+}
+
+/**
  * Hosts allowed to render drafts.
  *
  * The site block is the expected source — the opt-in lives in the repo,
  * reviewed in a PR, versioned with branches. `DECO_ALLOWED_PREVIEW_HOSTS`
  * REPLACES it when set: an operational escape hatch (kill a bad value without
  * a deploy, add a machine-specific port) — not the primary configuration.
+ *
+ * The deco-hosted preview domain (`<site>.deco.site`, via `setDecoSiteHost`)
+ * is always ADDED on top, so a signed draft grant can preview on deco-operated
+ * infra without any per-site config.
+ *
+ * The sentinel `DECO_ALLOWED_PREVIEW_HOSTS=none` is a KILL SWITCH: it disables
+ * preview entirely — including the inferred host and the site block — so a bad
+ * rollout can be stopped without a deploy. It must win over every other source.
  */
 function readAllowedHosts(env: EnvLike): string[] {
   const fromEnv = (env.DECO_ALLOWED_PREVIEW_HOSTS ?? "")
     .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
-  return fromEnv.length > 0 ? fromEnv : (G.__decoDraftHosts ?? []);
+  if (fromEnv.includes("none")) return [];
+  const configured = fromEnv.length > 0 ? fromEnv : (G.__decoDraftHosts ?? []);
+  const siteHost = G.__decoSiteHost;
+  return siteHost && !configured.includes(siteHost)
+    ? [...configured, siteHost]
+    : configured;
 }
 
 /**
@@ -226,8 +260,10 @@ export function isDraftHostAllowed(
 
 /**
  * True when any host is allowed to preview. A cheap read callers use to gate
- * BEFORE touching the network, so an unconfigured site is fully inert. The
- * per-request host match happens later, in `isDraftHostAllowed`.
+ * BEFORE touching the network. A site with no config but a resolved name is now
+ * enabled here (its inferred `<site>.deco.site` host); `DECO_ALLOWED_PREVIEW_HOSTS=none`
+ * forces it back to fully inert. The per-request host match happens later, in
+ * `isDraftHostAllowed`.
  */
 export function isDraftPreviewEnabled(env?: EnvLike): boolean {
   return readAllowedHosts(envOrDeno(env)).length > 0;
