@@ -367,6 +367,68 @@ Deno.test("deco-hosted preview domain (setDecoSiteHost)", async (t) => {
     }
   });
 
+  await t.step("infers the per-deploy envs-<site>--<hash>.decocdn.com host", () => {
+    setDecoSiteHost("als-storefront");
+    try {
+      assertEquals(isDraftPreviewEnabled({}), true);
+      // The <hash> label changes every deploy — matched as a pattern.
+      assertEquals(
+        isDraftHostAllowed("envs-als-storefront--4l18ts.decocdn.com", {}),
+        true,
+      );
+      assertEquals(
+        isDraftHostAllowed("envs-als-storefront--abc123.decocdn.com", {}),
+        true,
+      );
+      // Wrong site prefix.
+      assertEquals(
+        isDraftHostAllowed("envs-other-site--4l18ts.decocdn.com", {}),
+        false,
+      );
+      // Missing the `envs-` prefix / the `--` separator.
+      assertEquals(
+        isDraftHostAllowed("als-storefront--4l18ts.decocdn.com", {}),
+        false,
+      );
+      assertEquals(
+        isDraftHostAllowed("envs-als-storefront-4l18ts.decocdn.com", {}),
+        false,
+      );
+      // Empty hash.
+      assertEquals(
+        isDraftHostAllowed("envs-als-storefront--.decocdn.com", {}),
+        false,
+      );
+      // The hash must be a single label — no sneaking a nested subdomain under
+      // an attacker-controlled *.decocdn.com.
+      assertEquals(
+        isDraftHostAllowed("envs-als-storefront--x.evil.decocdn.com", {}),
+        false,
+      );
+      // Wrong apex.
+      assertEquals(
+        isDraftHostAllowed("envs-als-storefront--4l18ts.example.com", {}),
+        false,
+      );
+    } finally {
+      setDecoSiteHost(null);
+    }
+  });
+
+  await t.step("the kill switch also disables the per-deploy preview host", () => {
+    setDecoSiteHost("als-storefront");
+    try {
+      const env = { DECO_ALLOWED_PREVIEW_HOSTS: "none" };
+      assertEquals(isDraftPreviewEnabled(env), false);
+      assertEquals(
+        isDraftHostAllowed("envs-als-storefront--4l18ts.decocdn.com", env),
+        false,
+      );
+    } finally {
+      setDecoSiteHost(null);
+    }
+  });
+
   await t.step("is merged ON TOP of the site block, not replacing it", () => {
     setDraftPreviewHosts(["fila.vtex.app"]);
     setDecoSiteHost("als-storefront");
