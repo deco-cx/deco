@@ -2,6 +2,8 @@ import type { ComponentType } from "preact";
 import { useContext } from "preact/hooks";
 import { SectionContext } from "../components/section.tsx";
 import { FieldResolver } from "../engine/core/resolver.ts";
+import { DRAFT_QUERY_PARAM } from "../engine/decofile/draft.ts";
+import { DRAFT_PREVIEW_KEY } from "../runtime/draftBadge.ts";
 
 import { Murmurhash3 } from "../deps.ts";
 
@@ -117,6 +119,20 @@ export const useSection = <P>(
   const vary = ctx?.context.state.vary.build();
   const { request, renderSalt, context: { state: { pathTemplate } } } = ctx;
 
+  // Fast Preview: a deferred section is lazy-loaded client-side via a separate
+  // `/deco/render` fetch, which resolves its draft from the `__deco_draft`
+  // cookie. That cookie is `SameSite=Lax`, so inside Studio's cross-site
+  // preview iframe the browser does NOT attach it to the subrequest — the
+  // section would render against the PUBLISHED release while the page shell
+  // rendered the draft, producing duplicated/stale sections. If this render is
+  // bound to a draft (the runtime stashed the active pointer in the bag during
+  // prepareState), carry it forward as an explicit `?__draft=` param: the
+  // server prefers the param over the cookie, so lazy rendering stays on the
+  // draft regardless of frame context. Absent on ordinary (non-draft) traffic.
+  const draftPointer = ctx?.context.state.bag?.get(DRAFT_PREVIEW_KEY) as
+    | string
+    | undefined;
+
   const hrefParam = href ?? request.url;
   const stableHref = createStableHref(hrefParam);
   const cbString = [
@@ -142,6 +158,10 @@ export const useSection = <P>(
       "resolveChain",
       JSON.stringify(FieldResolver.minify(ctx.resolveChain.slice(0, -1))),
     );
+  }
+
+  if (draftPointer) {
+    params.set(DRAFT_QUERY_PARAM, draftPointer);
   }
 
   return `/deco/render?${params}`;
