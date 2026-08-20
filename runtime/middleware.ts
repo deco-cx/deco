@@ -38,6 +38,7 @@ import {
   DRAFT_PREVIEW_KEY,
   injectBeforeBodyEnd,
 } from "./draftBadge.ts";
+import { buildEditorBridge } from "./editorBridge.ts";
 import { setLogger } from "./fetch/fetchLog.ts";
 import { liveness } from "./middlewares/liveness.ts";
 import type { Deco, State } from "./mod.ts";
@@ -515,8 +516,8 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
 
       const contentType = newHeaders.get("Content-Type") ?? "";
       const isHtmlResponse = contentType.includes("text/html");
-      const isPageCacheAllowed = ctx.var.bag?.has(PAGE_CACHE_ALLOWED_KEY) ===
-          true && isHtmlResponse;
+      const isPageCacheAllowed =
+        ctx.var.bag?.has(PAGE_CACHE_ALLOWED_KEY) === true && isHtmlResponse;
       applyPageCacheDecision(newHeaders, {
         flags: ctx.var?.flags ?? [],
         isPageCacheAllowed,
@@ -542,12 +543,17 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       const draftBadge = typeof draftPointer === "string"
         ? buildDraftBadge(draftPointer)
         : null;
+      // Editor bridge: the origin-gated `postMessage` hook Studio uses to inject
+      // its visual/CMS overlay into a Fast Preview draft render on the site's
+      // real pages. Same gate as the badge (draft-bound request only); active
+      // only inside Studio's frame. See runtime/editorBridge.ts.
+      const editorBridge = draftBadge ? buildEditorBridge() : null;
 
       // for some reason hono deletes content-type when response is not fresh.
       // which means that sometimes it will fail as headers are immutable.
       // so I'm first setting it to undefined and just then set the entire response again
       ctx.res = undefined;
-      if (cookieScript || draftBadge) {
+      if (cookieScript || draftBadge || editorBridge) {
         let html = await initialResponse.text();
         if (cookieScript) {
           // Script captured the framework cookies; remove the now-redundant
@@ -560,6 +566,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
           html = injectScriptIntoHtml(html, cookieScript);
         }
         if (draftBadge) html = injectBeforeBodyEnd(html, draftBadge);
+        if (editorBridge) html = injectBeforeBodyEnd(html, editorBridge);
         ctx.res = new Response(html, {
           status: responseStatus,
           headers: newHeaders,
