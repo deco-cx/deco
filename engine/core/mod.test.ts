@@ -7,6 +7,7 @@ import {
   type ResolverMap,
 } from "../../engine/core/resolver.ts";
 import defaults from "../manifest/fresh.ts";
+import { RequestContext } from "../../deco.ts";
 
 Deno.test("resolve", async (t) => {
   const context: BaseContext = {
@@ -341,4 +342,81 @@ Deno.test("resolve", async (t) => {
     );
     assertEquals(result, { foo: "hello", bar: { value: 10 } });
   });
+});
+
+Deno.test("aborted reads must not poison the shared memo", async (t) => {
+  // A loader-like resolver that fails when the active RequestContext signal is
+  // aborted (mirrors `blocks/loader.ts` calling `signal.throwIfAborted()`) and
+  // otherwise returns its resolved props unchanged.
+  const flakyLoader = (props: unknown): unknown => {
+    RequestContext?.signal?.throwIfAborted();
+    return props;
+  };
+
+  const makeContext = (): BaseContext => ({
+    revision: "",
+    resolveChain: [],
+    resolveId: "1",
+    resolverId: "unknown",
+    // A shared *named* block (top-level decofile key): resolution is memoized
+    // by key in `context.memo`, so every reference shares one promise.
+    resolvables: {
+      SharedBlock: { __resolveType: "flakyLoader", title: "hello" },
+    },
+    resolvers: { ...defaults, flakyLoader } as unknown as ResolverMap,
+    resolveHints: {},
+    memo: {},
+    runOnce: (_key, f) => f(),
+    resolve: <T>(data: unknown) => data as T,
+  });
+
+  const tryResolve = async (ctx: BaseContext) => {
+    try {
+      return await resolve<{ title: string }>("SharedBlock", ctx);
+    } catch (e) {
+      return `threw:${(e as Error).name}`;
+    }
+  };
+
+  await t.step(
+    "sequential: a live consumer re-resolves after an aborted one",
+    async () => {
+      const ctx = makeContext();
+      const aborted = new AbortController();
+      aborted.abort();
+
+      // Consumer A resolves the shared block under an already-aborted signal
+      // (as `website/sections/Rendering/Lazy.tsx` does to render a fallback).
+      const a = await RequestContext.bind(
+        { signal: aborted.signal },
+        () => tryResolve(ctx),
+      )();
+      // Consumer B (the real render) has a live signal and must get the value.
+      const b = await tryResolve(ctx);
+
+      assertEquals(a, "threw:AbortError");
+      assertEquals(b, { title: "hello" });
+    },
+  );
+
+  await t.step(
+    "concurrent: a live consumer does not inherit a co-scheduled abort",
+    async () => {
+      const ctx = makeContext();
+      const aborted = new AbortController();
+      aborted.abort();
+
+      // A (aborted) and B (live) await the same in-flight memo promise.
+      const [a, b] = await Promise.all([
+        RequestContext.bind(
+          { signal: aborted.signal },
+          () => tryResolve(ctx),
+        )(),
+        tryResolve(ctx),
+      ]);
+
+      assertEquals(a, "threw:AbortError");
+      assertEquals(b, { title: "hello" });
+    },
+  );
 });
