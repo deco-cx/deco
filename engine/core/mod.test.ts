@@ -419,4 +419,24 @@ Deno.test("aborted reads must not poison the shared memo", async (t) => {
       assertEquals(b, { title: "hello" });
     },
   );
+
+  await t.step(
+    "an aborted caller never writes the shared memo",
+    async () => {
+      const ctx = makeContext();
+      const aborted = new AbortController();
+      aborted.abort();
+
+      const a = await RequestContext.bind(
+        { signal: aborted.signal },
+        () => tryResolve(ctx),
+      )();
+
+      assertEquals(a, "threw:AbortError");
+      // The doomed aborted resolution must not have populated the cache.
+      assertEquals(ctx.memo["SharedBlock"], undefined);
+      // ...so the real render still resolves it for real.
+      assertEquals(await tryResolve(ctx), { title: "hello" });
+    },
+  );
 });

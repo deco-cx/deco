@@ -545,15 +545,23 @@ const resolveWithType = <
   const { resolvers: resolverMap, resolvables } = context;
 
   if (resolveType in resolvables) {
-    // Resolve the shared (memoized) resolvable, evicting the cache entry when
-    // the resolution fails because of an aborted RequestContext signal. That
-    // abort belongs to whichever consumer happened to trigger the shared
-    // resolution first (e.g. `website/sections/Rendering/Lazy.tsx` deliberately
-    // aborts to render a loading fallback) — it is NOT a property of the block,
-    // so it must not be cached and served to the block's other references.
-    const resolveShared = (): Promise<
-      T
-    > => (context.memo[resolveType] ??= resolveResolvable<T>(
+    // A caller resolving under an already-aborted RequestContext signal (e.g.
+    // `website/sections/Rendering/Lazy.tsx`, which deliberately aborts to
+    // render a loading fallback fast) must NOT touch the shared memo: its
+    // resolution is doomed to reject, and caching that rejection — or handing
+    // the aborted caller a live consumer's in-flight promise — poisons the
+    // block for every other reference on the page. That is what makes a
+    // multivariate page with more than one variant render blank in preview.
+    // Resolve it standalone so the memo only ever holds the real render's
+    // resolution. Nested resolutions inherit the same aborted signal, so the
+    // whole aborted subtree bypasses the memo too.
+    if (RequestContext.signal?.aborted === true) {
+      return resolveResolvable<T>(resolveType, context, opts);
+    }
+    // Otherwise memoize, but still evict the entry if the resolution rejects
+    // because the signal aborts mid-flight, so a later live read re-resolves
+    // instead of inheriting a cached rejection.
+    return (context.memo[resolveType] ??= resolveResolvable<T>(
       resolveType,
       context,
       opts,
@@ -563,18 +571,6 @@ const resolveWithType = <
       }
       throw err;
     }));
-
-    return resolveShared().catch((err: unknown) => {
-      // A consumer whose own signal is still live must not inherit an abort it
-      // did not cause — this happens when it awaited the same in-flight promise
-      // as an aborted consumer. The entry was evicted above, so re-resolve it
-      // fresh under this (live) caller. Without this, a multivariate page whose
-      // real render is co-scheduled with an aborted lazy read renders blank.
-      if (isAbortError(err) && RequestContext.signal?.aborted !== true) {
-        return resolveShared();
-      }
-      throw err;
-    });
   } else if (resolveType in resolverMap) {
     const resolver = resolverMap[resolveType];
     const proceed = () =>
