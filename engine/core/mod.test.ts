@@ -6,8 +6,49 @@ import {
   resolve,
   type ResolverMap,
 } from "../../engine/core/resolver.ts";
+import { ReleaseResolver } from "../../engine/core/mod.ts";
+import { fromJSON } from "../../engine/decofile/fetcher.ts";
 import defaults from "../manifest/fresh.ts";
 import { RequestContext } from "../../deco.ts";
+
+Deno.test(".with({ release }) does not inherit stale resolve hints", async () => {
+  // Hints are cached by resolveType (block id) and derived from the release's
+  // resolvables. Fast Preview binds a request-scoped draft via
+  // `resolver.with({ release: draftProvider })`. If `.with` inherits the base
+  // resolver's hints, a block whose SHAPE changed between the published release
+  // and the draft (same id, different content) resolves against the stale shape
+  // and silently drops everything the old hints don't cover — the exact failure
+  // that blanked a page whose `sections` went from a plain array (published) to
+  // a `multivariate` flag (draft).
+  const resolvers = {
+    passthrough: (props: unknown) => props,
+  } as unknown as ResolverMap;
+
+  // Published: block "page" has a plain `content` (no nested resolvable).
+  const published = fromJSON({
+    page: { __resolveType: "passthrough", content: "plain" },
+  });
+  // Draft: SAME id "page", but `content` is now a nested resolvable — the draft
+  // needs a hint at `content` that the published shape never produced.
+  const draft = fromJSON({
+    page: { __resolveType: "passthrough", content: { __resolveType: "inner" } },
+    inner: { __resolveType: "passthrough", value: "from-draft" },
+  });
+
+  const base = new ReleaseResolver<BaseContext>({ release: published, resolvers });
+
+  // Resolve against the published release first — this populates (poisons) the
+  // base resolver's hint cache for "page" with the plain-content shape.
+  assertEquals(await base.resolve<{ content: unknown }>("page", {}), {
+    content: "plain",
+  });
+
+  // Swap the release for the draft, as Fast Preview does.
+  const drafted = base.with({ release: draft });
+  assertEquals(await drafted.resolve<{ content: unknown }>("page", {}), {
+    content: { value: "from-draft" },
+  });
+});
 
 Deno.test("resolve", async (t) => {
   const context: BaseContext = {
