@@ -82,7 +82,9 @@ export class DenoRun implements Isolate {
         },
       });
     }
-    const hostname = Deno.build.os === "windows" ? "localhost" : "0.0.0.0";
+    // 127.0.0.1 is the correct loopback for outbound connections;
+    // 0.0.0.0 is a bind wildcard and not a valid connect target on macOS/Linux.
+    const hostname = Deno.build.os === "windows" ? "localhost" : "127.0.0.1";
     this.proxyUrl = `http://${hostname}:${this.port}`;
     this.client = typeof Deno.createHttpClient === "function"
       ? Deno.createHttpClient({
