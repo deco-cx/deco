@@ -113,19 +113,30 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     { resolvers, resolvables, release, danglingRecover }: ExtensionOptions<
       TContext
     >,
-  ): ReleaseResolver<TContext> =>
-    new ReleaseResolver<TContext>(
+  ): ReleaseResolver<TContext> => {
+    // Hints are derived from the release's resolvables and cached by resolveType
+    // (block id). When the release is swapped — as Fast Preview does to bind a
+    // request-scoped draft (`resolver.with({ release: draftProvider })`) — the
+    // base hints are stale: the SAME block id can now resolve to different
+    // content (e.g. a page whose `sections` was a plain array in the published
+    // release but a `multivariate` flag in the draft). Inheriting them makes the
+    // draft resolve against the published shape and silently drop everything the
+    // old hints don't cover. This mirrors the `release.onChange` invariant in the
+    // constructor, which already clears hints whenever the release changes.
+    const releaseChanged = release !== undefined && release !== this.release;
+    return new ReleaseResolver<TContext>(
       {
         release: release ?? this.release,
         danglingRecover: danglingRecover ?? this.danglingRecover,
         resolvables: { ...this.resolvables, ...resolvables },
         resolvers: { ...this.resolvers, ...resolvers },
       },
-      { ...this.resolveHints },
+      releaseChanged ? {} : { ...this.resolveHints },
       {
         ...this.runOncePerRelease,
       },
     );
+  };
 
   public getResolvers(): ResolverMap<BaseContext> {
     return this._cachedResolvers ??= {
