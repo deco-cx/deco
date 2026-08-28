@@ -33,7 +33,7 @@ jobs:
         run: deno run -A --lock=deno.lock --frozen=false --reload mod.ts
       - name: fetch any uncached dependencies
         run: |
-          deno cache --lock=deno.lock --frozen=false --reload=file: ./mod.ts
+          deno cache --lock=deno.lock --frozen=false ./mod.ts
 
       - run: |
           deno test --lock=deno.lock --frozen=false -A .
