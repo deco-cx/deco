@@ -270,14 +270,8 @@ const watch = async (signal?: AbortSignal) => {
 const createDeps = (
   signal?: AbortSignal,
   opts?: { repoUrl?: string; branch?: string },
-): MiddlewareHandler & { ready: Promise<void>; ensureStarted: () => void } => {
-  let ok: Promise<unknown> | null = null;
-  let readyResolve: () => void;
-  let readyReject: (err: unknown) => void;
-  const ready = new Promise<void>((resolve, reject) => {
-    readyResolve = resolve;
-    readyReject = reject;
-  });
+): MiddlewareHandler => {
+  let ok: Promise<unknown> | null | false = null;
 
   const start = async () => {
     const siteName = getSiteName();
@@ -285,17 +279,11 @@ const createDeps = (
       throw new Error("Cannot initialize deps: site name not set");
     }
     let start = performance.now();
-    try {
-      await ensureGit({
-        site: siteName,
-        repoUrl: opts?.repoUrl,
-        branch: opts?.branch,
-      });
-      readyResolve();
-    } catch (err) {
-      readyReject(err);
-      throw err;
-    }
+    await ensureGit({
+      site: siteName,
+      repoUrl: opts?.repoUrl,
+      branch: opts?.branch,
+    });
     logs.push({
       level: "info",
       message: `${colors.bold("[step 1/4]")}: Git setup took ${
@@ -354,33 +342,17 @@ const createDeps = (
     });
   };
 
-  const ensureStarted = () => {
-    ok ||= start();
+  return async (c, next) => {
+    try {
+      ok ||= start();
+
+      await ok.then(next);
+    } catch (err) {
+      console.log(err);
+
+      c.res = new Response("Error while starting global deps", { status: 424 });
+    }
   };
-
-  const middleware: MiddlewareHandler & {
-    ready: Promise<void>;
-    ensureStarted: () => void;
-  } = Object
-    .assign(
-      async (
-        c: Parameters<MiddlewareHandler>[0],
-        next: () => Promise<void>,
-      ) => {
-        try {
-          ensureStarted();
-          await ok?.then(next);
-        } catch (err) {
-          console.log(err);
-
-          c.res = new Response("Error while starting global deps", {
-            status: 424,
-          });
-        }
-      },
-      { ready, ensureStarted },
-    );
-  return middleware;
 };
 
 // Create a function that returns fresh WorkerOptions with new tokens
@@ -424,10 +396,6 @@ interface SiteAppOptions {
 interface SiteAppResult {
   app: Hono;
   dispose: () => Promise<void>;
-  /** Resolves when git clone/setup is done (before manifest gen). */
-  gitReady: Promise<void>;
-  /** Eagerly trigger deps initialization (git clone, manifest gen, etc.). */
-  ensureStarted: () => void;
 }
 
 /**
@@ -450,8 +418,7 @@ const createSiteApp = ({
   const envName = DECO_ENV_NAME ?? "";
   siteApp.get("/deco/_is_idle", createIdleHandler(siteName, envName));
   // Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
-  const deps = createDeps(ac.signal, { repoUrl, branch });
-  siteApp.use(deps);
+  siteApp.use(createDeps(ac.signal, { repoUrl, branch }));
   siteApp.use(activityMonitor);
   // These are the APIs that communicate with admin UI
   siteApp.use(createDaemonAPIs({ build: buildCmd, site: siteName }));
@@ -491,12 +458,7 @@ const createSiteApp = ({
     console.log(`[sandbox] Cleaned working directory: ${cwd}`);
   };
 
-  return {
-    app: siteApp,
-    dispose,
-    gitReady: deps.ready,
-    ensureStarted: deps.ensureStarted,
-  };
+  return { app: siteApp, dispose };
 };
 const LOCAL_STORAGE_ENV_NAME = "deco_host_env_name";
 const stableEnvironmentName = () => {
@@ -669,7 +631,7 @@ if (SANDBOX_MODE) {
           const handlers = aiHandlers;
           // Wait for git clone to finish before starting the AI task,
           // since the task needs a valid repo (git rev-parse HEAD, etc.)
-          currentSite.gitReady.then(async () => {
+          ensureGit({ site, repoUrl: repo, branch }).then(async () => {
             const ct = await handlers.createTask({
               issue: task.issue,
               prompt: task.prompt,
