@@ -15,7 +15,7 @@ import { Context } from "../deco.ts";
 import { type DeepPartial, Murmurhash3 } from "../deps.ts";
 import type { ComponentFunc, ComponentMetadata } from "../engine/block.ts";
 import type { FieldResolver } from "../engine/core/resolver.ts";
-import { HttpError } from "../engine/errors.ts";
+
 import { logger } from "../observability/otel/config.ts";
 import { useFramework } from "../runtime/handler.tsx";
 import { type Device, deviceOf } from "../utils/userAgent.ts";
@@ -70,9 +70,6 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
   override state = { error: null };
 
   static override getDerivedStateFromError(error: Error) {
-    if (error instanceof HttpError) {
-      throw error;
-    }
     return { error };
   }
 
