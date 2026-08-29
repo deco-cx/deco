@@ -28,9 +28,25 @@ const headersStringToObject = (headersString: string | undefined | null) => {
   return Object.fromEntries(splitByComma);
 };
 
-// Add views with different boundaries for each unit.
+// Add views with different boundaries for each unit. Now that durations are
+// recorded in seconds (OTel semconv), the `s` buckets must cover both
+// sub-second HTTP latencies and multi-second gen_ai/block operations.
 const msBoundaries = [10, 100, 500, 1000, 5000, 10000, 15000];
-const sBoundaries = [1, 5, 10, 50];
+const sBoundaries = [
+  0.005,
+  0.01,
+  0.025,
+  0.05,
+  0.1,
+  0.25,
+  0.5,
+  1,
+  2.5,
+  5,
+  10,
+  30,
+  60,
+];
 
 type IMeter = ReturnType<MeterProvider["getMeter"]>;
 const meterProvider: MeterProvider = new MeterProvider({
