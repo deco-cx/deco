@@ -65,12 +65,22 @@ const buildHandler = (
       }
     });
   };
+  // In production (k8s), SIGTERM comes from the kubelet and the process must
+  // shut down. In local dev, Deno's HMR/watch sends SIGTERM to the child
+  // process expecting a clean restart cycle — calling self.close() here kills
+  // the process before HMR can relaunch it, breaking hot-reload entirely.
+  // Deno runtime flags (--unstable-hmr, --watch) are NOT visible in Deno.args,
+  // so we detect production by the presence of KUBERNETES_SERVICE_HOST which is
+  // always injected into k8s pods.
+  const isK8s = Boolean(Deno.env.get("KUBERNETES_SERVICE_HOST"));
   try {
     if (Deno.build.os !== "windows") {
       Deno.addSignalListener("SIGTERM", () => {
         const checks = runChecks();
         console.log(checks);
-        self.close();
+        if (isK8s) {
+          self.close();
+        }
       });
     }
   } catch (err) {
