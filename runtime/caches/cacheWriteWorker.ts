@@ -1,6 +1,10 @@
 // Worker thread for cache write operations.
 // Offloads SHA1 hashing, buffer combining, and FS writes from the main event loop.
 
+const CACHE_MAX_ENTRY_SIZE = parseInt(
+  Deno.env.get("CACHE_MAX_ENTRY_SIZE") ?? "2097152", // 2 MB
+) || 2097152;
+
 const textEncoder = new TextEncoder();
 
 const initializedDirs = new Set<string>();
@@ -57,6 +61,12 @@ function generateCombinedBuffer(
   return buf;
 }
 
+function shardedPath(cacheDir: string, key: string): string {
+  const l1 = key.substring(0, 2);
+  const l2 = key.substring(2, 4);
+  return `${cacheDir}/${l1}/${l2}/${key}`;
+}
+
 // --- Message handler ---
 
 export interface CacheWriteMessage {
@@ -85,8 +95,12 @@ self.onmessage = async (e: MessageEvent<CacheWriteMessage>) => {
     // Combine into single buffer
     const buffer = generateCombinedBuffer(body, headersBytes);
 
-    // Write to filesystem
-    const filePath = `${cacheDir}/${cacheKey}`;
+    if (buffer.length > CACHE_MAX_ENTRY_SIZE) return;
+
+    // Write to filesystem (with hex sharding for directory distribution)
+    const filePath = shardedPath(cacheDir, cacheKey);
+    const dir = filePath.substring(0, filePath.lastIndexOf("/"));
+    ensureCacheDir(dir);
     await Deno.writeFile(filePath, buffer);
   } catch (err) {
     console.error("[cache-write-worker] error:", err);
