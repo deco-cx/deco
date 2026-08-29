@@ -69,21 +69,27 @@ export const newFsProviderFromPath = (
   const onChangeCbs: OnChangeCallback[] = [];
   let previousState: unknown = null;
 
+  let resolvedState: Decofile | null = null;
+  let resolvedRevision: string | null = null;
+
+  const setResolved = (versioned: VersionedDecofile) => {
+    resolvedState = versioned.state;
+    resolvedRevision = versioned.revision;
+  };
+
   const doUpdateState = async () => {
     const state = await readAndDecompressFile(fullPath)
       .catch((_e) => null);
     if (state === null) {
       return;
     }
-    // Only update and notify if the state has actually changed
     if (equal(state, previousState)) {
       return;
     }
     previousState = state;
-    decofile = Promise.resolve({
-      state,
-      revision: hashState(state),
-    });
+    const versioned = { state, revision: hashState(state) };
+    decofile = Promise.resolve(versioned);
+    setResolved(versioned);
     for (const cb of onChangeCbs) {
       cb();
     }
@@ -114,6 +120,8 @@ export const newFsProviderFromPath = (
       };
     },
   ).then((result) => {
+    setResolved(result);
+
     (async () => {
       const watcher = Deno.watchFs(fullPath);
       for await (const _event of watcher) {
@@ -124,27 +132,25 @@ export const newFsProviderFromPath = (
     return result;
   });
 
-  const state = async (options: ReadOptions | undefined) => {
-    if (options?.forceFresh) {
-      return readAndDecompressFile(fullPath);
-    }
-
-    return await decofile.then((r) => r.state);
-  };
-
   return {
-    state,
+    state: (options: ReadOptions | undefined) => {
+      if (options?.forceFresh) {
+        return readAndDecompressFile(fullPath);
+      }
+      if (resolvedState !== null) {
+        return Promise.resolve(resolvedState);
+      }
+      return decofile.then((r) => r.state);
+    },
     notify: async () => {
-      // Directly check for updates without debounce
-      // This is important for environments where Deno.watchFs doesn't work (e.g., tempfs)
       await doUpdateState();
     },
-    set: (state, rev) => {
+    set: (state: Decofile, rev?: string) => {
       previousState = state;
-      decofile = Promise.resolve({
-        state,
-        revision: rev ?? hashState(state),
-      });
+      const revision = rev ?? hashState(state);
+      const versioned = { state, revision };
+      decofile = Promise.resolve(versioned);
+      setResolved(versioned);
       for (const cb of onChangeCbs) {
         cb();
       }
@@ -158,7 +164,12 @@ export const newFsProviderFromPath = (
         },
       };
     },
-    revision: () => decofile.then((r) => r.revision),
+    revision: () => {
+      if (resolvedRevision !== null) {
+        return Promise.resolve(resolvedRevision);
+      }
+      return decofile.then((r) => r.revision);
+    },
   };
 };
 export const newFsProvider = (
