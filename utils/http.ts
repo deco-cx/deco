@@ -155,19 +155,54 @@ export function setCSPHeaders(
   const isOnAdmin = referer && isAdmin(referer);
   const localhost =
     "127.0.0.1:* localhost:* http://localhost:* http://127.0.0.1:*";
+  const frameAncestors = `frame-ancestors 'self' ${
+    landingPageDomain.join(" ")
+  } ${localhost} ${
+    adminDomains.join(" ")
+  } ${
+    referer && isOnAdmin
+      ? "https://" + referer.startsWith("http")
+        ? new URL(referer).host
+        : referer
+      : ""
+  }`;
+  // Preserve any Content-Security-Policy the app already set (default-src,
+  // script-src, …) and only inject/replace our `frame-ancestors` directive.
+  // Using `.set()` with just `frame-ancestors` here used to obliterate a full
+  // app CSP, silently downgrading an enforced policy to frame-ancestors-only.
   response.headers.set(
     "Content-Security-Policy",
-    `frame-ancestors 'self' ${landingPageDomain.join(" ")} ${localhost} ${
-      adminDomains.join(" ")
-    } ${
-      referer && isOnAdmin
-        ? "https://" + referer.startsWith("http")
-          ? new URL(referer).host
-          : referer
-        : ""
-    }`,
+    mergeFrameAncestors(
+      response.headers.get("Content-Security-Policy"),
+      frameAncestors,
+    ),
   );
   return response;
+}
+
+/**
+ * Merge a `frame-ancestors` directive into an existing Content-Security-Policy
+ * value. Any `frame-ancestors` already present is replaced (the platform owns
+ * that directive so the admin live-preview iframe keeps working); every other
+ * directive the app set is preserved. With no existing policy, returns the
+ * `frame-ancestors` directive on its own.
+ */
+export function mergeFrameAncestors(
+  existing: string | null,
+  frameAncestors: string,
+): string {
+  if (!existing) {
+    return frameAncestors;
+  }
+  const kept = existing
+    .split(";")
+    .map((directive) => directive.trim())
+    .filter(
+      (directive) =>
+        directive.length > 0 && !/^frame-ancestors\b/i.test(directive),
+    );
+  kept.push(frameAncestors);
+  return kept.join("; ");
 }
 
 /**
