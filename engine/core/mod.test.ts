@@ -35,7 +35,10 @@ Deno.test(".with({ release }) does not inherit stale resolve hints", async () =>
     inner: { __resolveType: "passthrough", value: "from-draft" },
   });
 
-  const base = new ReleaseResolver<BaseContext>({ release: published, resolvers });
+  const base = new ReleaseResolver<BaseContext>({
+    release: published,
+    resolvers,
+  });
 
   // Resolve against the published release first — this populates (poisons) the
   // base resolver's hint cache for "page" with the plain-content shape.
@@ -48,6 +51,51 @@ Deno.test(".with({ release }) does not inherit stale resolve hints", async () =>
   assertEquals(await drafted.resolve<{ content: unknown }>("page", {}), {
     content: { value: "from-draft" },
   });
+});
+
+Deno.test("dispose() unsubscribes the resolver from its release", () => {
+  // `installApps` rebuilds the resolver on every decofile change:
+  //   currentResolver = currentResolver.with({ resolvers, resolvables })
+  // Each `new ReleaseResolver` subscribes to the SAME provider. Without
+  // disposing the superseded resolver, its subscription keeps it — and its
+  // whole resolvables/resolvers/resolveHints graph — reachable from the
+  // provider's listener list forever, so every publish permanently retains one
+  // more resolver. This test pins the subscription count instead of the bytes.
+  const listeners = new Set<() => unknown>();
+  const release = {
+    state: () => Promise.resolve({}),
+    revision: () => Promise.resolve("1"),
+    onChange: (cb: () => unknown) => {
+      listeners.add(cb);
+      return { [Symbol.dispose]: () => listeners.delete(cb) };
+    },
+    // deno-lint-ignore no-explicit-any
+  } as any;
+
+  const base = new ReleaseResolver<BaseContext>({ release, resolvers: {} });
+  assertEquals(listeners.size, 1);
+
+  // Simulate repeated app installs, disposing each superseded resolver.
+  let current = base;
+  for (let i = 0; i < 25; i++) {
+    const superseded = current as unknown as { dispose?: () => void };
+    current = current.with({ resolvers: {} });
+    // Cast keeps this test meaningful without the fix: `dispose` is simply
+    // absent, the subscriptions pile up and the assertion below reports the
+    // real leak (one per rebuild) instead of failing to type-check.
+    superseded.dispose?.();
+  }
+  assertEquals(
+    listeners.size,
+    1,
+    "each publish must leave exactly one live subscription, not accumulate one per rebuild",
+  );
+
+  // Disposing is idempotent and actually detaches.
+  const last = current as unknown as { dispose?: () => void };
+  last.dispose?.();
+  last.dispose?.();
+  assertEquals(listeners.size, 0);
 });
 
 Deno.test("resolve", async (t) => {

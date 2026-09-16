@@ -194,7 +194,12 @@ const installAppsForResolver = async (
       ...importMap,
       imports: { ...appImportMap?.imports, ...importMap?.imports },
     };
+    const supersededResolver = currentResolver;
     currentResolver = currentResolver.with({ resolvers, resolvables });
+    // Drop the superseded resolver's release subscription; otherwise every
+    // publish leaves one more resolver graph permanently reachable from the
+    // provider's listener list.
+    supersededResolver.dispose?.();
     return true;
   };
 
