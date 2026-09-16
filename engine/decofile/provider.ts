@@ -110,7 +110,25 @@ const respectDecofileProviders = [
   "deconfig://",
   "file:///app/decofile/decofile.json",
   "file:///app/decofile/decofile.bin", // brotli-compressed decofile
+  // An EXPLICIT remote release over HTTP(S) — e.g. the operator's s3 target sets
+  // DECO_RELEASE=https://…/decofile.json. Honor it OVER a baked `.deco/blocks`
+  // folder: otherwise a site with blocks in its image would ignore the remote
+  // release and cold-start from the (stale) built-in folder, losing every
+  // content update delivered out-of-band (fast-deploy).
+  "https://",
+  "http://",
 ];
+
+/**
+ * Whether an explicit `DECO_RELEASE` should be honored OVER a baked
+ * `.deco/blocks` folder. True for deconfig / a mounted decofile file / an
+ * explicit http(s) endpoint — all deliberate sources that must win over the
+ * folder. A bare folder is used only when `DECO_RELEASE` is unset or a scheme we
+ * don't front-load. Pure (no env/fs) so the precedence is unit-testable.
+ */
+export const shouldRespectDecoRelease = (
+  release: string | undefined,
+): boolean => respectDecofileProviders.some((p) => release?.startsWith(p));
 /**
  * Compose `config` and `pages` tables into a single ConfigStore provider given the impression that they are a single source of truth.
  * @param ns the site namespace
@@ -127,12 +145,8 @@ export const getProvider = async (
     return newFsProvider();
   }
 
-  const shouldRespectDecoRelease = respectDecofileProviders.some((provider) =>
-    DECOFILE_PATH_FROM_ENV?.startsWith(provider)
-  );
-
   const endpoint = await blocksFolderExistsPromise &&
-      !shouldRespectDecoRelease
+      !shouldRespectDecoRelease(DECOFILE_PATH_FROM_ENV)
     ? `folder://${BLOCKS_FOLDER}`
     : DECOFILE_PATH_FROM_ENV;
   if (endpoint) {
