@@ -131,13 +131,17 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
    * they no longer serve. Idempotent.
    */
   public dispose = (): void => {
-    this.releaseSubscription?.[Symbol.dispose]?.();
+    this.releaseSubscription?.[Symbol.dispose]();
     this.releaseSubscription = undefined;
   };
 
-  [Symbol.dispose](): void {
-    this.dispose();
-  }
+  /**
+   * Alias, not a forwarding method: a prototype method that calls
+   * `this.dispose()` throws once it is detached from the instance
+   * (`const d = resolver[Symbol.dispose]; d()`), while the bound field above
+   * survives it.
+   */
+  readonly [Symbol.dispose] = this.dispose;
 
   public with = (
     { resolvers, resolvables, release, danglingRecover }: ExtensionOptions<

@@ -154,7 +154,13 @@ export const newFsProviderFromPath = (
       onChangeCbs.push(cb);
       return {
         [Symbol.dispose]: () => {
-          onChangeCbs.splice(onChangeCbs.indexOf(cb), 1);
+          // Guard the index: on a second disposal `indexOf` returns -1 and
+          // `splice(-1, 1)` would drop the LAST, still-live callback instead of
+          // doing nothing.
+          const idx = onChangeCbs.indexOf(cb);
+          if (idx !== -1) {
+            onChangeCbs.splice(idx, 1);
+          }
         },
       };
     },

@@ -7,7 +7,7 @@ import {
   type ResolverMap,
 } from "../../engine/core/resolver.ts";
 import { ReleaseResolver } from "../../engine/core/mod.ts";
-import { fromJSON } from "../../engine/decofile/fetcher.ts";
+import { fromEndpoint, fromJSON } from "../../engine/decofile/fetcher.ts";
 import defaults from "../manifest/fresh.ts";
 import { RequestContext } from "../../deco.ts";
 
@@ -96,6 +96,54 @@ Deno.test("dispose() unsubscribes the resolver from its release", () => {
   last.dispose?.();
   last.dispose?.();
   assertEquals(listeners.size, 0);
+});
+
+Deno.test("dispose() unsubscribes through an endpoint-backed provider", async () => {
+  // The fake release above implements `onChange` correctly. `fromEndpoint` —
+  // which every real deployment goes through, since `getProvider` wraps
+  // `folder://`, `file://`, `deconfig://` and `http(s)://` in it — used to
+  // discard the inner Disposable and hand back a no-op one, so `dispose()`
+  // unsubscribed nothing in production while the test above stayed green.
+  // Count live subscriptions through the real provider instead of a stand-in.
+  const server = Deno.serve(
+    { port: 0, onListen: () => {} },
+    () => new Response(JSON.stringify({})),
+  );
+  // Each live subscription dispatches exactly one `deco:hmr` per notify, so the
+  // event count is the subscription count.
+  let hmr = 0;
+  const countHmr = () => hmr++;
+  addEventListener("deco:hmr", countHmr);
+  try {
+    const release = fromEndpoint(
+      `http://localhost:${server.addr.port}/decofile.json`,
+    );
+    await release.state();
+
+    let current = new ReleaseResolver<BaseContext>({ release, resolvers: {} });
+    for (let i = 0; i < 25; i++) {
+      const superseded = current;
+      current = current.with({ resolvers: {} });
+      superseded.dispose();
+    }
+    await release.notify?.();
+    assertEquals(
+      hmr,
+      1,
+      "each publish must leave exactly one live subscription on the endpoint-backed provider",
+    );
+
+    // Disposal that lands before the provider promise settles must still
+    // prevent the subscription from ever being registered.
+    hmr = 0;
+    current.dispose();
+    current.dispose();
+    await release.notify?.();
+    assertEquals(hmr, 0, "dispose() must detach the last resolver too");
+  } finally {
+    removeEventListener("deco:hmr", countHmr);
+    await server.shutdown();
+  }
 });
 
 Deno.test("resolve", async (t) => {

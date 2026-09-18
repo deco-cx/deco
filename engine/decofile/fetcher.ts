@@ -150,7 +150,13 @@ export const fromJSON = (
       cbs.push(cb);
       return {
         [Symbol.dispose]: () => {
-          cbs.splice(cbs.indexOf(cb), 1);
+          // Guard the index: on a second disposal `indexOf` returns -1 and
+          // `splice(-1, 1)` would drop the LAST, still-live callback instead of
+          // doing nothing.
+          const idx = cbs.indexOf(cb);
+          if (idx !== -1) {
+            cbs.splice(idx, 1);
+          }
         },
       };
     },
@@ -236,9 +242,24 @@ export const fromEndpoint = (endpoint: string): DecofileProvider => {
     },
     state: (options) => decofileProviderPromise.then((r) => r.state(options)),
     onChange: (cb) => {
-      decofileProviderPromise.then((r) => r.onChange(cb));
+      // The inner provider only exists after the promise settles, but callers
+      // need a Disposable synchronously. Proxy it: forward the disposal to the
+      // real subscription once it exists, and remember a disposal that happened
+      // before that — otherwise this returns a no-op and every caller relying on
+      // it (e.g. `ReleaseResolver.dispose`) silently leaks its subscription.
+      let disposed = false;
+      let inner: Disposable | undefined;
+      decofileProviderPromise.then((r) => {
+        if (disposed) {
+          return;
+        }
+        inner = r.onChange(cb);
+      }).catch(() => {});
       return {
         [Symbol.dispose]: () => {
+          disposed = true;
+          inner?.[Symbol.dispose]();
+          inner = undefined;
         },
       };
     },
