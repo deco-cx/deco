@@ -7,7 +7,7 @@ import {
   type ResolverMap,
 } from "../../engine/core/resolver.ts";
 import { ReleaseResolver } from "../../engine/core/mod.ts";
-import { fromJSON } from "../../engine/decofile/fetcher.ts";
+import { fromEndpoint, fromJSON } from "../../engine/decofile/fetcher.ts";
 import defaults from "../manifest/fresh.ts";
 import { RequestContext } from "../../deco.ts";
 
@@ -35,7 +35,10 @@ Deno.test(".with({ release }) does not inherit stale resolve hints", async () =>
     inner: { __resolveType: "passthrough", value: "from-draft" },
   });
 
-  const base = new ReleaseResolver<BaseContext>({ release: published, resolvers });
+  const base = new ReleaseResolver<BaseContext>({
+    release: published,
+    resolvers,
+  });
 
   // Resolve against the published release first — this populates (poisons) the
   // base resolver's hint cache for "page" with the plain-content shape.
@@ -48,6 +51,99 @@ Deno.test(".with({ release }) does not inherit stale resolve hints", async () =>
   assertEquals(await drafted.resolve<{ content: unknown }>("page", {}), {
     content: { value: "from-draft" },
   });
+});
+
+Deno.test("dispose() unsubscribes the resolver from its release", () => {
+  // `installApps` rebuilds the resolver on every decofile change:
+  //   currentResolver = currentResolver.with({ resolvers, resolvables })
+  // Each `new ReleaseResolver` subscribes to the SAME provider. Without
+  // disposing the superseded resolver, its subscription keeps it — and its
+  // whole resolvables/resolvers/resolveHints graph — reachable from the
+  // provider's listener list forever, so every publish permanently retains one
+  // more resolver. This test pins the subscription count instead of the bytes.
+  const listeners = new Set<() => unknown>();
+  const release = {
+    state: () => Promise.resolve({}),
+    revision: () => Promise.resolve("1"),
+    onChange: (cb: () => unknown) => {
+      listeners.add(cb);
+      return { [Symbol.dispose]: () => listeners.delete(cb) };
+    },
+    // deno-lint-ignore no-explicit-any
+  } as any;
+
+  const base = new ReleaseResolver<BaseContext>({ release, resolvers: {} });
+  assertEquals(listeners.size, 1);
+
+  // Simulate repeated app installs, disposing each superseded resolver.
+  let current = base;
+  for (let i = 0; i < 25; i++) {
+    const superseded = current as unknown as { dispose?: () => void };
+    current = current.with({ resolvers: {} });
+    // Cast keeps this test meaningful without the fix: `dispose` is simply
+    // absent, the subscriptions pile up and the assertion below reports the
+    // real leak (one per rebuild) instead of failing to type-check.
+    superseded.dispose?.();
+  }
+  assertEquals(
+    listeners.size,
+    1,
+    "each publish must leave exactly one live subscription, not accumulate one per rebuild",
+  );
+
+  // Disposing is idempotent and actually detaches.
+  const last = current as unknown as { dispose?: () => void };
+  last.dispose?.();
+  last.dispose?.();
+  assertEquals(listeners.size, 0);
+});
+
+Deno.test("dispose() unsubscribes through an endpoint-backed provider", async () => {
+  // The fake release above implements `onChange` correctly. `fromEndpoint` —
+  // which every real deployment goes through, since `getProvider` wraps
+  // `folder://`, `file://`, `deconfig://` and `http(s)://` in it — used to
+  // discard the inner Disposable and hand back a no-op one, so `dispose()`
+  // unsubscribed nothing in production while the test above stayed green.
+  // Count live subscriptions through the real provider instead of a stand-in.
+  const server = Deno.serve(
+    { port: 0, onListen: () => {} },
+    () => new Response(JSON.stringify({})),
+  );
+  // Each live subscription dispatches exactly one `deco:hmr` per notify, so the
+  // event count is the subscription count.
+  let hmr = 0;
+  const countHmr = () => hmr++;
+  addEventListener("deco:hmr", countHmr);
+  try {
+    const release = fromEndpoint(
+      `http://localhost:${server.addr.port}/decofile.json`,
+    );
+    await release.state();
+
+    let current = new ReleaseResolver<BaseContext>({ release, resolvers: {} });
+    for (let i = 0; i < 25; i++) {
+      const superseded = current;
+      current = current.with({ resolvers: {} });
+      superseded.dispose();
+    }
+    await release.notify?.();
+    assertEquals(
+      hmr,
+      1,
+      "each publish must leave exactly one live subscription on the endpoint-backed provider",
+    );
+
+    // Disposal that lands before the provider promise settles must still
+    // prevent the subscription from ever being registered.
+    hmr = 0;
+    current.dispose();
+    current.dispose();
+    await release.notify?.();
+    assertEquals(hmr, 0, "dispose() must detach the last resolver too");
+  } finally {
+    removeEventListener("deco:hmr", countHmr);
+    await server.shutdown();
+  }
 });
 
 Deno.test("resolve", async (t) => {

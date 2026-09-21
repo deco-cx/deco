@@ -90,6 +90,13 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   private resolveHints: ResolveHints;
   private _cachedResolvers: ResolverMap<BaseContext> | null = null;
   private _resolveIdCounter = 0;
+  /**
+   * Subscription to the release's `onChange`. Kept so it can be disposed when
+   * this resolver is replaced — otherwise every superseded resolver stays
+   * reachable from the provider's listener list and leaks its whole
+   * `resolvables`/`resolvers`/`resolveHints` graph.
+   */
+  private releaseSubscription: Disposable | undefined;
   constructor(
     config: ResolverOptions<TContext>,
     hints?: ResolveHints,
@@ -101,13 +108,40 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     this.danglingRecover = config.danglingRecover;
     this.resolveHints = hints ?? {};
     this.runOncePerRelease = oncePerRelease ?? {};
-    this.release.onChange(() => {
+    this.releaseSubscription = this.release.onChange(() => {
       dispatchEvent(new Event("deco:hmr"));
       this.runOncePerRelease = {};
       this.resolveHints = {};
       this._cachedResolvers = null;
     });
   }
+
+  /**
+   * Unsubscribes this resolver from its release.
+   *
+   * `installApps` rebuilds the resolver on every decofile change
+   * (`currentResolver = currentResolver.with({ resolvers, resolvables })`), and
+   * each `new ReleaseResolver` subscribes to the same provider. Without
+   * dropping the previous subscription the superseded resolver is still
+   * referenced by the provider's listener list and can never be collected, so
+   * every publish permanently retains one full resolver graph.
+   *
+   * Safe to call on a superseded resolver: in-flight requests holding a
+   * reference keep working, they simply stop being notified of release changes
+   * they no longer serve. Idempotent.
+   */
+  public dispose = (): void => {
+    this.releaseSubscription?.[Symbol.dispose]();
+    this.releaseSubscription = undefined;
+  };
+
+  /**
+   * Alias, not a forwarding method: a prototype method that calls
+   * `this.dispose()` throws once it is detached from the instance
+   * (`const d = resolver[Symbol.dispose]; d()`), while the bound field above
+   * survives it.
+   */
+  readonly [Symbol.dispose] = this.dispose;
 
   public with = (
     { resolvers, resolvables, release, danglingRecover }: ExtensionOptions<

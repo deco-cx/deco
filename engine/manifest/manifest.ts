@@ -194,7 +194,12 @@ const installAppsForResolver = async (
       ...importMap,
       imports: { ...appImportMap?.imports, ...importMap?.imports },
     };
+    const supersededResolver = currentResolver;
     currentResolver = currentResolver.with({ resolvers, resolvables });
+    // Drop the superseded resolver's release subscription; otherwise every
+    // publish leaves one more resolver graph permanently reachable from the
+    // provider's listener list.
+    supersededResolver.dispose();
     return true;
   };
 
@@ -294,6 +299,13 @@ export const fulfillContext = async <
     release: provider,
   });
   const firstInstallAppsPromise = deferred<void>();
+  // The resolver currently serving traffic (`ctx.runtime.resolver`). Every
+  // publish re-runs `installApps()` from the same stable `resolver` base, so
+  // without holding on to the outgoing one nothing ever disposes it: its
+  // subscription keeps it — and its whole resolver graph — reachable from the
+  // provider's listener list, and its `onChange` callback keeps firing for a
+  // release it no longer serves.
+  let installedResolver: ReleaseResolver<RouteContext> | undefined;
   const installApps = async () => {
     const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
       (curr, acc) => buildRuntime<AppManifest, RouteContext>(curr, acc),
@@ -324,11 +336,20 @@ export const fulfillContext = async <
       );
     const apps: Resolvable[] = Object.values(allAppsMap);
     if (!apps || apps.length === 0) {
+      // `runtimePromise` only takes the first resolution: on a later publish
+      // this path leaves `ctx.runtime` untouched, so the resolver just built is
+      // dead on arrival — dispose it instead of the live one.
+      const isFirstInstall = runtimePromise.state === "pending";
       runtimePromise.resolve({
         resolver: currentResolver,
         manifest: newManifest as T,
         importMap: currentImportMap ?? buildImportMap(newManifest),
       });
+      if (isFirstInstall) {
+        installedResolver = currentResolver;
+      } else {
+        currentResolver.dispose();
+      }
       firstInstallAppsPromise.resolve();
       return;
     }
@@ -362,6 +383,12 @@ export const fulfillContext = async <
       runtimePromise.resolve(runtime);
     }
     ctx.runtime = Promise.resolve(runtime);
+    // Only after the replacement is live: in-flight requests holding the old
+    // resolver keep resolving, they just stop being notified about a release
+    // they no longer serve.
+    const supersededRuntimeResolver = installedResolver;
+    installedResolver = currentResolver;
+    supersededRuntimeResolver?.dispose();
   };
 
   let appsInstallationMutex = deferred<void>();
