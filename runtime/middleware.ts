@@ -5,6 +5,7 @@ import {
   DECO_MATCHER_PREFIX,
 } from "../blocks/matcher.ts";
 import { PAGE_CACHE_ALLOWED_KEY } from "../blocks/utils.tsx";
+import { maybeCompressResponseBody } from "./compression.ts";
 import { Context, context } from "../deco.ts";
 import {
   type Exception,
@@ -560,15 +561,25 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
           html = injectScriptIntoHtml(html, cookieScript);
         }
         if (draftBadge) html = injectBeforeBodyEnd(html, draftBadge);
-        ctx.res = new Response(html, {
-          status: responseStatus,
-          headers: newHeaders,
-        });
+        ctx.res = new Response(
+          maybeCompressResponseBody(html, newHeaders, ctx.req.raw),
+          {
+            status: responseStatus,
+            headers: newHeaders,
+          },
+        );
       } else {
-        ctx.res = new Response(initialResponse.body, {
-          status: responseStatus,
-          headers: newHeaders,
-        });
+        ctx.res = new Response(
+          maybeCompressResponseBody(
+            initialResponse.body,
+            newHeaders,
+            ctx.req.raw,
+          ),
+          {
+            status: responseStatus,
+            headers: newHeaders,
+          },
+        );
       }
     },
   ];
