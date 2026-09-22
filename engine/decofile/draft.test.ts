@@ -137,19 +137,45 @@ Deno.test("previewApiOriginForHost", async (t) => {
 });
 
 Deno.test("gating", async (t) => {
-  await t.step("on iff an allowed host is configured", () => {
+  await t.step("on by default (local dev), and with a configured host", () => {
+    // Local dev hosts are always allowed, so the feature reads as enabled even
+    // with no config; a configured host obviously enables it too.
     assertEquals(isDraftPreviewEnabled(ENV_ON), true);
-    assertEquals(isDraftPreviewEnabled({}), false);
+    assertEquals(isDraftPreviewEnabled({}), true);
   });
 
-  await t.step("matches request hosts verbatim, port + case", () => {
+  await t.step("matches non-local request hosts verbatim, port + case", () => {
     const env = { DECO_ALLOWED_PREVIEW_HOSTS: "fila.vtex.app, localhost:3100" };
     assertEquals(isDraftHostAllowed("FILA.VTEX.APP", env), true);
     assertEquals(isDraftHostAllowed("localhost:3100", env), true);
     assertEquals(isDraftHostAllowed("fila.com.br", env), false);
-    assertEquals(isDraftHostAllowed("localhost", env), false);
+    // The port is part of the exact match for a configured host.
+    assertEquals(isDraftHostAllowed("fila.vtex.app:80", env), false);
     assertEquals(isDraftHostAllowed(null, env), false);
+    // A non-local host is inert without config.
     assertEquals(isDraftHostAllowed("fila.vtex.app", {}), false);
+  });
+
+  await t.step("local dev hosts are always allowed, with any port", () => {
+    // No config, no site name: a dev server still previews out of the box.
+    assertEquals(isDraftHostAllowed("localhost", {}), true);
+    assertEquals(isDraftHostAllowed("localhost:8000", {}), true);
+    assertEquals(isDraftHostAllowed("127.0.0.1:3000", {}), true);
+    assertEquals(isDraftHostAllowed("my-site.localhost:5173", {}), true);
+    // IPv6 loopback: bracketed with/without a port, and the bare portless form.
+    assertEquals(isDraftHostAllowed("[::1]:8000", {}), true);
+    assertEquals(isDraftHostAllowed("[::1]", {}), true);
+    assertEquals(isDraftHostAllowed("::1", {}), true);
+    // Not actually loopback — must not be treated as local.
+    assertEquals(isDraftHostAllowed("localhost.evil.example", {}), false);
+    assertEquals(isDraftHostAllowed("notlocalhost", {}), false);
+    assertEquals(isDraftHostAllowed("[::2]:8000", {}), false);
+  });
+
+  await t.step("the kill switch disables local too", () => {
+    const env = { DECO_ALLOWED_PREVIEW_HOSTS: "none" };
+    assertEquals(isDraftPreviewEnabled(env), false);
+    assertEquals(isDraftHostAllowed("localhost:8000", env), false);
   });
 });
 
@@ -173,12 +199,15 @@ Deno.test("resolveDraftDecofile", async (t) => {
     ]);
   });
 
-  await t.step("is inert without a host allowlist — no fetch", async () => {
+  await t.step("is inert under the kill switch — no fetch", async () => {
+    // resolveDraftDecofile is origin-gated (the request-host gate lives in
+    // resolveDraftForRequest), so the "inert / no network" case at this level is
+    // the kill switch, which disables preview entirely — local included.
     clearDraftCache();
     let called = false;
     const blocks = await resolveDraftDecofile({
       pointer: `${P}@v1`,
-      env: {},
+      env: { DECO_ALLOWED_PREVIEW_HOSTS: "none" },
       fetchImpl: (() => {
         called = true;
         return Promise.resolve(jsonResponse({}));
@@ -367,6 +396,67 @@ Deno.test("deco-hosted preview domain (setDecoSiteHost)", async (t) => {
     }
   });
 
+  await t.step("infers the per-developer <env>--<site>.deco.host dev tunnel", () => {
+    setDecoSiteHost("farmrio");
+    try {
+      assertEquals(isDraftPreviewEnabled({}), true);
+      // The host `deno task start` actually serves on (see daemon/tunnel.ts).
+      assertEquals(
+        isDraftHostAllowed("tavano--farmrio.deco.host", {}),
+        true,
+      );
+      // The `.deco.site` simpletunnel fallback is deliberately NOT matched: it
+      // shares the apex with the stable production domain, so matching it would
+      // widen the gate on production, not just dev machines.
+      assertEquals(
+        isDraftHostAllowed("tavano--farmrio.deco.site", {}),
+        false,
+      );
+      // Any developer env label — matched as a single label, like the deploy hash.
+      assertEquals(
+        isDraftHostAllowed("other-dev--farmrio.deco.host", {}),
+        true,
+      );
+      // Wrong site segment.
+      assertEquals(
+        isDraftHostAllowed("tavano--other.deco.host", {}),
+        false,
+      );
+      // Missing the `--` boundary (would collide with the exact <site>.deco.site).
+      assertEquals(
+        isDraftHostAllowed("farmrio.deco.host", {}),
+        false,
+      );
+      // The env must be a single label — no nested subdomain under deco.host.
+      assertEquals(
+        isDraftHostAllowed("x.evil--farmrio.deco.host", {}),
+        false,
+      );
+      // Empty env label.
+      assertEquals(
+        isDraftHostAllowed("--farmrio.deco.host", {}),
+        false,
+      );
+      // Wrong apex.
+      assertEquals(
+        isDraftHostAllowed("tavano--farmrio.deco.example", {}),
+        false,
+      );
+    } finally {
+      setDecoSiteHost(null);
+    }
+  });
+
+  await t.step("the kill switch disables the dev tunnel too", () => {
+    setDecoSiteHost("farmrio");
+    try {
+      const env = { DECO_ALLOWED_PREVIEW_HOSTS: "none" };
+      assertEquals(isDraftHostAllowed("tavano--farmrio.deco.host", env), false);
+    } finally {
+      setDecoSiteHost(null);
+    }
+  });
+
   await t.step("infers the per-deploy envs-<site>--<hash>.decocdn.com host", () => {
     setDecoSiteHost("als-storefront");
     try {
@@ -452,21 +542,27 @@ Deno.test("deco-hosted preview domain (setDecoSiteHost)", async (t) => {
     }
   });
 
-  await t.step("a blank/null site name registers no host", () => {
+  await t.step("a blank/null site name infers no deco-hosted host", () => {
     setDecoSiteHost("   ");
     try {
-      assertEquals(isDraftPreviewEnabled({}), false);
+      // No `<site>.deco.site` inferred; only local dev stays allowed.
+      assertEquals(isDraftHostAllowed("anything.deco.site", {}), false);
+      assertEquals(isDraftHostAllowed("preview.example", {}), false);
+      assertEquals(isDraftHostAllowed("localhost:8000", {}), true);
     } finally {
       setDecoSiteHost(null);
     }
   });
 
-  await t.step("undefined (the random dev fallback) registers no host", () => {
+  await t.step("undefined (the random dev fallback) infers no host", () => {
     // runtime/mod.ts passes `resolvedSite` (undefined when the site name falls
-    // back to randomSiteName) straight through — an unnamed site is not armed.
+    // back to randomSiteName) straight through — an unnamed site infers no
+    // deco-hosted domain, though local dev is still allowed.
     setDecoSiteHost(undefined);
     try {
-      assertEquals(isDraftPreviewEnabled({}), false);
+      assertEquals(isDraftHostAllowed("anything.deco.site", {}), false);
+      assertEquals(isDraftHostAllowed("preview.example", {}), false);
+      assertEquals(isDraftHostAllowed("localhost:8000", {}), true);
     } finally {
       setDecoSiteHost(null);
     }

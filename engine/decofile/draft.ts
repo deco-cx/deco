@@ -16,12 +16,15 @@ import { deleteCookie, setCookie } from "@std/http";
  * request is done by the runtime (see `runtime/mod.ts`'s `prepareState`, which
  * swaps `state.release` for a `fromJSON`-backed provider of the pulled draft).
  *
- * Inert unless `DECO_ALLOWED_PREVIEW_HOSTS` (or the site-declared preview
- * hosts) names the request's host: upgrading the package must never be enough
- * to start fetching from the network and rendering unpublished content.
- * Host-scoping (rather than a boolean) exists because one deployment commonly
- * serves several domains — the preview domain may render drafts while the
- * production domain, on the same build, must ignore a `?__draft=` entirely.
+ * Inert unless the request's host is a local dev origin, or is named by
+ * `DECO_ALLOWED_PREVIEW_HOSTS` (or the site-declared preview hosts), or is a
+ * deco-hosted domain inferred from the site name: upgrading the package must
+ * never be enough to start fetching from the network and rendering unpublished
+ * content on a production domain. Host-scoping (rather than a boolean) exists
+ * because one deployment commonly serves several domains — the preview domain
+ * may render drafts while the production domain, on the same build, must ignore
+ * a `?__draft=` entirely. `DECO_ALLOWED_PREVIEW_HOSTS=none` disables everything,
+ * including local.
  */
 
 /**
@@ -200,8 +203,11 @@ export function setDraftPreviewHosts(hosts: readonly unknown[]): void {
  *   - `envs-<site>--<hash>.decocdn.com` — the per-deploy preview URL, whose
  *     `<hash>` label changes every deploy (so it is matched as a PATTERN, never
  *     a fixed allowlist entry).
+ *   - `<env>--<site>.deco.host` — the per-developer dev tunnel that
+ *     `deno task start` serves on, whose `<env>` label varies per developer (so
+ *     it too is matched as a PATTERN — see `matchesDevTunnel`).
  *
- * Both are MERGED with the site-block/env list rather than replacing it: they
+ * All are MERGED with the site-block/env list rather than replacing it: they
  * are deco-operated infra, so a signed draft grant can preview there out of the
  * box, while a custom production domain — never inferred here — stays inert.
  * Fed from the trusted setup-time site name, never from the request or a draft.
@@ -224,6 +230,57 @@ const DEPLOY_PREVIEW_SUFFIX = ".decocdn.com";
 const DEPLOY_HASH_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 
 /**
+ * Apex of deco's per-developer dev tunnel: `deno task start` exposes the local
+ * server at `<env>--<site>.deco.host` (the `decoHost` tunnel, the default — see
+ * `daemon/tunnel.ts` and `DECO_HOST`).
+ *
+ * Deliberately NOT the simpletunnel fallback `<env>--<site>.deco.site`: `.deco.site`
+ * is also the STABLE PRODUCTION apex (`<site>.deco.site`, the exact host
+ * previewConfig already infers), so matching `--<site>.deco.site` here would
+ * widen the draft gate on production deployments, not just dev machines. The
+ * fallback is a rare `DECO_HOST=false` opt-out; those devs can preview via
+ * localhost or an explicit `DECO_ALLOWED_PREVIEW_HOSTS` entry instead.
+ */
+const DEV_TUNNEL_APEX = ".deco.host";
+
+/**
+ * Whether `host` is this site's dev tunnel: `<env>--<site>.deco.host`.
+ *
+ * The `<env>` label is per-developer (`tavano` in `tavano--farmrio.deco.host`),
+ * so — like the per-deploy `<hash>` — it can't be a fixed allowlist entry, but
+ * it is pinned to a SINGLE DNS label ahead of the literal `--<site>` boundary.
+ * Nothing under an attacker-controlled subdomain can widen the match: the site
+ * segment and apex are fixed, and the env segment carries no dots. The apex is
+ * dev-only (`.deco.host`, never the production `.deco.site`), so this stays
+ * inert on production.
+ */
+function matchesDevTunnel(host: string, site: string | null): boolean {
+  if (!site) return false;
+  const suffix = `--${site}${DEV_TUNNEL_APEX}`; // e.g. `--farmrio.deco.host`
+  if (!host.endsWith(suffix)) return false;
+  const envLabel = host.slice(0, -suffix.length);
+  return DEPLOY_HASH_RE.test(envLabel);
+}
+
+/**
+ * Whether `host` is a local dev origin — `localhost`, either loopback IP
+ * (`127.0.0.1` / IPv6 `::1`), or any `*.localhost` subdomain, with an optional
+ * port. These are ALWAYS allowed to render drafts (unless the kill switch is
+ * set): a dev server should preview a draft with zero config, and a loopback
+ * host is only reachable on the dev machine, so it adds no production blast
+ * radius. The signed `?__draft=` grant remains the actual capability.
+ */
+function isLocalDevHost(host: string): boolean {
+  // IPv6 loopback arrives bracketed (`[::1]` / `[::1]:port`) or, portless and
+  // unbracketed, as `::1`; the port-splitting below would mangle both.
+  if (host === "::1" || host === "[::1]" || host.startsWith("[::1]:")) {
+    return true;
+  }
+  const h = host.split(":")[0]; // strip an optional port
+  return h === "localhost" || h === "127.0.0.1" || h.endsWith(".localhost");
+}
+
+/**
  * The resolved preview gate: the exact-match host list, the per-deploy preview
  * pattern, and the kill switch — all in one read so callers see a consistent
  * view.
@@ -234,9 +291,10 @@ const DEPLOY_HASH_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
  * deploy, add a machine-specific port) — not the primary configuration.
  *
  * The deco-hosted domains inferred from the site name (`<site>.deco.site` as an
- * exact host, `envs-<site>--<hash>.decocdn.com` as `deployPreviewPrefix`) are
- * always ADDED on top, so a signed draft grant can preview on deco-operated
- * infra without any per-site config.
+ * exact host, `envs-<site>--<hash>.decocdn.com` as `deployPreviewPrefix`, and
+ * the `<env>--<site>.deco.host` dev tunnel via `site`) are always ADDED
+ * on top, so a signed draft grant can preview on deco-operated infra — including
+ * the local dev tunnel — without any per-site config.
  *
  * The sentinel `DECO_ALLOWED_PREVIEW_HOSTS=none` is a KILL SWITCH: it disables
  * preview entirely — the inferred hosts and the site block included — so a bad
@@ -245,19 +303,36 @@ const DEPLOY_HASH_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 function previewConfig(env: EnvLike): {
   hosts: string[];
   deployPreviewPrefix: string | null;
+  /** Resolved site name, for the dev-tunnel match (`matchesDevTunnel`); null
+   * when unset or killed. */
+  site: string | null;
+  /** Whether local dev hosts (see `isLocalDevHost`) may render drafts. Always
+   * true except under the `none` kill switch. */
+  localAllowed: boolean;
 } {
   const fromEnv = (env.DECO_ALLOWED_PREVIEW_HOSTS ?? "")
     .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
-  if (fromEnv.includes("none")) return { hosts: [], deployPreviewPrefix: null };
+  if (fromEnv.includes("none")) {
+    return { hosts: [], deployPreviewPrefix: null, site: null, localAllowed: false };
+  }
   const configured = fromEnv.length > 0 ? fromEnv : (G.__decoDraftHosts ?? []);
   const site = G.__decoSite;
-  if (!site) return { hosts: configured, deployPreviewPrefix: null };
+  if (!site) {
+    return {
+      hosts: configured,
+      deployPreviewPrefix: null,
+      site: null,
+      localAllowed: true,
+    };
+  }
   const decoSite = `${site}.deco.site`;
   return {
     hosts: configured.includes(decoSite) ? configured : [...configured, decoSite],
     deployPreviewPrefix: `envs-${site}--`,
+    site,
+    localAllowed: true,
   };
 }
 
@@ -277,19 +352,18 @@ function matchesDeployPreview(host: string, prefix: string | null): boolean {
   return DEPLOY_HASH_RE.test(hash);
 }
 
-/** Hosts allowed to render drafts by an exact match. */
-function readAllowedHosts(env: EnvLike): string[] {
-  return previewConfig(env).hosts;
-}
-
 /**
  * Whether `host` (as seen on the request) may render drafts.
  *
- * Exact-matched against the allowlist (port included — local dev is
- * `localhost:3100`, not `localhost`), then against the per-deploy preview
- * pattern. The header is spoofable by a direct-to-origin request, but the draft
- * id is the actual capability; host-scoping bounds blast radius (production
- * domains stay inert), it is not a secret.
+ * Local dev hosts are always allowed (see `isLocalDevHost`) so a dev server
+ * previews with no config, as is this site's dev tunnel
+ * (`<env>--<site>.deco.host`, see `matchesDevTunnel`) — the host
+ * `deno task start` actually serves on. Otherwise the host is exact-matched
+ * against the allowlist (port included — a configured `localhost:3100` is
+ * matched here, not by the local rule) and the per-deploy preview pattern. The
+ * header is spoofable by a direct-to-origin request, but the draft id is the
+ * actual capability; host-scoping bounds blast radius (production domains stay
+ * inert), it is not a secret.
  */
 export function isDraftHostAllowed(
   host: string | null | undefined,
@@ -298,20 +372,24 @@ export function isDraftHostAllowed(
   if (!host) return false;
   const h = host.trim().toLowerCase();
   const cfg = previewConfig(envOrDeno(env));
-  return cfg.hosts.includes(h) ||
-    matchesDeployPreview(h, cfg.deployPreviewPrefix);
+  return (cfg.localAllowed && isLocalDevHost(h)) ||
+    cfg.hosts.includes(h) ||
+    matchesDeployPreview(h, cfg.deployPreviewPrefix) ||
+    matchesDevTunnel(h, cfg.site);
 }
 
 /**
  * True when any host is allowed to preview. A cheap read callers use to gate
- * BEFORE touching the network. A site with no config but a resolved name is now
- * enabled here (its inferred `<site>.deco.site` / `envs-<site>--*.decocdn.com`
- * hosts); `DECO_ALLOWED_PREVIEW_HOSTS=none` forces it back to fully inert. The
+ * BEFORE touching the network. Local dev hosts are always allowed, so this is
+ * effectively always on (a site with a resolved name additionally enables its
+ * inferred `<site>.deco.site` / `envs-<site>--*.decocdn.com` hosts);
+ * `DECO_ALLOWED_PREVIEW_HOSTS=none` forces it back to fully inert. The
  * per-request host match happens later, in `isDraftHostAllowed`.
  */
 export function isDraftPreviewEnabled(env?: EnvLike): boolean {
   const cfg = previewConfig(envOrDeno(env));
-  return cfg.hosts.length > 0 || cfg.deployPreviewPrefix !== null;
+  return cfg.localAllowed || cfg.hosts.length > 0 ||
+    cfg.deployPreviewPrefix !== null;
 }
 
 /**
@@ -366,7 +444,7 @@ export async function resolveDraftDecofile(
   options: ResolveDraftOptions,
 ): Promise<Record<string, unknown> | null> {
   const env = envOrDeno(options.env);
-  if (readAllowedHosts(env).length === 0) return null;
+  if (!isDraftPreviewEnabled(env)) return null;
 
   const parsed = parseDraftPointer(options.pointer);
   if (!parsed) return null;
@@ -485,7 +563,7 @@ export function applyDraftCookie(
     return;
   }
   const e = envOrDeno(env);
-  if (readAllowedHosts(e).length === 0) return;
+  if (!isDraftPreviewEnabled(e)) return;
   if (!isDraftHostAllowed(draftHostFromRequest(request), e)) return;
   setCookie(headers, {
     name: DRAFT_COOKIE_NAME,
@@ -517,7 +595,7 @@ export async function resolveDraftForRequest(
   options: ResolveDraftForRequestOptions = {},
 ): Promise<Record<string, unknown> | null> {
   const env = envOrDeno(options.env);
-  if (readAllowedHosts(env).length === 0) return null;
+  if (!isDraftPreviewEnabled(env)) return null;
   const pointer = draftPointerFromRequest(request);
   if (!pointer) return null;
   if (!isDraftHostAllowed(draftHostFromRequest(request), env)) return null;
