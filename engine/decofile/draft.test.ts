@@ -162,9 +162,14 @@ Deno.test("gating", async (t) => {
     assertEquals(isDraftHostAllowed("localhost:8000", {}), true);
     assertEquals(isDraftHostAllowed("127.0.0.1:3000", {}), true);
     assertEquals(isDraftHostAllowed("my-site.localhost:5173", {}), true);
+    // IPv6 loopback: bracketed with/without a port, and the bare portless form.
+    assertEquals(isDraftHostAllowed("[::1]:8000", {}), true);
+    assertEquals(isDraftHostAllowed("[::1]", {}), true);
+    assertEquals(isDraftHostAllowed("::1", {}), true);
     // Not actually loopback — must not be treated as local.
     assertEquals(isDraftHostAllowed("localhost.evil.example", {}), false);
     assertEquals(isDraftHostAllowed("notlocalhost", {}), false);
+    assertEquals(isDraftHostAllowed("[::2]:8000", {}), false);
   });
 
   await t.step("the kill switch disables local too", () => {
@@ -400,10 +405,12 @@ Deno.test("deco-hosted preview domain (setDecoSiteHost)", async (t) => {
         isDraftHostAllowed("tavano--farmrio.deco.host", {}),
         true,
       );
-      // The simpletunnel fallback apex.
+      // The `.deco.site` simpletunnel fallback is deliberately NOT matched: it
+      // shares the apex with the stable production domain, so matching it would
+      // widen the gate on production, not just dev machines.
       assertEquals(
         isDraftHostAllowed("tavano--farmrio.deco.site", {}),
-        true,
+        false,
       );
       // Any developer env label — matched as a single label, like the deploy hash.
       assertEquals(

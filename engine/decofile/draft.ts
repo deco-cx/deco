@@ -203,7 +203,7 @@ export function setDraftPreviewHosts(hosts: readonly unknown[]): void {
  *   - `envs-<site>--<hash>.decocdn.com` — the per-deploy preview URL, whose
  *     `<hash>` label changes every deploy (so it is matched as a PATTERN, never
  *     a fixed allowlist entry).
- *   - `<env>--<site>.deco.{host,site}` — the per-developer dev tunnel that
+ *   - `<env>--<site>.deco.host` — the per-developer dev tunnel that
  *     `deno task start` serves on, whose `<env>` label varies per developer (so
  *     it too is matched as a PATTERN — see `matchesDevTunnel`).
  *
@@ -230,41 +230,52 @@ const DEPLOY_PREVIEW_SUFFIX = ".decocdn.com";
 const DEPLOY_HASH_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 
 /**
- * Apex domains of deco's per-developer dev tunnel: `deno task start` exposes the
- * local server at `<env>--<site>.deco.host` (the `decoHost` tunnel) or
- * `<env>--<site>.deco.site` (the simpletunnel fallback). See `daemon/tunnel.ts`.
+ * Apex of deco's per-developer dev tunnel: `deno task start` exposes the local
+ * server at `<env>--<site>.deco.host` (the `decoHost` tunnel, the default — see
+ * `daemon/tunnel.ts` and `DECO_HOST`).
+ *
+ * Deliberately NOT the simpletunnel fallback `<env>--<site>.deco.site`: `.deco.site`
+ * is also the STABLE PRODUCTION apex (`<site>.deco.site`, the exact host
+ * previewConfig already infers), so matching `--<site>.deco.site` here would
+ * widen the draft gate on production deployments, not just dev machines. The
+ * fallback is a rare `DECO_HOST=false` opt-out; those devs can preview via
+ * localhost or an explicit `DECO_ALLOWED_PREVIEW_HOSTS` entry instead.
  */
-const DEV_TUNNEL_APEXES = [".deco.host", ".deco.site"];
+const DEV_TUNNEL_APEX = ".deco.host";
 
 /**
- * Whether `host` is this site's dev tunnel: `<env>--<site>.deco.{host,site}`.
+ * Whether `host` is this site's dev tunnel: `<env>--<site>.deco.host`.
  *
  * The `<env>` label is per-developer (`tavano` in `tavano--farmrio.deco.host`),
  * so — like the per-deploy `<hash>` — it can't be a fixed allowlist entry, but
  * it is pinned to a SINGLE DNS label ahead of the literal `--<site>` boundary.
  * Nothing under an attacker-controlled subdomain can widen the match: the site
- * segment and apex are fixed, and the env segment carries no dots.
+ * segment and apex are fixed, and the env segment carries no dots. The apex is
+ * dev-only (`.deco.host`, never the production `.deco.site`), so this stays
+ * inert on production.
  */
 function matchesDevTunnel(host: string, site: string | null): boolean {
   if (!site) return false;
-  for (const apex of DEV_TUNNEL_APEXES) {
-    const suffix = `--${site}${apex}`; // e.g. `--farmrio.deco.host`
-    if (!host.endsWith(suffix)) continue;
-    const envLabel = host.slice(0, -suffix.length);
-    if (DEPLOY_HASH_RE.test(envLabel)) return true;
-  }
-  return false;
+  const suffix = `--${site}${DEV_TUNNEL_APEX}`; // e.g. `--farmrio.deco.host`
+  if (!host.endsWith(suffix)) return false;
+  const envLabel = host.slice(0, -suffix.length);
+  return DEPLOY_HASH_RE.test(envLabel);
 }
 
 /**
- * Whether `host` is a local dev origin — `localhost`, the loopback IP, or any
- * `*.localhost` subdomain, with an optional port. These are ALWAYS allowed to
- * render drafts (unless the kill switch is set): a dev server should preview a
- * draft with zero config, and a loopback host is only reachable on the dev
- * machine, so it adds no production blast radius. The signed `?__draft=` grant
- * remains the actual capability.
+ * Whether `host` is a local dev origin — `localhost`, either loopback IP
+ * (`127.0.0.1` / IPv6 `::1`), or any `*.localhost` subdomain, with an optional
+ * port. These are ALWAYS allowed to render drafts (unless the kill switch is
+ * set): a dev server should preview a draft with zero config, and a loopback
+ * host is only reachable on the dev machine, so it adds no production blast
+ * radius. The signed `?__draft=` grant remains the actual capability.
  */
 function isLocalDevHost(host: string): boolean {
+  // IPv6 loopback arrives bracketed (`[::1]` / `[::1]:port`) or, portless and
+  // unbracketed, as `::1`; the port-splitting below would mangle both.
+  if (host === "::1" || host === "[::1]" || host.startsWith("[::1]:")) {
+    return true;
+  }
   const h = host.split(":")[0]; // strip an optional port
   return h === "localhost" || h === "127.0.0.1" || h.endsWith(".localhost");
 }
@@ -281,7 +292,7 @@ function isLocalDevHost(host: string): boolean {
  *
  * The deco-hosted domains inferred from the site name (`<site>.deco.site` as an
  * exact host, `envs-<site>--<hash>.decocdn.com` as `deployPreviewPrefix`, and
- * the `<env>--<site>.deco.{host,site}` dev tunnel via `site`) are always ADDED
+ * the `<env>--<site>.deco.host` dev tunnel via `site`) are always ADDED
  * on top, so a signed draft grant can preview on deco-operated infra — including
  * the local dev tunnel — without any per-site config.
  *
@@ -346,7 +357,7 @@ function matchesDeployPreview(host: string, prefix: string | null): boolean {
  *
  * Local dev hosts are always allowed (see `isLocalDevHost`) so a dev server
  * previews with no config, as is this site's dev tunnel
- * (`<env>--<site>.deco.{host,site}`, see `matchesDevTunnel`) — the host
+ * (`<env>--<site>.deco.host`, see `matchesDevTunnel`) — the host
  * `deno task start` actually serves on. Otherwise the host is exact-matched
  * against the allowlist (port included — a configured `localhost:3100` is
  * matched here, not by the local rule) and the per-deploy preview pattern. The
