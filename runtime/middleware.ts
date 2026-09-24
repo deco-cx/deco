@@ -5,6 +5,7 @@ import {
   DECO_MATCHER_PREFIX,
 } from "../blocks/matcher.ts";
 import { PAGE_CACHE_ALLOWED_KEY } from "../blocks/utils.tsx";
+import { ifNoneMatchSatisfied, weakEtagFor } from "./conditionalGet.ts";
 import { Context, context } from "../deco.ts";
 import {
   type Exception,
@@ -543,11 +544,21 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         ? buildDraftBadge(draftPointer)
         : null;
 
+      // Conditional GET: cacheable HTML gets an ETag so CDN revalidations
+      // (once per max-age, per variant, per POP) can answer 304 with no body
+      // instead of re-streaming an unchanged render. Gated to cacheable 200 HTML
+      // — a no-store response is never revalidated, so an ETag on it is moot.
+      const conditionalGetEnabled = isPageCacheAllowed &&
+        responseStatus === 200 && isHtmlResponse &&
+        !(newHeaders.get("Cache-Control") ?? "").includes("no-store");
+
       // for some reason hono deletes content-type when response is not fresh.
       // which means that sometimes it will fail as headers are immutable.
       // so I'm first setting it to undefined and just then set the entire response again
       ctx.res = undefined;
-      if (cookieScript || draftBadge) {
+      // Buffer the body when we inject into it OR when we need to hash it for a
+      // conditional GET; streaming is preserved for every other response.
+      if (cookieScript || draftBadge || conditionalGetEnabled) {
         let html = await initialResponse.text();
         if (cookieScript) {
           // Script captured the framework cookies; remove the now-redundant
@@ -560,10 +571,19 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
           html = injectScriptIntoHtml(html, cookieScript);
         }
         if (draftBadge) html = injectBeforeBodyEnd(html, draftBadge);
-        ctx.res = new Response(html, {
-          status: responseStatus,
-          headers: newHeaders,
-        });
+
+        let notModified = false;
+        if (conditionalGetEnabled) {
+          const etag = await weakEtagFor(html);
+          newHeaders.set("ETag", etag);
+          const ifNoneMatch = ctx.req.raw.headers.get("if-none-match");
+          notModified = ifNoneMatch != null &&
+            ifNoneMatchSatisfied(ifNoneMatch, etag);
+        }
+
+        ctx.res = notModified
+          ? new Response(null, { status: 304, headers: newHeaders })
+          : new Response(html, { status: responseStatus, headers: newHeaders });
       } else {
         ctx.res = new Response(initialResponse.body, {
           status: responseStatus,
