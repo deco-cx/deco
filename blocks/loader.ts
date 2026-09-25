@@ -6,7 +6,7 @@ import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { singleFlight } from "../engine/core/utils.ts";
 import type { DecofileProvider } from "../engine/decofile/provider.ts";
-import { HttpError } from "../engine/errors.ts";
+
 import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import type { State } from "../mod.ts";
 import { logger } from "../observability/otel/config.ts";
@@ -106,9 +106,6 @@ export const wrapCaughtErrors = async <
   try {
     return await ctx.next!();
   } catch (err) {
-    if (err instanceof HttpError) {
-      throw err;
-    }
     return new Proxy({}, {
       get: (_target, prop) => {
         if (prop === "then") {
