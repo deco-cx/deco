@@ -45,6 +45,21 @@ export { type DecoRouteState } from "./runtime/middleware.ts";
 export * from "./runtime/mod.ts";
 export { Deco } from "./runtime/mod.ts";
 export type { PageData } from "./runtime/mod.ts";
+export {
+  buildLazyUrl,
+  sectionModuleLookup,
+  serializeResolvedSection,
+} from "./runtime/routes/serialize-section.ts";
+export { computeRenderCb } from "./hooks/useSection.ts";
+export type { RenderCbInput } from "./hooks/useSection.ts";
+export type {
+  LazyUrlContext,
+  RenderJson,
+  ResolvedSection,
+  SectionJsonModule,
+  SerializeContext,
+  SerializedSection,
+} from "./runtime/routes/serialize-section.ts";
 export * from "./types.ts";
 export { allowCorsFor } from "./utils/http.ts";
 export type { StreamProps } from "./utils/invoke.ts";
