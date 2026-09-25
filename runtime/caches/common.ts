@@ -46,6 +46,15 @@ export const withInstrumentation = (
             const result = getCacheStatus(isMatch);
 
             span.setAttribute("cache_status", result);
+            if (isMatch) {
+              const cl = isMatch.headers.get("Content-Length");
+              if (cl) span.setAttribute("content_length", parseInt(cl));
+              const tier = isMatch.headers.get("X-Cache-Tier");
+              if (tier) {
+                span.setAttribute("cache_tier", parseInt(tier));
+                isMatch.headers.delete("X-Cache-Tier");
+              }
+            }
             cacheHit.add(1, {
               result,
               engine,
