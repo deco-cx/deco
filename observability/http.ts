@@ -1,9 +1,16 @@
-import { ValueType } from "../deps.ts";
+import {
+  ATTR_HTTP_REQUEST_METHOD,
+  ATTR_HTTP_RESPONSE_STATUS_CODE,
+  ATTR_HTTP_ROUTE,
+  METRIC_HTTP_SERVER_REQUEST_DURATION,
+  ValueType,
+} from "../deps.ts";
 import { meter } from "./otel/metrics.ts";
 
-const httpDuration = meter.createHistogram("http_request_duration", {
-  description: "http request duration",
-  unit: "ms",
+// OTel semconv: name `http.server.request.duration`, unit seconds.
+const httpDuration = meter.createHistogram(METRIC_HTTP_SERVER_REQUEST_DURATION, {
+  description: "Duration of HTTP server requests.",
+  unit: "s",
   valueType: ValueType.DOUBLE,
 });
 /**
@@ -12,10 +19,10 @@ const httpDuration = meter.createHistogram("http_request_duration", {
 export const startObserve = () => {
   const start = performance.now();
   return (method: string, path: string, status: number) => {
-    httpDuration.record(Math.round(performance.now() - start), {
-      "http.method": method,
-      "http.route": path,
-      "http.response.status": `${status}`,
+    httpDuration.record((performance.now() - start) / 1000, {
+      [ATTR_HTTP_REQUEST_METHOD]: method,
+      [ATTR_HTTP_ROUTE]: path,
+      [ATTR_HTTP_RESPONSE_STATUS_CODE]: status,
     });
   };
 };
