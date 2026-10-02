@@ -577,3 +577,46 @@ Deno.test("aborted reads must not poison the shared memo", async (t) => {
     },
   );
 });
+
+Deno.test("resolve reuses the merged resolvables while the release state is unchanged", async () => {
+  // `{ ...state, ...ownResolvables }` copies the whole decofile; `resolve` runs
+  // many times per request, so the merge must only be redone when the release
+  // hands back a different state object.
+  const seen: unknown[] = [];
+  const resolvers = {
+    capture: (_props: unknown, ctx: BaseContext) => {
+      seen.push(ctx.resolvables);
+      return ctx.resolvables;
+    },
+  } as unknown as ResolverMap;
+  let state: Record<string, unknown> = {
+    block: { __resolveType: "capture" },
+    shared: "from-release",
+  };
+  const release = {
+    state: () => Promise.resolve(state),
+    revision: () => Promise.resolve(String(Object.keys(state).length)),
+    onChange: () => ({ [Symbol.dispose]: () => {} }),
+  } as unknown as ConstructorParameters<typeof ReleaseResolver>[0]["release"];
+  const resolver = new ReleaseResolver<BaseContext>({
+    release,
+    resolvers,
+    resolvables: { shared: "from-app", own: "app-only" },
+  });
+
+  const first = await resolver.resolve<Record<string, unknown>>("block", {});
+  await resolver.resolve("block", {});
+  assertEquals(seen[0] === seen[1], true, "same state → same merged object");
+  assertEquals(
+    first.shared,
+    "from-app",
+    "own resolvables win over the release",
+  );
+  assertEquals(first.own, "app-only");
+
+  state = { ...state, added: "new-block" };
+  const next = await resolver.resolve<Record<string, unknown>>("block", {});
+  assertEquals(seen[2] === seen[0], false, "new state → merge is redone");
+  assertEquals(next.added, "new-block");
+  assertEquals(next.shared, "from-app");
+});
