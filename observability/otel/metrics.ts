@@ -3,9 +3,11 @@ import {
   MeterProvider,
   OTLPMetricExporter,
   PeriodicExportingMetricReader,
+  registerInstrumentations,
   View,
 } from "../../deps.ts";
 import { OTEL_IS_ENABLED, resource } from "./config.ts";
+import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 
 export const OTEL_ENABLE_EXTRA_METRICS: boolean = Deno.env.has(
   "OTEL_ENABLE_EXTRA_METRICS",
@@ -63,3 +65,11 @@ if (OTEL_IS_ENABLED) {
 }
 
 export const meter: IMeter = meterProvider.getMeter("deco");
+
+// Must get deco's meterProvider explicitly: it is not the global one, so
+// without this the instrumentation records into a no-op meter and
+// `deno.memory_usage` is never exported.
+registerInstrumentations({
+  instrumentations: [new DenoRuntimeInstrumentation()],
+  meterProvider,
+});
