@@ -91,6 +91,14 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   private _cachedResolvers: ResolverMap<BaseContext> | null = null;
   private _resolveIdCounter = 0;
   /**
+   * `{ ...state, ...this.resolvables }` copies the whole decofile (thousands of
+   * keys) and `resolve` runs many times per request. The release hands back the
+   * same state object until it changes, so the merge is reused while that
+   * identity holds. Nothing writes to `ctx.resolvables`, so sharing it is safe.
+   */
+  private _merged: { state: ResolvableMap; merged: ResolvableMap } | null =
+    null;
+  /**
    * Subscription to the release's `onChange`. Kept so it can be disposed when
    * this resolver is replaced — otherwise every superseded resolver stays
    * reachable from the provider's listener list and leaks its whole
@@ -196,6 +204,13 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     });
   };
 
+  private mergeWithOwn(state: ResolvableMap): ResolvableMap {
+    if (this._merged?.state !== state) {
+      this._merged = { state, merged: { ...state, ...this.resolvables } };
+    }
+    return this._merged.merged;
+  }
+
   public resolve = async <T = any>(
     typeOrResolvable: string | Resolvable<T>,
     context: Omit<TContext, keyof BaseContext>,
@@ -218,7 +233,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     }
 
     const mergedResolvables = this.resolvables
-      ? { ...resolvables, ...this.resolvables }
+      ? this.mergeWithOwn(resolvables)
       : resolvables;
     const nresolvables = options?.overrides
       ? withOverrides(options.overrides, mergedResolvables)
