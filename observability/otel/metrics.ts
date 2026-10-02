@@ -69,7 +69,9 @@ export const meter: IMeter = meterProvider.getMeter("deco");
 // Must get deco's meterProvider explicitly: it is not the global one, so
 // without this the instrumentation records into a no-op meter and
 // `deno.memory_usage` is never exported.
-registerInstrumentations({
-  instrumentations: [new DenoRuntimeInstrumentation()],
-  meterProvider,
-});
+if (OTEL_IS_ENABLED) {
+  registerInstrumentations({
+    instrumentations: [new DenoRuntimeInstrumentation()],
+    meterProvider,
+  });
+}
