@@ -2,7 +2,9 @@ import { debounce } from "@std/async/debounce";
 import { equal } from "@std/assert/equal";
 import { extname } from "@std/path";
 import { join } from "@std/path";
-import { decompress } from "npm:brotli@1.3.3";
+// node:zlib, not npm:brotli: importing that package also loads its emscripten
+// encoder, which reserves 304 MiB (TOTAL_MEMORY) at module load in every pod.
+import { brotliDecompressSync } from "node:zlib";
 import { exists } from "../../utils/filesystem.ts";
 import { stableStringify, stringifyForWrite } from "../../utils/json.ts";
 import { MurmurHash3 } from "../../utils/hasher.ts";
@@ -48,7 +50,7 @@ const readAndDecompressFile = async (filePath: string): Promise<Decofile> => {
       atob(base64Content),
       (c) => c.charCodeAt(0),
     );
-    const decompressed = decompress(compressedData);
+    const decompressed = brotliDecompressSync(compressedData);
     const textDecoder = new TextDecoder();
     const jsonString = textDecoder.decode(decompressed);
     return JSON.parse(jsonString) as Decofile;
