@@ -131,6 +131,10 @@ export const watchMeta = async (signal?: AbortSignal) => {
 
       dispatchWorkerState("updating");
       console.error(error);
+      // Backoff to avoid a tight retry spin when the worker fetch fails fast
+      // (e.g. connection refused mid-restart); without this, the loop pegs CPU
+      // and floods stderr until a supervisor kills the daemon.
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
 
