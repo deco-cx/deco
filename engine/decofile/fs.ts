@@ -2,7 +2,9 @@ import { debounce } from "@std/async/debounce";
 import { equal } from "@std/assert/equal";
 import { extname } from "@std/path";
 import { join } from "@std/path";
-import { decompress } from "npm:brotli@1.3.3";
+// node:zlib, not npm:brotli: importing that package also loads its emscripten
+// encoder, which reserves 304 MiB (TOTAL_MEMORY) at module load in every pod.
+import { brotliDecompressSync } from "node:zlib";
 import { exists } from "../../utils/filesystem.ts";
 import { stableStringify, stringifyForWrite } from "../../utils/json.ts";
 import { MurmurHash3 } from "../../utils/hasher.ts";
@@ -48,7 +50,7 @@ const readAndDecompressFile = async (filePath: string): Promise<Decofile> => {
       atob(base64Content),
       (c) => c.charCodeAt(0),
     );
-    const decompressed = decompress(compressedData);
+    const decompressed = brotliDecompressSync(compressedData);
     const textDecoder = new TextDecoder();
     const jsonString = textDecoder.decode(decompressed);
     return JSON.parse(jsonString) as Decofile;
@@ -68,11 +70,13 @@ export const newFsProviderFromPath = (
 ): DecofileProvider => {
   const onChangeCbs: OnChangeCallback[] = [];
   let previousState: unknown = null;
+  let watcher: Deno.FsWatcher | undefined;
+  let disposed = false;
 
   const doUpdateState = async () => {
     const state = await readAndDecompressFile(fullPath)
       .catch((_e) => null);
-    if (state === null) {
+    if (state === null || disposed) {
       return;
     }
     // Only update and notify if the state has actually changed
@@ -114,9 +118,11 @@ export const newFsProviderFromPath = (
       };
     },
   ).then((result) => {
+    // Inside the IIFE so a watchFs failure can't reject the decofile promise.
     (async () => {
-      const watcher = Deno.watchFs(fullPath);
-      for await (const _event of watcher) {
+      if (disposed) return;
+      const fsWatcher = watcher = Deno.watchFs(fullPath);
+      for await (const _event of fsWatcher) {
         updateState();
       }
     })();
@@ -165,6 +171,11 @@ export const newFsProviderFromPath = (
       };
     },
     revision: () => decofile.then((r) => r.revision),
+    dispose: () => {
+      disposed = true;
+      watcher?.close();
+      updateState.clear();
+    },
   };
 };
 export const newFsProvider = (
