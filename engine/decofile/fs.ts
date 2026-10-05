@@ -76,7 +76,7 @@ export const newFsProviderFromPath = (
   const doUpdateState = async () => {
     const state = await readAndDecompressFile(fullPath)
       .catch((_e) => null);
-    if (state === null) {
+    if (state === null || disposed) {
       return;
     }
     // Only update and notify if the state has actually changed
@@ -118,14 +118,14 @@ export const newFsProviderFromPath = (
       };
     },
   ).then((result) => {
-    if (!disposed) {
+    // Inside the IIFE so a watchFs failure can't reject the decofile promise.
+    (async () => {
+      if (disposed) return;
       const fsWatcher = watcher = Deno.watchFs(fullPath);
-      (async () => {
-        for await (const _event of fsWatcher) {
-          updateState();
-        }
-      })();
-    }
+      for await (const _event of fsWatcher) {
+        updateState();
+      }
+    })();
 
     return result;
   });
