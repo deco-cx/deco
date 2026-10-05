@@ -70,6 +70,8 @@ export const newFsProviderFromPath = (
 ): DecofileProvider => {
   const onChangeCbs: OnChangeCallback[] = [];
   let previousState: unknown = null;
+  let watcher: Deno.FsWatcher | undefined;
+  let disposed = false;
 
   const doUpdateState = async () => {
     const state = await readAndDecompressFile(fullPath)
@@ -116,12 +118,14 @@ export const newFsProviderFromPath = (
       };
     },
   ).then((result) => {
-    (async () => {
-      const watcher = Deno.watchFs(fullPath);
-      for await (const _event of watcher) {
-        updateState();
-      }
-    })();
+    if (!disposed) {
+      const fsWatcher = watcher = Deno.watchFs(fullPath);
+      (async () => {
+        for await (const _event of fsWatcher) {
+          updateState();
+        }
+      })();
+    }
 
     return result;
   });
@@ -167,6 +171,11 @@ export const newFsProviderFromPath = (
       };
     },
     revision: () => decofile.then((r) => r.revision),
+    dispose: () => {
+      disposed = true;
+      watcher?.close();
+      updateState.clear();
+    },
   };
 };
 export const newFsProvider = (

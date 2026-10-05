@@ -3,12 +3,7 @@ import { brotliCompressSync } from "node:zlib";
 import { encodeBase64 } from "@std/encoding/base64";
 import { newFsProviderFromPath } from "./fs.ts";
 
-// The fs provider starts a Deno.watchFs it never closes, so skip the sanitizers.
-Deno.test({
-  name: "reads a brotli + base64 decofile.bin (the production format)",
-  sanitizeResources: false,
-  sanitizeOps: false,
-}, async () => {
+Deno.test("reads a brotli + base64 decofile.bin (the production format)", async () => {
   const decofile = {
     site: { __resolveType: "site/apps/site.ts" },
     "page-home": { name: "Home", path: "/" },
