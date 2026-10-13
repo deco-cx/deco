@@ -1,10 +1,6 @@
-const inFuture = (maybeDate: string) => {
-  try {
-    return new Date(maybeDate) > new Date();
-  } catch {
-    return false;
-  }
-};
+import { inFuture } from "./utils.ts";
+
+const TIERED_CACHE_HEADER = "X-Cache-Tier";
 
 /**
  * Creates a lightweight Response from pre-read body bytes and headers.
@@ -85,9 +81,12 @@ export function createTieredCache(
           options?: CacheQueryOptions,
         ): Promise<Response | undefined> => {
           if (openedCaches.length === 1) {
-            return openedCaches[0].match(request, options);
+            const resp = await openedCaches[0].match(request, options);
+            resp?.headers.set(TIERED_CACHE_HEADER, "0");
+            return resp;
           }
           let matched: Response | undefined;
+          let matchedTierIndex: number | undefined;
           const indexOfCachesToUpdate: number[] = [];
           for (const [index, cache] of openedCaches.entries()) {
             matched = await cache.match(request, options).catch(() =>
@@ -104,6 +103,7 @@ export function createTieredCache(
 
             if (!isStale) {
               // found a match that is not stale, no need to check the other caches
+              matchedTierIndex = index;
               break;
             }
             indexOfCachesToUpdate.push(index);
@@ -111,29 +111,33 @@ export function createTieredCache(
 
           if (!matched) return undefined;
 
-          if (indexOfCachesToUpdate.length > 0) {
-            // Read body bytes ONCE instead of using Response.clone() per tier.
-            // clone() duplicates the full SharedArrayBuffer and creates tee'd streams
-            // that keep both original and clone alive until both are fully consumed.
-            // With fire-and-forget backfill, clones linger until all puts complete.
-            const body = await matched.arrayBuffer();
-            const { headers, status } = matched;
+          const tierIndex = matchedTierIndex ?? (openedCaches.length - 1);
 
-            // Backfill lower-priority tiers with independent responses from shared bytes
-            Promise.all(
-              indexOfCachesToUpdate.map((index) =>
-                openedCaches[index].put(
-                  request,
-                  responseFromBody(body, headers, status),
-                )
-              ),
-            ).catch(() => {});
-
-            // Return a new response for the caller (original body was consumed above)
-            return responseFromBody(body, headers, status);
+          if (indexOfCachesToUpdate.length === 0) {
+            // Fast path: L1 hit, nothing to backfill — avoid reading the body.
+            // Our cache implementations always return mutable headers so the set is safe.
+            matched.headers.set(TIERED_CACHE_HEADER, String(tierIndex));
+            return matched;
           }
 
-          return matched;
+          // Slow path: need to fan out to lower tiers — read body once.
+          const body = await matched.arrayBuffer();
+          const { headers, status } = matched;
+
+          // Backfill lower-priority tiers with independent responses from shared bytes.
+          Promise.all(
+            indexOfCachesToUpdate.map((index) =>
+              openedCaches[index].put(
+                request,
+                responseFromBody(body, headers, status),
+              )
+            ),
+          ).catch(() => {});
+
+          // Tag which tier served the hit.
+          const resp = responseFromBody(body, headers, status);
+          resp.headers.set(TIERED_CACHE_HEADER, String(tierIndex));
+          return resp;
         },
         /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/matchAll) */
         matchAll: (
