@@ -20,7 +20,7 @@ import {
   revalidationLocker,
 } from "../runtime/caches/mod.ts";
 import { inFuture } from "../runtime/caches/utils.ts";
-import type { DebugProperties } from "../utils/vary.ts";
+import { type DebugProperties, vary as newVary } from "../utils/vary.ts";
 import type { HttpContext } from "./handler.ts";
 import {
   applyProps,
@@ -286,7 +286,18 @@ const wrapLoader = (
         const request = new Request(cacheKeyUrl);
 
         const callHandlerAndCache = async () => {
-          const json = await handler(props, req, ctx);
+          // This loader's output is cached under its own key and served to
+          // every request on a hit, so its key owns correctness: loaders it
+          // invokes must not veto page caching (or push vary keys) only on a
+          // miss. Scope their vary to this run; debug entries still surface.
+          const scopedVary = {
+            ...newVary(),
+            debug: ctx.vary?.debug ?? newVary().debug,
+          };
+          const json = await RequestContext.bind(
+            { ...RequestContext.active(), vary: scopedVary },
+            () => handler(props, req, { ...ctx, vary: scopedVary }),
+          )();
 
           // Serialize and encode once on the main thread.
           const jsonStringEncoded = textEncoder.encode(JSON.stringify(json));
