@@ -19,7 +19,7 @@ import type {
   PreactComponent,
 } from "../engine/block.ts";
 import type { Resolver } from "../engine/core/resolver.ts";
-import { HttpError } from "../engine/errors.ts";
+
 
 /**
  * @widget none
@@ -155,9 +155,6 @@ export const createSectionBlock = (
       ).then((props) => {
         return useExportDefaultComponentWithProps(props, httpCtx);
       }).catch((err) => {
-        if (err instanceof HttpError) {
-          throw err;
-        }
         const allowErrorBoundary = withMainComponent(alwaysThrow(err), props);
         return allowErrorBoundary(
           props as unknown as TProps,
