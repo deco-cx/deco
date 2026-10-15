@@ -46,7 +46,12 @@ export async function brotli(req: Request, res: Response): Promise<Response> {
   const etag = headers.get("etag");
   if (etag && !etag.startsWith("W/")) headers.set("etag", `W/${etag}`);
 
-  return new Response(await compress(body, OPTIONS), { ...init, headers });
+  // Stream it (chunked, no content-length) like Deno's own gzip. With a known length,
+  // Cloudflare answers Range requests from non-br clients with slices of the br bytes.
+  return new Response(new Blob([await compress(body, OPTIONS)]).stream(), {
+    ...init,
+    headers,
+  });
 }
 
 const WRAPPED = Symbol.for("deco.originBrotli");
