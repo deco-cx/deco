@@ -40,7 +40,9 @@ export async function brotli(req: Request, res: Response): Promise<Response> {
   const headers = new Headers(res.headers);
   headers.set("content-encoding", "br");
   headers.delete("content-length");
-  headers.append("vary", "Accept-Encoding");
+  if (!/accept-encoding/i.test(headers.get("vary") ?? "")) {
+    headers.append("vary", "Accept-Encoding");
+  }
   const etag = headers.get("etag");
   if (etag && !etag.startsWith("W/")) headers.set("etag", `W/${etag}`);
 

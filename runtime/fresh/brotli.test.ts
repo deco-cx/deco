@@ -50,3 +50,11 @@ Deno.test("leaves responses alone when brotli does not apply", async () => {
     assertEquals(res.headers.get("content-encoding"), encoding);
   }
 });
+
+Deno.test("does not repeat an existing Vary: Accept-Encoding", async () => {
+  const res = await brotli(
+    req("gzip, br"),
+    html(HTML, { vary: "Accept-Language, Accept-Encoding" }),
+  );
+  assertEquals(res.headers.get("vary"), "Accept-Language, Accept-Encoding");
+});
