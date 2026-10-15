@@ -141,8 +141,11 @@ export const fnContextFromHttpContext = <TState = {}>(
   let device: Device | null = null;
   let isBot: boolean | null = null;
 
+  const scopedVary = RequestContext.active()?.vary;
+
   return {
     ...ctx?.context?.state?.global,
+    ...(scopedVary && { vary: scopedVary }),
     revision: ctx.revision,
     resolverId: ctx.resolverId,
     monitoring: ctx.monitoring,
