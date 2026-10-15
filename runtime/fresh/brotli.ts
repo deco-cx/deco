@@ -1,4 +1,5 @@
-import { brotliCompressSync, constants } from "node:zlib";
+import { brotliCompress, constants } from "node:zlib";
+import { promisify } from "node:util";
 
 // Deno compresses responses itself, but with the first encoding the request lists. Cloudflare
 // asks origins for "gzip, br", so every deco origin sends Cloudflare fast gzip: 35-80% bigger
@@ -12,6 +13,7 @@ const COMPRESSIBLE =
   /^(text\/(html|plain|css|javascript|xml)|application\/(json|javascript|xml|manifest\+json|ld\+json)|image\/svg\+xml)/;
 const OPTIONS = { params: { [constants.BROTLI_PARAM_QUALITY]: 5 } }; // ~1-3ms per page
 const MIN_BYTES = 1024;
+const compress = promisify(brotliCompress); // async: big JSON takes ~25ms, keep the event loop free
 
 const acceptsBrotli = (req: Request) =>
   (req.headers.get("accept-encoding") ?? "").split(",").some((part) => {
@@ -23,6 +25,7 @@ const acceptsBrotli = (req: Request) =>
 export async function brotli(req: Request, res: Response): Promise<Response> {
   if (
     req.method === "HEAD" || !res.body || res.headers.has("content-encoding") ||
+    res.status === 206 || res.headers.has("content-range") ||
     /no-transform/i.test(res.headers.get("cache-control") ?? "") ||
     !COMPRESSIBLE.test(res.headers.get("content-type") ?? "") ||
     !acceptsBrotli(req)
@@ -41,7 +44,7 @@ export async function brotli(req: Request, res: Response): Promise<Response> {
   const etag = headers.get("etag");
   if (etag && !etag.startsWith("W/")) headers.set("etag", `W/${etag}`);
 
-  return new Response(brotliCompressSync(body, OPTIONS), { ...init, headers });
+  return new Response(await compress(body, OPTIONS), { ...init, headers });
 }
 
 const WRAPPED = Symbol.for("deco.originBrotli");

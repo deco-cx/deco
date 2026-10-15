@@ -33,6 +33,16 @@ Deno.test("leaves responses alone when brotli does not apply", async () => {
     [req("gzip, br"), html(HTML, { "cache-control": "no-transform" })],
     [req("gzip, br"), html(HTML, { "content-type": "image/png" })],
     [req("gzip, br"), html("<p>tiny</p>")],
+    [
+      req("gzip, br"),
+      new Response(HTML, {
+        status: 206,
+        headers: {
+          "content-type": "text/html",
+          "content-range": "bytes 0-99/5000",
+        },
+      }),
+    ],
   ];
   for (const [request, response] of cases) {
     const encoding = response.headers.get("content-encoding");
