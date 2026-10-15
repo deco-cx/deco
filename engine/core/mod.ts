@@ -163,8 +163,10 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     // content (e.g. a page whose `sections` was a plain array in the published
     // release but a `multivariate` flag in the draft). Inheriting them makes the
     // draft resolve against the published shape and silently drop everything the
-    // old hints don't cover. This mirrors the `release.onChange` invariant in the
-    // constructor, which already clears hints whenever the release changes.
+    // old hints don't cover. The once-per-release memo is stale the same way:
+    // it holds the published route table, so a page that exists only in the
+    // draft gets no route. This mirrors the `release.onChange` invariant in the
+    // constructor, which clears both whenever the release changes.
     const releaseChanged = release !== undefined && release !== this.release;
     return new ReleaseResolver<TContext>(
       {
@@ -174,9 +176,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
         resolvers: { ...this.resolvers, ...resolvers },
       },
       releaseChanged ? {} : { ...this.resolveHints },
-      {
-        ...this.runOncePerRelease,
-      },
+      releaseChanged ? {} : { ...this.runOncePerRelease },
     );
   };
 

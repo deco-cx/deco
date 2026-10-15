@@ -53,6 +53,41 @@ Deno.test(".with({ release }) does not inherit stale resolve hints", async () =>
   });
 });
 
+Deno.test(".with({ release }) does not inherit once-per-release results", async () => {
+  // `website/loaders/pages.ts` builds the route table under `runOnce`. If a
+  // draft-bound resolver inherits the published release's memo, a page that
+  // exists only in the draft never gets a route and the request falls through
+  // to the catch-all (e.g. the PLP's not-found page).
+  const page = Object.assign((props: unknown) => props, { type: "pages" });
+  const resolvers = { ...defaults, page } as unknown as ResolverMap;
+  const published = fromJSON({
+    "pages-home": { __resolveType: "page", path: "/" },
+  });
+  const draft = fromJSON({
+    "pages-home": { __resolveType: "page", path: "/" },
+    "pages-new": { __resolveType: "page", path: "/new" },
+  });
+  const selectPages = { type: "pages", __resolveType: "blockSelector" };
+
+  const base = new ReleaseResolver<BaseContext>({
+    release: published,
+    resolvers,
+  });
+  assertEquals(Object.keys(await base.resolve(selectPages, {})), [
+    "pages-home",
+  ]);
+
+  const drafted = base.with({ release: draft });
+  assertEquals(Object.keys(await drafted.resolve(selectPages, {})).sort(), [
+    "pages-home",
+    "pages-new",
+  ]);
+  // The published resolver keeps its own memo.
+  assertEquals(Object.keys(await base.resolve(selectPages, {})), [
+    "pages-home",
+  ]);
+});
+
 Deno.test("dispose() unsubscribes the resolver from its release", () => {
   // `installApps` rebuilds the resolver on every decofile change:
   //   currentResolver = currentResolver.with({ resolvers, resolvables })
