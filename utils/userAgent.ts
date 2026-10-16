@@ -39,7 +39,34 @@ export const deviceOf = (request: Request) => {
 
 const UABotParser = new UAParser(Bots);
 
-const KNOWN_BOTS = ["Google-InspectionTool"];
+/**
+ * Crawlers the ua-parser-js bot list doesn't recognize. Mostly AI agents and
+ * answer engines: they don't run JS, so without this they get deferred
+ * sections as empty skeletons instead of the server-rendered content.
+ */
+const KNOWN_BOTS = [
+  "Google-InspectionTool",
+  "Google-CloudVertexBot",
+  // OpenAI (GPTBot is already detected by ua-parser-js)
+  "ChatGPT-User",
+  "OAI-SearchBot",
+  // Anthropic
+  "ClaudeBot",
+  "Claude-User",
+  "Claude-SearchBot",
+  // Perplexity
+  "PerplexityBot",
+  "Perplexity-User",
+  // Others
+  "Applebot",
+  "Amazonbot",
+  "meta-externalagent",
+  "meta-externalfetcher",
+  "Bytespider",
+  "CCBot",
+  "DuckAssistBot",
+  "MistralAI-User",
+];
 
 export const isBot = (req: Request) => {
   const fromCloudFlare = req.headers.get("cf-verified-bot");
