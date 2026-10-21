@@ -1,4 +1,4 @@
-import { getAllowedAuthorities } from "../../engine/trustedAuthority.ts";
+import { mayReadDecofile } from "../../utils/corsPolicy.ts";
 import { allowCorsForOrigin } from "../../utils/http.ts";
 import { createHandler } from "../middleware.ts";
 
@@ -10,12 +10,8 @@ export const handler = createHandler(async (
     "Content-Type": "application/json",
   };
 
-  if (origin && URL.canParse(origin)) {
-    const originUrl = new URL(origin);
-    const allowedAuthorities = getAllowedAuthorities();
-    if (allowedAuthorities.includes(originUrl.hostname)) {
-      Object.assign(headers, allowCorsForOrigin(origin));
-    }
+  if (origin && mayReadDecofile(origin)) {
+    Object.assign(headers, allowCorsForOrigin(origin));
   }
 
   return new Response(

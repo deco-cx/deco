@@ -1,5 +1,6 @@
 import { formDataToProps } from "../../clients/formdata.ts";
-import { bodyFromUrl } from "../../utils/http.ts";
+import { isAdminOrLocalhost } from "../../utils/admin.ts";
+import { allowCorsFor, bodyFromUrl } from "../../utils/http.ts";
 import { invokeToHttpResponse } from "../../utils/invoke.ts";
 import type { InvokeFunction } from "../../utils/invoke.types.ts";
 import { createHandler } from "../middleware.ts";
@@ -73,9 +74,29 @@ async function parsePropsFromRequest(
 
   return await propsParsers[strategy](req);
 }
+/**
+ * A CORS preflight, as opposed to any other `OPTIONS`. Worth distinguishing:
+ * this route is mounted with `hono.all`, so without the check below an
+ * `OPTIONS` probe falls through and RUNS the loader just to answer it.
+ */
+const isPreflight = (req: Request): boolean =>
+  req.method === "OPTIONS" && req.headers.has("access-control-request-method");
+
 export const handler = createHandler(async (
   ctx,
 ): Promise<Response> => {
+  // The CMS invokes `@options` loaders straight from the browser, and a JSON
+  // body makes that a preflighted cross-origin request. `batchInvoke` (the
+  // sibling `/deco/invoke` route, no key) already allows the admin surfaces;
+  // single invoke allowed none, so every such call died at the preflight.
+  const cors = isAdminOrLocalhost(ctx.req.raw)
+    ? allowCorsFor(ctx.req.raw)
+    : null;
+
+  if (isPreflight(ctx.req.raw)) {
+    return new Response(null, { status: 204, headers: cors ?? {} });
+  }
+
   const key = ctx.var.url.pathname.replace("/live/invoke/", "")
     .replace(
       "/deco/invoke/",
@@ -96,5 +117,13 @@ export const handler = createHandler(async (
     ctx.var,
   );
 
-  return invokeToHttpResponse(ctx.req.raw, resp);
+  const response = invokeToHttpResponse(ctx.req.raw, resp);
+
+  if (cors) {
+    for (const [name, value] of Object.entries(cors)) {
+      response.headers.set(name, value);
+    }
+  }
+
+  return response;
 });
