@@ -111,7 +111,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BASE_BRANCH="main"
-          RECENT_PR=$(gh pr list --state closed --base $BASE_BRANCH --json number,title,closedAt --jq '.[] | select(.closedAt >= "'$(date -u -d '1 minute ago' +%Y-%m-%dT%H:%M:%SZ)'") | {number, title}')
+          RECENT_PR=$(gh pr list --state closed --base $BASE_BRANCH --json number,title,closedAt --jq '.[] | select(.closedAt >= "'$(date -u -d '1 minute ago' +%Y-%m-%dT%H:%M:%SZ)'") | select(.title | startswith("Update version to") | not) | {number, title}')
           echo "RECENT_PR=$RECENT_PR" >> $GITHUB_ENV
           echo "PR_NUMBER=$(echo $RECENT_PR | jq -r '.number')" >> $GITHUB_ENV
 
@@ -191,23 +191,40 @@ jobs:
           echo "new_version=$NEW_TAG" >> $GITHUB_OUTPUT
 
       - name: Update deno.json Version
+        id: bump
         if: steps.determine_version.outputs.new_version != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.determine_version.outputs.new_version }}
         run: |
           jq --arg new_version "${{ steps.determine_version.outputs.new_version }}" '.version = $new_version' deno.json > tmp.$$.json && mv tmp.$$.json deno.json
           jq --arg new_version "${{ steps.determine_version.outputs.new_version }}" '.version = $new_version' ./scripts/deno.json > tmp.$$.json && mv tmp.$$.json ./scripts/deno.json
           jq --arg new_version "${{ steps.determine_version.outputs.new_version }}" '.version = $new_version' ./dev/deno.json > tmp.$$.json && mv tmp.$$.json ./dev/deno.json
 
-
+          # main requires a pull request, so the bump is merged through one
+          BRANCH="release/$NEW_VERSION"
           git config user.name "decobot"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
           git add deno.json ./scripts/deno.json ./dev/deno.json
-          git commit -m "Update version to ${{ steps.determine_version.outputs.new_version }}"
-          git push origin main
+          git commit -m "Update version to $NEW_VERSION"
+          git push origin "$BRANCH"
+          PR_URL=$(gh pr create --base main --head "$BRANCH" --title "Update version to $NEW_VERSION" --body "Automated version bump to $NEW_VERSION.")
+          for attempt in 1 2 3 4 5; do
+            gh pr merge "$PR_URL" --squash || true
+            [ "$(gh pr view "$PR_URL" --json state -q .state)" = "MERGED" ] && break
+            [ "$attempt" = 5 ] && exit 1
+            sleep 5
+          done
+          echo "merge_sha=$(gh pr view "$PR_URL" --json mergeCommit -q .mergeCommit.oid)" >> $GITHUB_OUTPUT
 
       - name: Create and Push Tag
         if: steps.determine_version.outputs.new_version != ''
+        env:
+          MERGE_SHA: ${{ steps.bump.outputs.merge_sha }}
         run: |
-          git tag ${{ steps.determine_version.outputs.new_version }}
+          git fetch origin "$MERGE_SHA"
+          git tag ${{ steps.determine_version.outputs.new_version }} "$MERGE_SHA"
           git push origin ${{ steps.determine_version.outputs.new_version }}
       - name: Trigger Release Workflow
         run: |
