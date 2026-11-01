@@ -6,6 +6,7 @@ import { Deco, type PageData, type PageParams } from "@deco/deco";
 import { framework as htmxFramework } from "@deco/deco/htmx";
 import type { ComponentType } from "preact";
 import type { Bindings } from "../handler.tsx";
+import { serveBrotli } from "./brotli.ts";
 import freshFramework from "./Bindings.tsx";
 export type { Plugin } from "$fresh/server.ts";
 
@@ -87,6 +88,7 @@ export default function decoPlugin<TManifest extends AppManifest = AppManifest>(
   if (typeof opt === "function") {
     throw new Error(`functions opts are not supported`);
   }
+  serveBrotli();
 
   const framework = opt?.htmx ? htmxFramework : freshFramework;
 
