@@ -32,6 +32,13 @@ Deno.test("editor::inject runs scripts only from trusted origins", () => {
     assertEquals(inject("null"), false);
     assertEquals(inject("https://admin.deco.cx"), true);
     assertEquals(inject("https://shop.com"), true); // the page itself
+    assertEquals(inject("http://localhost:3000"), false); // page isn't local
+
+    // A local dev page trusts a locally run Studio or admin.
+    g.window.location.origin = "http://localhost:8000";
+    assertEquals(inject("http://localhost:3000"), true);
+    assertEquals(inject("http://127.0.0.1:4200"), true);
+    assertEquals(inject("https://attacker--site.deco.host"), false);
   } finally {
     g.addEventListener = realAddEventListener;
     delete g.window;

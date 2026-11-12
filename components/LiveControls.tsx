@@ -149,9 +149,22 @@ export const main = (trustedOrigins: string[]) => {
       case "editor::inject": {
         // Any page can postMessage a framed or opened storefront. Without this
         // check, any origin could run code on it.
+        // A page on localhost also trusts other localhost ports: Studio or the
+        // admin run locally. Sending from there already means running code on
+        // this machine.
+        const isLoopback = (origin: string) => {
+          try {
+            return ["localhost", "127.0.0.1", "[::1]"].includes(
+              new URL(origin).hostname,
+            );
+          } catch {
+            return false;
+          }
+        };
         if (
           event.origin !== WINDOW.location.origin &&
-          !trustedOrigins.includes(event.origin)
+          !trustedOrigins.includes(event.origin) &&
+          !(isLoopback(WINDOW.location.origin) && isLoopback(event.origin))
         ) {
           return;
         }
