@@ -396,128 +396,83 @@ Deno.test("deco-hosted preview domain (setDecoSiteHost)", async (t) => {
     }
   });
 
-  await t.step("infers the per-developer <env>--<site>.deco.host dev tunnel", () => {
+  await t.step("does not allow <env>--<site>.deco.host", () => {
     setDecoSiteHost("farmrio");
     try {
-      assertEquals(isDraftPreviewEnabled({}), true);
-      // The host `deno task start` actually serves on (see daemon/tunnel.ts).
-      assertEquals(
-        isDraftHostAllowed("tavano--farmrio.deco.host", {}),
-        true,
-      );
-      // The `.deco.site` simpletunnel fallback is deliberately NOT matched: it
-      // shares the apex with the stable production domain, so matching it would
-      // widen the gate on production, not just dev machines.
-      assertEquals(
-        isDraftHostAllowed("tavano--farmrio.deco.site", {}),
-        false,
-      );
-      // Any developer env label — matched as a single label, like the deploy hash.
-      assertEquals(
-        isDraftHostAllowed("other-dev--farmrio.deco.host", {}),
-        true,
-      );
-      // Wrong site segment.
-      assertEquals(
-        isDraftHostAllowed("tavano--other.deco.host", {}),
-        false,
-      );
-      // Missing the `--` boundary (would collide with the exact <site>.deco.site).
-      assertEquals(
-        isDraftHostAllowed("farmrio.deco.host", {}),
-        false,
-      );
-      // The env must be a single label — no nested subdomain under deco.host.
-      assertEquals(
-        isDraftHostAllowed("x.evil--farmrio.deco.host", {}),
-        false,
-      );
-      // Empty env label.
-      assertEquals(
-        isDraftHostAllowed("--farmrio.deco.host", {}),
-        false,
-      );
-      // Wrong apex.
-      assertEquals(
-        isDraftHostAllowed("tavano--farmrio.deco.example", {}),
-        false,
-      );
+      assertEquals(isDraftHostAllowed("tavano--farmrio.deco.host", {}), false);
+      assertEquals(isDraftHostAllowed("tavano--farmrio.deco.site", {}), false);
     } finally {
       setDecoSiteHost(null);
     }
   });
 
-  await t.step("the kill switch disables the dev tunnel too", () => {
-    setDecoSiteHost("farmrio");
-    try {
-      const env = { DECO_ALLOWED_PREVIEW_HOSTS: "none" };
-      assertEquals(isDraftHostAllowed("tavano--farmrio.deco.host", env), false);
-    } finally {
-      setDecoSiteHost(null);
-    }
-  });
+  await t.step(
+    "infers the per-deploy envs-<site>--<hash>.decocdn.com host",
+    () => {
+      setDecoSiteHost("als-storefront");
+      try {
+        assertEquals(isDraftPreviewEnabled({}), true);
+        // The <hash> label changes every deploy — matched as a pattern.
+        assertEquals(
+          isDraftHostAllowed("envs-als-storefront--4l18ts.decocdn.com", {}),
+          true,
+        );
+        assertEquals(
+          isDraftHostAllowed("envs-als-storefront--abc123.decocdn.com", {}),
+          true,
+        );
+        // Wrong site prefix.
+        assertEquals(
+          isDraftHostAllowed("envs-other-site--4l18ts.decocdn.com", {}),
+          false,
+        );
+        // Missing the `envs-` prefix / the `--` separator.
+        assertEquals(
+          isDraftHostAllowed("als-storefront--4l18ts.decocdn.com", {}),
+          false,
+        );
+        assertEquals(
+          isDraftHostAllowed("envs-als-storefront-4l18ts.decocdn.com", {}),
+          false,
+        );
+        // Empty hash.
+        assertEquals(
+          isDraftHostAllowed("envs-als-storefront--.decocdn.com", {}),
+          false,
+        );
+        // The hash must be a single label — no sneaking a nested subdomain under
+        // an attacker-controlled *.decocdn.com.
+        assertEquals(
+          isDraftHostAllowed("envs-als-storefront--x.evil.decocdn.com", {}),
+          false,
+        );
+        // Wrong apex.
+        assertEquals(
+          isDraftHostAllowed("envs-als-storefront--4l18ts.example.com", {}),
+          false,
+        );
+      } finally {
+        setDecoSiteHost(null);
+      }
+    },
+  );
 
-  await t.step("infers the per-deploy envs-<site>--<hash>.decocdn.com host", () => {
-    setDecoSiteHost("als-storefront");
-    try {
-      assertEquals(isDraftPreviewEnabled({}), true);
-      // The <hash> label changes every deploy — matched as a pattern.
-      assertEquals(
-        isDraftHostAllowed("envs-als-storefront--4l18ts.decocdn.com", {}),
-        true,
-      );
-      assertEquals(
-        isDraftHostAllowed("envs-als-storefront--abc123.decocdn.com", {}),
-        true,
-      );
-      // Wrong site prefix.
-      assertEquals(
-        isDraftHostAllowed("envs-other-site--4l18ts.decocdn.com", {}),
-        false,
-      );
-      // Missing the `envs-` prefix / the `--` separator.
-      assertEquals(
-        isDraftHostAllowed("als-storefront--4l18ts.decocdn.com", {}),
-        false,
-      );
-      assertEquals(
-        isDraftHostAllowed("envs-als-storefront-4l18ts.decocdn.com", {}),
-        false,
-      );
-      // Empty hash.
-      assertEquals(
-        isDraftHostAllowed("envs-als-storefront--.decocdn.com", {}),
-        false,
-      );
-      // The hash must be a single label — no sneaking a nested subdomain under
-      // an attacker-controlled *.decocdn.com.
-      assertEquals(
-        isDraftHostAllowed("envs-als-storefront--x.evil.decocdn.com", {}),
-        false,
-      );
-      // Wrong apex.
-      assertEquals(
-        isDraftHostAllowed("envs-als-storefront--4l18ts.example.com", {}),
-        false,
-      );
-    } finally {
-      setDecoSiteHost(null);
-    }
-  });
-
-  await t.step("the kill switch also disables the per-deploy preview host", () => {
-    setDecoSiteHost("als-storefront");
-    try {
-      const env = { DECO_ALLOWED_PREVIEW_HOSTS: "none" };
-      assertEquals(isDraftPreviewEnabled(env), false);
-      assertEquals(
-        isDraftHostAllowed("envs-als-storefront--4l18ts.decocdn.com", env),
-        false,
-      );
-    } finally {
-      setDecoSiteHost(null);
-    }
-  });
+  await t.step(
+    "the kill switch also disables the per-deploy preview host",
+    () => {
+      setDecoSiteHost("als-storefront");
+      try {
+        const env = { DECO_ALLOWED_PREVIEW_HOSTS: "none" };
+        assertEquals(isDraftPreviewEnabled(env), false);
+        assertEquals(
+          isDraftHostAllowed("envs-als-storefront--4l18ts.decocdn.com", env),
+          false,
+        );
+      } finally {
+        setDecoSiteHost(null);
+      }
+    },
+  );
 
   await t.step("is merged ON TOP of the site block, not replacing it", () => {
     setDraftPreviewHosts(["fila.vtex.app"]);
@@ -568,21 +523,27 @@ Deno.test("deco-hosted preview domain (setDecoSiteHost)", async (t) => {
     }
   });
 
-  await t.step("DECO_ALLOWED_PREVIEW_HOSTS=none kills the inferred host", () => {
-    setDraftPreviewHosts(["fila.vtex.app"]);
-    setDecoSiteHost("als-storefront");
-    try {
-      // The kill switch wins over the inferred host AND the site block, so a
-      // bad rollout can be stopped without a deploy.
-      const env = { DECO_ALLOWED_PREVIEW_HOSTS: "none" };
-      assertEquals(isDraftPreviewEnabled(env), false);
-      assertEquals(isDraftHostAllowed("als-storefront.deco.site", env), false);
-      assertEquals(isDraftHostAllowed("fila.vtex.app", env), false);
-    } finally {
-      setDraftPreviewHosts([]);
-      setDecoSiteHost(null);
-    }
-  });
+  await t.step(
+    "DECO_ALLOWED_PREVIEW_HOSTS=none kills the inferred host",
+    () => {
+      setDraftPreviewHosts(["fila.vtex.app"]);
+      setDecoSiteHost("als-storefront");
+      try {
+        // The kill switch wins over the inferred host AND the site block, so a
+        // bad rollout can be stopped without a deploy.
+        const env = { DECO_ALLOWED_PREVIEW_HOSTS: "none" };
+        assertEquals(isDraftPreviewEnabled(env), false);
+        assertEquals(
+          isDraftHostAllowed("als-storefront.deco.site", env),
+          false,
+        );
+        assertEquals(isDraftHostAllowed("fila.vtex.app", env), false);
+      } finally {
+        setDraftPreviewHosts([]);
+        setDecoSiteHost(null);
+      }
+    },
+  );
 });
 
 Deno.test("draftPointerFromRequest", async (t) => {

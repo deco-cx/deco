@@ -17,7 +17,6 @@ import { createAuth } from "./auth.ts";
 import {
   createDaemonAPIs,
   DECO_ENV_NAME,
-  DECO_HOST,
   getSiteName,
   SANDBOX_MODE,
   setSiteName,
@@ -34,7 +33,6 @@ import {
 import { downloadCache } from "./cache.ts";
 import { createAIHandlers } from "./ai/handlers.ts";
 import { createSandboxHandlers, type DeployParams } from "./sandbox.ts";
-import { register, type TunnelConnection } from "./tunnel.ts";
 import {
   createWorker,
   resetWorkerState,
@@ -498,36 +496,7 @@ const createSiteApp = ({
     ensureStarted: deps.ensureStarted,
   };
 };
-const LOCAL_STORAGE_ENV_NAME = "deco_host_env_name";
-const stableEnvironmentName = () => {
-  const savedEnvironment = localStorage.getItem(LOCAL_STORAGE_ENV_NAME);
-  if (savedEnvironment) {
-    return savedEnvironment;
-  }
-
-  const newEnvironment = `${crypto.randomUUID().slice(0, 6)}-localhost`;
-  localStorage.setItem(LOCAL_STORAGE_ENV_NAME, newEnvironment);
-  return newEnvironment;
-};
-
 const port = Number(Deno.env.get("APP_PORT")) || 8000;
-
-const registerTunnel = async (
-  siteName: string,
-  envNameOverride?: string,
-): Promise<TunnelConnection | null> => {
-  const env = envNameOverride ??
-    (DECO_HOST && !DECO_ENV_NAME ? stableEnvironmentName() : DECO_ENV_NAME);
-  if (env && !Deno.env.has("DECO_PREVIEW")) {
-    return await register({
-      site: siteName,
-      env,
-      port: `${port}`,
-      decoHost: DECO_HOST,
-    });
-  }
-  return null;
-};
 
 const app = new Hono();
 
@@ -558,12 +527,11 @@ app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
 if (SANDBOX_MODE) {
   // Sandbox mode: start without a site, deploy later via POST /sandbox/deploy
   let currentSite: SiteAppResult | null = null;
-  let tunnelConn: TunnelConnection | null = null;
   let aiHandlers: ReturnType<typeof createAIHandlers> | null = null;
 
   const sandbox = createSandboxHandlers({
     onDeploy: async (
-      { repo, site, envName, branch, runCommand, envs, task }: DeployParams,
+      { repo, site, branch, runCommand, envs, task }: DeployParams,
     ) => {
       // Reset idle timer so the newly claimed sandbox starts fresh
       resetActivity();
@@ -652,13 +620,6 @@ if (SANDBOX_MODE) {
         proxyToken: envs?.ANTHROPIC_PROXY_TOKEN,
       });
 
-      const tunnel = await registerTunnel(site, envName).catch((err) => {
-        console.error("Tunnel registration failed:", err);
-        return null;
-      });
-
-      tunnelConn = tunnel;
-
       // Auto-create an AI task if task field was provided in deploy request
       // Only auto-start prompt/issue tasks if we have an API key (OAuth can't be auto-started)
       if (task && aiHandlers && (task.issue || task.prompt)) {
@@ -690,7 +651,7 @@ if (SANDBOX_MODE) {
         }
       }
 
-      return { domain: tunnel?.domain };
+      return {};
     },
     onUndeploy: async () => {
       // Dispose AI handlers first (kills running tasks)
@@ -702,11 +663,6 @@ if (SANDBOX_MODE) {
       if (currentSite) {
         await currentSite.dispose();
         currentSite = null;
-      }
-      if (tunnelConn) {
-        tunnelConn.close();
-        tunnelConn = null;
-        console.log(`[sandbox] Tunnel closed`);
       }
       // Reset worker state so a subsequent deploy starts fresh
       // (workerInitFailed persists across deploys otherwise)
@@ -877,22 +833,13 @@ if (SANDBOX_MODE) {
 Deno.serve(
   {
     port,
-    onListen: async (addr) => {
-      try {
-        const siteName = !SANDBOX_MODE ? getSiteName() : undefined;
-        const tunnel = siteName ? await registerTunnel(siteName) : null;
-
-        if (!tunnel) {
-          const prefix = SANDBOX_MODE ? "[sandbox] " : "";
-          console.log(
-            colors.green(
-              `${prefix}Server running on http://${addr.hostname}:${addr.port}`,
-            ),
-          );
-        }
-      } catch (err) {
-        console.log(err);
-      }
+    onListen: (addr) => {
+      const prefix = SANDBOX_MODE ? "[sandbox] " : "";
+      console.log(
+        colors.green(
+          `${prefix}Server running on http://${addr.hostname}:${addr.port}`,
+        ),
+      );
     },
   },
   app.fetch,
