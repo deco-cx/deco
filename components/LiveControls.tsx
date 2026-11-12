@@ -2,6 +2,7 @@
 /** @jsxImportSource preact */
 
 import { context } from "../deco.ts";
+import { getTrustedEditorOrigins } from "../engine/trustedEditorOrigins.ts";
 import { DomInspector, DomInspectorActivators } from "../deps.ts";
 import type { Flag, Site } from "../types.ts";
 
@@ -24,6 +25,7 @@ interface DecoWindow {
     site: Site;
     flags?: Flag[];
     play?: boolean;
+    trustedOrigins?: string[];
   };
 }
 
@@ -63,7 +65,7 @@ const DomInspectorActivators = {
 ${DomInspector.toString()}`
   : "";
 
-const main = () => {
+export const main = () => {
   const WINDOW =
     (globalThis as unknown as { window: Window & DecoWindow }).window;
   const onKeydown = (event: KeyboardEvent) => {
@@ -110,10 +112,32 @@ const main = () => {
     }
   };
 
+  const isTrustedOrigin = (origin: string) => {
+    if (WINDOW.LIVE.trustedOrigins?.includes(origin)) {
+      return true;
+    }
+    try {
+      const { protocol, hostname } = new URL(origin);
+      return protocol === "http:" &&
+        (hostname === "localhost" || hostname === "127.0.0.1");
+    } catch {
+      return false;
+    }
+  };
+
   const onMessage = (event: MessageEvent<LiveEvent>) => {
+    // Only the editor embedding this page may drive it: a window obtained via
+    // window.open or any other frame must never reach `editor::inject`.
+    if (WINDOW === WINDOW.parent || event.source !== WINDOW.parent) {
+      return;
+    }
+    if (!isTrustedOrigin(event.origin)) {
+      return;
+    }
+
     const { data } = event;
 
-    switch (data.type) {
+    switch (data?.type) {
       case "scrollToComponent": {
         const findById = document
           .getElementById(data.args.id);
@@ -180,7 +204,12 @@ function LiveControls({ site, page, flags }: Props) {
         type="application/json"
         id="__DECO_STATE"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({ page, site, flags }),
+          __html: JSON.stringify({
+            page,
+            site,
+            flags,
+            trustedOrigins: getTrustedEditorOrigins(),
+          }),
         }}
       />
       <script
