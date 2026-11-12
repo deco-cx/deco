@@ -4,6 +4,7 @@
 import { context } from "../deco.ts";
 import { DomInspector, DomInspectorActivators } from "../deps.ts";
 import type { Flag, Site } from "../types.ts";
+import { adminDomains, landingPageDomain } from "../utils/admin.ts";
 
 const IS_LOCALHOST = context.deploymentId === undefined;
 
@@ -63,7 +64,12 @@ const DomInspectorActivators = {
 ${DomInspector.toString()}`
   : "";
 
-const main = () => {
+// Origins allowed to run scripts on this page via `editor::inject`: the deco
+// admin and Studio (plus ADMIN_DOMAINS), and the old admin at deco.cx/admin.
+const TRUSTED_EDITOR_ORIGINS = [...adminDomains, ...landingPageDomain];
+
+/** Exported for tests only; runs in the browser as an inline script. */
+export const main = (trustedOrigins: string[]) => {
   const WINDOW =
     (globalThis as unknown as { window: Window & DecoWindow }).window;
   const onKeydown = (event: KeyboardEvent) => {
@@ -141,6 +147,14 @@ const main = () => {
         return;
       }
       case "editor::inject": {
+        // Any page can postMessage a framed or opened storefront. Without this
+        // check, any origin could run code on it.
+        if (
+          event.origin !== WINDOW.location.origin &&
+          !trustedOrigins.includes(event.origin)
+        ) {
+          return;
+        }
         return eval(data.args.script);
       }
     }
@@ -186,7 +200,9 @@ function LiveControls({ site, page, flags }: Props) {
       <script
         type="module"
         dangerouslySetInnerHTML={{
-          __html: `${domInspectorModule}\n(${main})()`,
+          __html: `${domInspectorModule}\n(${main})(${
+            JSON.stringify(TRUSTED_EDITOR_ORIGINS)
+          })`,
         }}
       />
     </>
