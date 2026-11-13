@@ -13,6 +13,7 @@
  */
 import { parseArgs } from "@std/cli";
 import * as colors from "@std/fmt/colors";
+import { relative } from "@std/path";
 import { BLOCKS_FOLDER, DECO_FOLDER } from "../engine/decofile/constants.ts";
 import { genMetadata } from "../engine/decofile/fsFolder.ts";
 import { delay, throttle } from "../utils/async.ts";
@@ -45,21 +46,26 @@ const timed = async (label: string, fn: () => Promise<void>) => {
 };
 
 const watch = async () => {
-  const blocksDir = `${DECO_FOLDER}/${BLOCKS_FOLDER}`;
-  for await (const event of Deno.watchFs(Deno.cwd(), { recursive: true })) {
-    const paths = event.paths.filter((path) =>
-      !path.includes(".git") && !path.includes("node_modules")
-    );
+  const cwd = Deno.cwd();
+  const blocksDir = `${DECO_FOLDER}/${BLOCKS_FOLDER}/`;
+  for await (const event of Deno.watchFs(cwd, { recursive: true })) {
+    // Paths relative to the site, with `/` on every OS.
+    const paths = event.paths
+      .map((path) => relative(cwd, path).replaceAll("\\", "/"))
+      .filter((path) => {
+        const segments = path.split("/");
+        return !segments.includes(".git") && !segments.includes("node_modules");
+      });
     if (paths.length === 0) continue;
     if (VERBOSE) console.log(event.kind, ...paths);
 
-    if (paths.some((path) => path.includes(blocksDir))) {
+    if (paths.some((path) => path.startsWith(blocksDir))) {
       genBlocks();
     }
     const codeCreatedOrDeleted = event.kind !== "modify" &&
       event.kind !== "access" &&
       paths.some((path) =>
-        /\.tsx?$/.test(path) && !path.includes("manifest.gen.ts")
+        /\.[jt]sx?$/.test(path) && !path.endsWith("manifest.gen.ts")
       );
     if (codeCreatedOrDeleted) {
       genManifest();
@@ -79,7 +85,8 @@ if (command.length === 0) {
 }
 
 const [cmd, ...args] = command;
-const child = new Deno.Command(cmd, {
+// `deno` is this Deno, even when it isn't on PATH.
+const child = new Deno.Command(cmd === "deno" ? Deno.execPath() : cmd, {
   args,
   stdin: "inherit",
   stdout: "inherit",
