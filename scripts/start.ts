@@ -4,7 +4,7 @@
  *
  * - Generates `manifest.gen.ts` and the blocks metadata once, before the site
  *   starts.
- * - Regenerates `manifest.gen.ts` when a `.ts`/`.tsx` file is created or
+ * - Regenerates `manifest.gen.ts` when a `.ts`/`.tsx`/`.js`/`.jsx` file is created or
  *   deleted (Fresh only reads the manifest at boot), and the blocks metadata
  *   when something under `.deco/blocks` changes.
  * - Runs the command after `--` (the site's `deno task dev`) with the same
@@ -65,7 +65,7 @@ const watch = async () => {
     const codeCreatedOrDeleted = event.kind !== "modify" &&
       event.kind !== "access" &&
       paths.some((path) =>
-        /\.[jt]sx?$/.test(path) && !path.endsWith("manifest.gen.ts")
+        /\.[jt]sx?$/.test(path) && path !== "manifest.gen.ts"
       );
     if (codeCreatedOrDeleted) {
       genManifest();
