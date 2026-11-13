@@ -715,7 +715,7 @@ const environments: UpgradeOption = {
       const dev = `deno run -A ${envArg} --unstable --unstable-hmr dev.ts`;
 
       const start =
-        `deno task bundle && deno run -A ${envArg} --unstable-http --unstable --config=deno.json $(deno eval 'console.log(import.meta.resolve("deco/daemon/main.ts"))') --build-cmd 'deno task build' -- deno task dev`;
+        `deno task bundle && deno run -A ${envArg} --unstable-http --config=deno.json $(deno eval 'console.log(import.meta.resolve("deco/scripts/start.ts"))') -- deno task dev`;
 
       return {
         from: denoJSONPath,
