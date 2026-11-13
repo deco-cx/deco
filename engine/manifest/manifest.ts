@@ -16,12 +16,13 @@ import {
   context,
   type DecoContext,
   type DecoRuntimeState,
+  type DraftRuntime,
 } from "../../deco.ts";
 import { baseState } from "../../runtime/utils.ts";
 import type { DecoState, SiteInfo } from "../../types.ts";
 import { deferred } from "../../utils/promise.ts";
 import { randId } from "../../utils/rand.ts";
-import { ReleaseResolver } from "../core/mod.ts";
+import { type ExtensionOptions, ReleaseResolver } from "../core/mod.ts";
 import {
   type BaseContext,
   DanglingReference,
@@ -31,6 +32,7 @@ import {
   type ResolverMap,
 } from "../core/resolver.ts";
 import { ENV_SITE_NAME } from "../decofile/constants.ts";
+import { fromJSON } from "../decofile/fetcher.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../decofile/fs.ts";
 import { type DecofileProvider, getProvider } from "../decofile/provider.ts";
 import { integrityCheck } from "../integrity.ts";
@@ -267,6 +269,57 @@ const installAppsForResolver = async (
   }
   return { resolver: currentResolver, apps: allAppsMap, manifest, importMap };
 };
+/**
+ * Builds `DecoRuntimeState.draftResolverFor`: installs the apps against a
+ * request-scoped decofile (a Fast Preview draft) instead of only swapping the
+ * release on the published resolver.
+ *
+ * Swapping the release alone (`resolver.with({ release })`) is not enough:
+ * app state is resolved once, at install time, against the published release
+ * and baked into the installed resolvers. The website app's `routes` holds the
+ * resolved `website/loaders/pages.ts` result, so a page that exists only in
+ * the draft never reaches the router — the request falls through to a dynamic
+ * route that matches the path (e.g. `/blog/:slug`) or 404s.
+ *
+ * Installs are memoized per decofile object: the draft cache hands back the
+ * same object for the same pointer version, so navigating within one draft
+ * installs once, and a draft evicted from that cache frees its resolver too.
+ */
+const draftResolverInstaller = (
+  root: ReleaseResolver<RouteContext>,
+  extension: Pick<
+    ExtensionOptions<RouteContext>,
+    "resolvers" | "danglingRecover"
+  >,
+  manifest: AppManifest,
+  importMap?: ImportMap,
+): NonNullable<DecoRuntimeState["draftResolverFor"]> => {
+  const installed = new WeakMap<
+    Record<string, unknown>,
+    Promise<DraftRuntime>
+  >();
+  return (decofile) => {
+    let draft = installed.get(decofile);
+    if (!draft) {
+      // One provider per decofile keeps the revision stable across requests,
+      // so revision-keyed caches (e.g. the website router) are reused instead
+      // of growing by one entry per preview request.
+      const release = fromJSON(decofile);
+      // Built lazily from the root: binding the draft release up front means
+      // no resolver here ever subscribes to the published provider.
+      draft = installAppsForResolver(
+        root.with({ ...extension, release }),
+        manifest,
+        importMap,
+      ).then(({ resolver }) => ({ release, resolver }));
+      // A failed install must not stick: the next request retries it.
+      draft.catch(() => installed.delete(decofile));
+      installed.set(decofile, draft);
+    }
+    return draft;
+  };
+};
+
 export const fulfillContext = async <
   T extends AppManifest,
 >(
@@ -323,14 +376,12 @@ export const fulfillContext = async <
         DanglingRecover[],
       ],
     );
+    const danglingRecover = recovers.length > 0
+      ? buildDanglingRecover(recovers)
+      : undefined;
     const { resolver: currentResolver, apps: allAppsMap, manifest, importMap } =
       await installAppsForResolver(
-        resolver.with({
-          resolvers,
-          danglingRecover: recovers.length > 0
-            ? buildDanglingRecover(recovers)
-            : undefined,
-        }),
+        resolver.with({ resolvers, danglingRecover }),
         newManifest,
         currentImportMap,
       );
@@ -378,6 +429,12 @@ export const fulfillContext = async <
       manifest: mergeManifests(newManifest, manifest) as T,
       importMap: mergedImportMap,
       resolver: currentResolver,
+      draftResolverFor: draftResolverInstaller(
+        resolver,
+        { resolvers, danglingRecover },
+        newManifest,
+        currentImportMap,
+      ),
     };
     if (runtimePromise.state === "pending") {
       runtimePromise.resolve(runtime);
