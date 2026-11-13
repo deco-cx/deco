@@ -14,9 +14,13 @@ export const isSecretValue = (value: unknown): boolean => {
   const o = value as Record<string, unknown>;
   // Resolved Secret: an object whose only own key is a `get` function.
   if (typeof o.get === "function" && Object.keys(o).length === 1) return true;
-  // Unresolved secret block.
+  // Unresolved secret block. Match the actual secret-loader suffix
+  // (`.../secret.ts` and the deprecated `.../secretString.ts`), not any
+  // `__resolveType` that merely contains "secret" — otherwise legitimate
+  // blocks like `.../secretary.ts` or a `Secret`-named section would be
+  // dropped from the served decofile.
   const rt = o.__resolveType;
-  return typeof rt === "string" && /secret/i.test(rt);
+  return typeof rt === "string" && /(?:^|\/)secret(?:String)?\.ts$/i.test(rt);
 };
 
 /** `JSON.stringify` that drops any secret-shaped value anywhere in the tree. */

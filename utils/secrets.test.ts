@@ -15,10 +15,21 @@ Deno.test("isSecretValue matches secret-shaped values only", () => {
     true,
   );
   assertEquals(isSecretValue({ get: () => "plaintext" }), true);
+  // Deprecated secretString loader also returns plaintext — must still match.
+  assertEquals(isSecretValue({ __resolveType: "website/loaders/secretString.ts" }), true);
+  assertEquals(isSecretValue({ __resolveType: "site/loaders/secret.ts" }), true);
   assertEquals(isSecretValue({ __resolveType: "website/sections/Hero.tsx" }), false);
   assertEquals(isSecretValue({ get: () => 1, other: 2 }), false);
   assertEquals(isSecretValue("a string"), false);
   assertEquals(isSecretValue(null), false);
+});
+
+Deno.test("isSecretValue does not match on a mere 'secret' substring", () => {
+  // Suffix match, not substring — these legitimate blocks must be preserved.
+  assertEquals(isSecretValue({ __resolveType: "apps/foo/loaders/secretary.ts" }), false);
+  assertEquals(isSecretValue({ __resolveType: "website/sections/SecretSanta.tsx" }), false);
+  assertEquals(isSecretValue({ __resolveType: "mysecret/loaders/config.ts" }), false);
+  assertEquals(isSecretValue({ __resolveType: "site/loaders/mysecret.ts" }), false);
 });
 
 Deno.test("stringifyWithoutSecrets drops ciphertext + env-var name", () => {
