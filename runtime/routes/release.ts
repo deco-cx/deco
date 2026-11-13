@@ -1,5 +1,6 @@
 import { getAllowedAuthorities } from "../../engine/trustedAuthority.ts";
 import { allowCorsForOrigin } from "../../utils/http.ts";
+import { stringifyWithoutSecrets } from "../../utils/secrets.ts";
 import { createHandler } from "../middleware.ts";
 
 export const handler = createHandler(async (
@@ -18,8 +19,11 @@ export const handler = createHandler(async (
     }
   }
 
+  // `/.decofile` is reachable unauthenticated. Strip secret envelopes
+  // (ciphertext + plaintext env-var name) and resolved Secret objects before
+  // serializing so secret material is never disclosed to anonymous callers.
   return new Response(
-    JSON.stringify(await state.release.state()),
+    stringifyWithoutSecrets(await state.release.state()),
     { headers },
   );
 });
