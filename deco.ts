@@ -16,6 +16,22 @@ export interface DecoRuntimeState<
   // deno-lint-ignore no-explicit-any
   resolver: ReleaseResolver<any>;
   importMap: ImportMap;
+  /**
+   * Resolver for a request-scoped decofile (a Fast Preview draft) with the
+   * apps installed against THAT decofile, so app state — e.g. the website
+   * app's `routes`, which lists every page — reflects the draft instead of the
+   * published release. Memoized per decofile object for the lifetime of this
+   * runtime. Undefined when the runtime does not install apps.
+   */
+  draftResolverFor?: (
+    decofile: Record<string, unknown>,
+  ) => Promise<DraftRuntime>;
+}
+
+export interface DraftRuntime {
+  release: DecofileProvider;
+  // deno-lint-ignore no-explicit-any
+  resolver: ReleaseResolver<any>;
 }
 
 export interface InstanceInfo {

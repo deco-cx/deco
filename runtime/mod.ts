@@ -251,7 +251,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       name: this.ctx.site,
     };
     state.global = state;
-    const { resolver } = await this.ctx.runtime!;
+    const { resolver, draftResolverFor } = await this.ctx.runtime!;
 
     // --- Fast Preview: request-scoped draft snapshot ---------------------
     // If this request carries a valid `?__draft=` pointer (or the cookie that
@@ -266,9 +266,19 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       null
     );
     if (draftDecofile) {
-      const draftProvider = fromJSON(draftDecofile);
+      // Apps are installed against the draft, not just bound to it: app state
+      // (e.g. the website app's `routes`) is resolved at install time, so a
+      // release swap alone keeps serving the published route table and a page
+      // that exists only in the draft never gets a route. If that install
+      // fails, fall back to the bare swap rather than breaking the preview.
+      const draft = await draftResolverFor?.(draftDecofile).catch((err) => {
+        console.error("draft apps install failed", err);
+        return undefined;
+      });
+      const draftProvider = draft?.release ?? fromJSON(draftDecofile);
       state.release = draftProvider;
-      activeResolver = resolver.with({ release: draftProvider });
+      activeResolver = draft?.resolver ??
+        resolver.with({ release: draftProvider });
       // A draft shares the published URL — it must never be cached or indexed.
       // `shouldCache = false` drives the framework's cache decision to
       // `no-store` (see applyPageCacheDecision); noindex keeps a leaked draft
