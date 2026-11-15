@@ -145,7 +145,8 @@ const installAppsForResolver = async (
     return currentResolver.resolve<
       { resolvers: ResolverMap; resolvables: Record<string, Resolvable> }
     >({
-      __resolveType: defaults["state"].name,
+      // The key, not `defaults.state.name`: bundlers may rename the function.
+      __resolveType: "state",
     }, fakeCtx);
   };
 
