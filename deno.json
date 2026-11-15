@@ -16,7 +16,8 @@
     "./scripts/bundle": "./scripts/apps/bundle.ts",
     "./scripts/dev": "./scripts/dev.ts",
     "./engine": "./engine/mod.ts",
-    "./workerd": "./runtime/workerd/mod.ts"
+    "./workerd": "./runtime/workerd/mod.ts",
+    "./scripts/workerd": "./scripts/workerd.ts"
   },
   "publish": {
     "exclude": [

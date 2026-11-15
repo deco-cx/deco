@@ -9,3 +9,10 @@ export {
   waitUntil,
 } from "./context.ts";
 export { type DenoShimOptions, installDenoShim } from "./deno.ts";
+export {
+  createWorker,
+  freshForWorkerd,
+  type FreshHandler,
+  type Worker,
+  type WorkerOptions,
+} from "./worker.ts";

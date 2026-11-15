@@ -4,31 +4,32 @@ Experimental. These helpers let an existing Fresh + deco site run inside a
 Cloudflare Worker without rewriting it. The site is bundled with `deno bundle`
 and runs on workerd with `nodejs_compat`.
 
-```ts
-import {
-  installDenoShim,
-  keepCacheWritesAlive,
-  runWithExecutionContext,
-} from "@deco/deco/workerd";
-import files from "./vfs.js"; // decofile blocks, Fresh snapshot, deno.json
+## Opt in from a site
 
-let app;
-export default {
-  fetch(req, env, ctx) {
-    app ??= runWithExecutionContext(ctx, async () => {
-      installDenoShim({ env, files });
-      keepCacheWritesAlive();
-      // The site bundle must be evaluated AFTER the shim is installed.
-      const { boot } = await import("./app.js");
-      return (await boot()).createApp();
-    });
-    return runWithExecutionContext(ctx, async () => (await app)(req));
-  },
-};
+A site opts in with a `wrangler.jsonc` and two tasks. Nothing changes for the
+Deno deploy.
+
+```jsonc
+// deno.json
+"tasks": {
+  "worker:build": "deno eval 'import \"@deco/deco/scripts/workerd\"' -- build",
+  "worker:dev": "deno eval 'import \"@deco/deco/scripts/workerd\"' -- dev"
+}
 ```
 
-A complete setup (build script, wrangler config) lives in the Aviator site:
-`worker/` in `deco-sites/aviator`.
+```sh
+deno eval 'import "@deco/deco/scripts/workerd"' -- init  # writes wrangler.jsonc
+deno task build          # Fresh snapshot in _fresh/
+deno task worker:build   # dist/worker (needs Deno >= 2.4 for `deno bundle`)
+deno task worker:dev     # wrangler dev
+npx wrangler deploy
+```
+
+`scripts/workerd.ts build` generates the Worker entry and app in
+`dist/worker/src`, bundles them, and copies `static/` and the Fresh islands to
+`dist/worker/assets`. It also embeds `.deco/blocks`, the Fresh snapshot and
+`deno.json` for the shim's file system. `--no-minify` keeps the bundle readable.
+`DECO_LINK=/path/to/deco` bundles against a local deco checkout.
 
 ## What each piece does
 
@@ -43,13 +44,16 @@ A complete setup (build script, wrangler config) lives in the Aviator site:
   later hits read truncated JSON.
 - `runWithExecutionContext(ctx, fn)` / `waitUntil(promise)` keep background work
   alive for the current request.
+- `createWorker({ files, boot })` is the Worker module the build generates; it
+  wires the pieces above. `freshForWorkerd(manifest, config)` points Fresh at
+  the shim's file system and registers plugin islands statically.
 
 ## Constraints a site bundle has to respect
 
 - workerd runs every module body in "global scope", where timers, random values
   and I/O are forbidden, even for modules imported lazily. Fresh, deco and the
   apps do all three at module level, so the site bundle has to be wrapped so its
-  body runs inside a request (see `wrapInBoot` in the Aviator build script).
+  body runs inside a request (`wrapInBoot` in `scripts/workerd.ts`).
 - `import.meta.url` is undefined on workerd; replace it at build time.
 - Do not use `--keep-names`: esbuild then injects `__name()` into functions that
   deco serializes to the browser.
