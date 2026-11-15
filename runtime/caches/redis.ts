@@ -7,12 +7,18 @@ import {
 } from "./utils.ts";
 import { Buffer } from "node:buffer";
 import { Redis } from "npm:ioredis@5.10.1";
-import { compress as lz4Compress, decompress as lz4Decompress } from "jsr:@denosaurs/lz4@^0.1.4";
 import {
   compress as zstdCompress,
   decompress as zstdDecompress,
   init as zstdInit,
 } from "npm:@bokuweb/zstd-wasm@0.0.27";
+
+// lz4 instantiates its WASM when the module is evaluated. Load it on first use
+// so importing this file does not compile WASM from bytes, which runtimes such
+// as Cloudflare Workers forbid.
+let lz4Promise: Promise<typeof import("jsr:@denosaurs/lz4@^0.1.4")> | null =
+  null;
+const lz4 = () => lz4Promise ??= import("jsr:@denosaurs/lz4@^0.1.4");
 
 const CONNECTION_TIMEOUT = parseInt(
   Deno.env.get("LOADER_CACHE_REDIS_CONNECTION_TIMEOUT_MS") || "2000",
@@ -98,7 +104,7 @@ export async function _compress(
   const input = new TextEncoder().encode(text);
 
   if (codec === CODEC_LZ4) {
-    const compressed = lz4Compress(input);
+    const compressed = (await lz4()).compress(input);
     const result = new Uint8Array(1 + compressed.length);
     result[0] = CODEC_LZ4;
     result.set(compressed, 1);
@@ -115,7 +121,9 @@ export async function _compress(
   }
 
   if (codec !== CODEC_GZIP && codec !== CODEC_DEFLATE) {
-    throw new Error(`[redis-cache] unknown compression codec: 0x${codec.toString(16)}`);
+    throw new Error(
+      `[redis-cache] unknown compression codec: 0x${codec.toString(16)}`,
+    );
   }
   // gzip / deflate-raw — native Deno, no deps
   const algo = codec === CODEC_GZIP ? "gzip" : "deflate-raw";
@@ -136,7 +144,7 @@ export async function _decompress(data: Uint8Array): Promise<string> {
   const payload = data.slice(1);
 
   if (codec === CODEC_LZ4) {
-    return new TextDecoder().decode(lz4Decompress(payload));
+    return new TextDecoder().decode((await lz4()).decompress(payload));
   }
 
   if (codec === CODEC_ZSTD) {
@@ -145,7 +153,9 @@ export async function _decompress(data: Uint8Array): Promise<string> {
   }
 
   if (codec !== CODEC_GZIP && codec !== CODEC_DEFLATE) {
-    throw new Error(`[redis-cache] unknown compression codec: 0x${codec.toString(16)}`);
+    throw new Error(
+      `[redis-cache] unknown compression codec: 0x${codec.toString(16)}`,
+    );
   }
   // gzip / deflate-raw — native Deno
   const algo = codec === CODEC_GZIP ? "gzip" : "deflate-raw";
