@@ -29,6 +29,8 @@ const FRESH = join(ROOT, "_fresh");
 /** Deno.cwd() inside the Worker. */
 const APP_ROOT = "/app";
 const WRANGLER_CONFIG = join(ROOT, "wrangler.jsonc");
+/** The workerd date this build was tested with (node:perf_hooks, etc.). */
+const COMPATIBILITY_DATE = "2026-11-01";
 
 const fail = (message: string): never => {
   console.error(`workerd: ${message}`);
@@ -51,7 +53,7 @@ const wranglerConfig = (name: string) =>
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": ${JSON.stringify(name)},
   "main": "dist/worker/server/index.js",
-  "compatibility_date": "${new Date().toISOString().slice(0, 10)}",
+  "compatibility_date": "${COMPATIBILITY_DATE}",
   "compatibility_flags": ["nodejs_compat"],
   // Already bundled by \`deno bundle\`; wrangler only uploads.
   "no_bundle": true,

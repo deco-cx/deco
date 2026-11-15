@@ -55,6 +55,10 @@ npx wrangler deploy
   apps do all three at module level, so the site bundle has to be wrapped so its
   body runs inside a request (`wrapInBoot` in `scripts/workerd.ts`).
 - `import.meta.url` is undefined on workerd; replace it at build time.
+- There is no `window` global (Deno 1.x aliases it to `globalThis`, but hides it
+  from npm packages). Server code must use `globalThis.location?.x` instead of
+  `window.location?.x`; aliasing `window` globally makes npm packages such as
+  `brotli` take their browser path and crash.
 - Do not use `--keep-names`: esbuild then injects `__name()` into functions that
   deco serializes to the browser.
 - Code must not rely on `Function.prototype.name` (bundlers rename functions).
