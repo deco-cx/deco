@@ -27,6 +27,8 @@ import {
   rewriteModuleUrls,
   SITE_MODULE_DIRS,
   siteModuleRegistry,
+  stringifyOneByte,
+  toOneByteSource,
 } from "./workerd_rewrite.ts";
 
 const ROOT = Deno.cwd();
@@ -329,8 +331,9 @@ async function buildServer(
   }
   await Deno.writeTextFile(
     join(SERVER, "vfs.js"),
-    `export default ${JSON.stringify(files)};\n` +
-      `export const lazyFiles = ${JSON.stringify(lazyFiles)};\n`,
+    // One-byte source (toOneByteSource): blocks carry curly quotes, emojis.
+    `export default ${stringifyOneByte(files)};\n` +
+      `export const lazyFiles = ${stringifyOneByte(lazyFiles)};\n`,
   );
 
   // 3. Generated sources.
@@ -437,6 +440,19 @@ export default createWorker({
     external: ["./app.js", "./vfs.js"],
     minify,
   });
+  // V8 keeps each module's source for the Worker's lifetime, two bytes per
+  // character if any one is above Latin-1 (toOneByteSource).
+  for (const file of ["app.js", "index.js"]) {
+    const path = join(SERVER, file);
+    const { code, kept } = toOneByteSource(await Deno.readTextFile(path));
+    await Deno.writeTextFile(path, code);
+    if (kept > 0) {
+      console.warn(
+        `warning: ${file} keeps ${kept} character(s) above U+00FF (tagged ` +
+          "templates, or it could not be tokenized): V8 stores it as UTF-16",
+      );
+    }
+  }
 }
 
 const command = Deno.args[0];

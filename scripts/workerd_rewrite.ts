@@ -394,3 +394,175 @@ export function siteModuleRegistry(modules: Record<string, string>): {
   })] = {\n${map}\n};`;
   return { imports, register };
 }
+
+/** Whitespace and line terminators above U+00FF (outside any token). */
+const WIDE_LINE_TERMINATOR = /[\u2028\u2029]/;
+const WIDE_SPACE = /[\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff]/;
+
+const hex4 = (unit: number) => `\\u${unit.toString(16).padStart(4, "0")}`;
+/** UTF-16 escape of a character: a surrogate pair for astral ones (valid in
+ *  strings, templates and regexes with or without the `u` flag). */
+const escapeUnits = (ch: string) =>
+  Array.from({ length: ch.length }, (_, i) => hex4(ch.charCodeAt(i))).join("");
+/** Escape of a character inside an identifier (`\u{...}`: an identifier
+ *  can't be written with surrogate escapes). */
+const escapeIdentifier = (ch: string) =>
+  `\\u{${ch.codePointAt(0)!.toString(16)}}`;
+
+/** Tokens a template literal may follow and still be untagged (`x = \`...\``).
+ *  Anything else (a name, `)`, `]`, another template...) may be a tag, whose
+ *  `strings.raw` would see an escape: those templates are left as they are. */
+const UNTAGGED_AFTER = new Set<unknown>([
+  tt.parenL,
+  tt.comma,
+  tt.eq,
+  tt.assign,
+  tt.colon,
+  tt.semi,
+  tt.braceL,
+  tt.bracketL,
+  tt.question,
+  tt.arrow,
+  tt.logicalOR,
+  tt.logicalAND,
+  tt.coalesce,
+  tt.plusMin,
+  tt.modulo,
+  tt.star,
+  tt.slash,
+  tt.starstar,
+  tt.equality,
+  tt.relational,
+  tt.bitwiseOR,
+  tt.bitwiseXOR,
+  tt.bitwiseAND,
+  tt.bitShift,
+  tt.prefix,
+  tt.ellipsis,
+  tt.dollarBraceL,
+  tt._return,
+  tt._case,
+  tt._throw,
+  tt._typeof,
+  tt._void,
+  tt._delete,
+  tt._in,
+  tt._instanceof,
+  tt._else,
+  tt._do,
+]);
+
+/** Above Latin-1: the characters that make V8 store a whole source as UTF-16. */
+const WIDE = /[\u0100-\uffff]/;
+
+/**
+ * The same module with every character above U+00FF written as an escape.
+ *
+ * V8 keeps a module's source in memory for as long as the module lives (lazy
+ * functions compile from it), and stores the whole string with two bytes per
+ * character as soon as one character doesn't fit in Latin-1. A 7 MB bundle
+ * with a single en dash in a regex then costs 14 MB of the Worker's 128 MB. The
+ * escapes mean the same strings, regexes and identifiers at runtime, so only
+ * the source changes. Comments get the escapes too (U+2028/U+2029 become
+ * `\n`, since they end a line comment), and wide whitespace between tokens
+ * becomes a space or a newline. Templates that may be tagged are left
+ * untouched: a tag reads `strings.raw`, where an escape is visible.
+ *
+ * Returns the code unchanged when it has no such character or can't be
+ * tokenized; `kept` counts the characters left in place.
+ */
+export function toOneByteSource(
+  code: string,
+): { code: string; kept: number } {
+  if (!WIDE.test(code)) return { code, kept: 0 };
+  const comments: [number, number][] = [];
+  const edits: Edit[] = [];
+  const gaps: number[] = [];
+  let kept = 0;
+  const escapeIn = (
+    from: number,
+    to: number,
+    escape: (ch: string) => string,
+  ) => {
+    for (let i = from; i < to; i++) {
+      const unit = code.charCodeAt(i);
+      if (unit <= 0xff) continue;
+      const ch = String.fromCodePoint(code.codePointAt(i)!);
+      edits.push([i, i + ch.length, escape(ch)]);
+      i += ch.length - 1;
+    }
+  };
+  try {
+    const tokens = tokenizer(code, {
+      ...TOKENIZER_OPTIONS,
+      onComment: (_block: boolean, _text: string, start: number, end: number) =>
+        comments.push([start, end]),
+    });
+    // One entry per open template: whether it may be tagged.
+    const templates: boolean[] = [];
+    let prev: { type: unknown; end: number } | null = null;
+    let last = 0;
+    for (const token of tokens) {
+      // Wide whitespace between the previous token and this one (comments
+      // in that gap are escaped below instead).
+      for (let i = last; i < token.start; i++) {
+        if (code.charCodeAt(i) > 0xff) gaps.push(i);
+      }
+      last = token.end;
+      const type = token.type;
+      if (type === tt.backQuote) {
+        if (prev?.type === tt.template || prev?.type === tt.invalidTemplate) {
+          templates.pop();
+        } else {
+          templates.push(!prev || !UNTAGGED_AFTER.has(prev.type));
+        }
+      } else if (type === tt.template || type === tt.invalidTemplate) {
+        if (templates.at(-1) || type === tt.invalidTemplate) {
+          for (let i = token.start; i < token.end; i++) {
+            if (code.charCodeAt(i) > 0xff) kept++;
+          }
+        } else {
+          escapeIn(token.start, token.end, escapeUnits);
+        }
+      } else if (type === tt.string || type === tt.regexp) {
+        escapeIn(token.start, token.end, escapeUnits);
+      } else if (type === tt.name || type === tt.privateId) {
+        escapeIn(token.start, token.end, escapeIdentifier);
+      }
+      prev = token;
+    }
+  } catch {
+    return { code, kept: (code.match(new RegExp(WIDE, "g")) ?? []).length };
+  }
+  for (const [start, end] of comments) {
+    escapeIn(
+      start,
+      end,
+      (ch) => WIDE_LINE_TERMINATOR.test(ch) ? "\n" : escapeUnits(ch),
+    );
+  }
+  let c = 0;
+  for (const i of gaps) {
+    while (c < comments.length && comments[c][1] <= i) c++;
+    if (c < comments.length && comments[c][0] <= i) continue;
+    const ch = code[i];
+    if (WIDE_LINE_TERMINATOR.test(ch)) edits.push([i, i + 1, "\n"]);
+    else if (WIDE_SPACE.test(ch)) edits.push([i, i + 1, " "]);
+  }
+  edits.sort((a, b) => a[0] - b[0]);
+  let out = "";
+  let at = 0;
+  for (const [from, to, text] of edits) {
+    out += code.slice(at, from) + text;
+    at = to;
+  }
+  return { code: out + code.slice(at), kept };
+}
+
+/** `JSON.stringify` with every character above U+00FF escaped (see
+ *  {@link toOneByteSource}): in JSON they can only be inside strings. */
+export const stringifyOneByte = (value: unknown): string =>
+  JSON.stringify(value).replace(
+    new RegExp(WIDE, "g"),
+    (ch) => hex4(ch.charCodeAt(0)),
+  );

@@ -10,6 +10,8 @@ import {
   rewriteModuleUrls,
   SITE_MODULES_KEY,
   siteModuleRegistry,
+  stringifyOneByte,
+  toOneByteSource,
 } from "./workerd_rewrite.ts";
 
 const SELF = "file:///app/app.js";
@@ -265,4 +267,63 @@ Deno.test("resolvedTargets: never main.ts, dev.ts or files outside the component
     ),
     ["sections/B.tsx"],
   );
+});
+
+const oneByte = (code: string) => {
+  const out = toOneByteSource(code);
+  return { ...out, wide: /[\u0100-\uffff]/.test(out.code) };
+};
+const run = (code: string): unknown => new Function(code)();
+
+Deno.test("toOneByteSource: no wide character, same string back", () => {
+  const code = 'const s = "ação";';
+  assertEquals(toOneByteSource(code), { code, kept: 0 });
+});
+
+Deno.test("toOneByteSource: strings, regexes and identifiers keep their meaning", () => {
+  const code = [
+    'const dash = "a – b 🇨🇭";',
+    "const re = /^aviator\\s*[|\\-–:]\\s*/i;",
+    'const accents = "Á".normalize("NFD").replace(/[̀-ͯ]/g, "");',
+    "const flag = /🇨/u.test('🇨');",
+    "const classU = /^[🇨🇭]+$/u.test('🇨🇭');",
+    "const café = 1, π = 3;",
+    "return [dash, re.test('aviator – x'), accents, flag, classU, café + π];",
+  ].join("\n");
+  const out = oneByte(code);
+  assertEquals(out.wide, false);
+  assertEquals(out.kept, 0);
+  assertEquals(run(out.code), run(code));
+});
+
+Deno.test("toOneByteSource: untagged templates are escaped, tagged ones kept", () => {
+  const code = [
+    "const x = 1;",
+    "const plain = `• ${x} – ${`“${x}”`}`;",
+    "const raw = String.raw`a–b`;",
+    "return [plain, raw];",
+  ].join("\n");
+  const out = oneByte(code);
+  assertEquals(out.kept, 1); // the – in String.raw
+  assert(out.code.includes("String.raw`a–b`"));
+  assertEquals(run(out.code), ["\u2022 1 \u2013 \u201c1\u201d", "a\u2013b"]);
+});
+
+Deno.test("toOneByteSource: comments and wide whitespace", () => {
+  const code = "// título – x\u2028return 1 /* “x” */ +\u3000\ufeff2;";
+  const out = oneByte(code);
+  assertEquals(out.wide, false);
+  assertEquals(run(out.code), 3);
+});
+
+Deno.test("toOneByteSource: untokenizable code is left as is", () => {
+  const code = "const s = '–;\nconst = ;";
+  assertEquals(toOneByteSource(code), { code, kept: 1 });
+});
+
+Deno.test("stringifyOneByte: same value, no wide character", () => {
+  const value = { "/app/.deco/blocks/pç.json": '{"t":"“ok” 🇨🇭 ç"}' };
+  const text = stringifyOneByte(value);
+  assert(!/[\u0100-\uffff]/.test(text));
+  assertEquals(JSON.parse(text), value);
 });
