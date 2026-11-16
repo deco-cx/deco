@@ -139,12 +139,13 @@ const run = async (cmd: string, args: string[], quiet = false) => {
   }
 };
 
-/** CommonJS default imports as on Deno (workerd_rewrite.ts nodeModeInterop). */
+/** CommonJS default imports as on Deno (workerd_rewrite.ts nodeModeInterop).
+ *  Throws (no `fail`): the build's `finally` still removes its temp config. */
 const cjsInterop = (body: string, path: string): string => {
   try {
     return nodeModeInterop(body);
   } catch (e) {
-    return fail(`${path}: ${(e as Error).message}`);
+    throw new Error(`${path}: ${(e as Error).message}`);
   }
 };
 
