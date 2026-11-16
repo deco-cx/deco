@@ -43,6 +43,9 @@ export interface Worker {
  *   run inside a request);
  * - makes loader cache writes part of the request's `waitUntil`.
  */
+/** Where `scripts/workerd.ts` embeds the precomputed editor schemas. */
+export const SCHEMAS_FILE = "/app/.deco/schemas.gen.json";
+
 export function createWorker({ files, boot }: WorkerOptions): Worker {
   let app: Promise<FreshHandler> | undefined;
   return {
@@ -52,7 +55,13 @@ export function createWorker({ files, boot }: WorkerOptions): Worker {
       ctx: ExecutionContextLike,
     ): Promise<Response> {
       app ??= runWithExecutionContext(ctx, () => {
-        installDenoShim({ env, files });
+        installDenoShim({
+          // /deco/meta reads the build-time schemas (no TS parsing on workerd).
+          env: SCHEMAS_FILE in files
+            ? { ...env, DECO_SCHEMAS_FILE: SCHEMAS_FILE }
+            : env,
+          files,
+        });
         keepCacheWritesAlive();
         return boot();
       });

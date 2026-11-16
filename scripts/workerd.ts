@@ -18,7 +18,8 @@
  * deco checkout (its version must match the site's @deco/deco).
  */
 import { copy, emptyDir, exists, walk } from "@std/fs";
-import { join, relative, toFileUrl } from "@std/path";
+import { join, relative, resolve, toFileUrl } from "@std/path";
+import { SCHEMAS_FILE } from "../runtime/workerd/worker.ts";
 
 const ROOT = Deno.cwd();
 const OUT = join(ROOT, "dist", "worker");
@@ -61,6 +62,10 @@ const wranglerConfig = (name: string) =>
   "find_additional_modules": true,
   "rules": [{ "type": "ESModule", "globs": ["**/*.js"] }],
   "assets": { "directory": "dist/worker/assets", "binding": "ASSETS" },
+  // No *.workers.dev / preview URLs: they bypass the zone WAF that blocks
+  // /.decofile and /deco/meta on the site's real hostnames.
+  "workers_dev": false,
+  "preview_urls": false,
   "observability": { "enabled": true },
   "vars": {
     "DECO_SITE_NAME": ${JSON.stringify(name)}
@@ -169,6 +174,53 @@ async function build() {
     await copy(join(FRESH, "static"), ASSETS, { overwrite: true });
   }
 
+  // A copy of the site config for the deno subprocesses (schemas, bundles),
+  // so DECO_LINK can add `links`. Removed at the end.
+  const config = join(ROOT, ".deno.worker.json");
+  const linkEnv = Deno.env.get("DECO_LINK");
+  const link = linkEnv ? resolve(ROOT, linkEnv) : undefined;
+  await Deno.writeTextFile(
+    config,
+    JSON.stringify({
+      ...siteConfig,
+      nodeModulesDir: "none",
+      ...(link ? { links: [link] } : {}),
+    }),
+  );
+  try {
+    await buildServer(siteConfig, snapshot, config, minify, link);
+  } finally {
+    await Deno.remove(config);
+  }
+
+  for (const file of ["index.js", "app.js", "vfs.js"]) {
+    const { size } = await Deno.stat(join(SERVER, file));
+    console.log(`${file.padEnd(9)} ${(size / 1024 / 1024).toFixed(2)} MB`);
+  }
+  if (!(await exists(WRANGLER_CONFIG))) {
+    console.log("no wrangler.jsonc yet: run the `init` command");
+  } else {
+    // An existing config is not rewritten by `init`: flag the WAF bypass.
+    const text = await Deno.readTextFile(WRANGLER_CONFIG);
+    for (const key of ["workers_dev", "preview_urls"]) {
+      if (!new RegExp(`"${key}"\\s*:\\s*false`).test(text)) {
+        console.warn(
+          `warning: wrangler.jsonc should set "${key}": false. A *.workers.dev ` +
+            "or preview URL bypasses the zone WAF that blocks /.decofile and " +
+            "/deco/meta.",
+        );
+      }
+    }
+  }
+}
+
+async function buildServer(
+  siteConfig: Record<string, unknown>,
+  snapshot: { build_id: string; files: Record<string, string[]> },
+  config: string,
+  minify: boolean,
+  link: string | undefined,
+) {
   // 2. Files the runtime reads at boot, served by the Deno shim.
   const files: Record<string, string> = {
     [`${APP_ROOT}/_fresh/snapshot.json`]: JSON.stringify(snapshot),
@@ -183,6 +235,24 @@ async function build() {
         .readTextFile(entry.path);
     }
   }
+  // The editor's static schemas (/deco/meta). Generating them parses the
+  // site's TypeScript, which the Worker cannot do at runtime.
+  const schemasOut = join(OUT, "schemas.gen.json");
+  await run(Deno.execPath(), [
+    "run",
+    "-A",
+    "--quiet",
+    "--config",
+    config,
+    // With DECO_LINK, the generator must come from the same checkout as
+    // the bundle (links don't redirect this URL's relative imports).
+    link
+      ? toFileUrl(join(link, "scripts", "workerd_schemas.ts")).href
+      : new URL("./workerd_schemas.ts", import.meta.url).href,
+    schemasOut,
+  ], true);
+  files[SCHEMAS_FILE] = await Deno.readTextFile(schemasOut);
+  await Deno.remove(schemasOut);
   await Deno.writeTextFile(
     join(SERVER, "vfs.js"),
     `export default ${JSON.stringify(files)};\n`,
@@ -221,17 +291,7 @@ export default createWorker({
 `,
   );
 
-  // 4. Bundles. A copy of the site config, so DECO_LINK can add `links`.
-  const config = join(ROOT, ".deno.worker.json");
-  const link = Deno.env.get("DECO_LINK");
-  await Deno.writeTextFile(
-    config,
-    JSON.stringify({
-      ...siteConfig,
-      nodeModulesDir: "none",
-      ...(link ? { links: [link] } : {}),
-    }),
-  );
+  // 4. Bundles.
   const bundle = (entry: string, out: string, opts: {
     external?: string[];
     minify?: boolean;
@@ -249,33 +309,21 @@ export default createWorker({
       join(SERVER, out),
       entry,
     ], true);
-  try {
-    // Fresh only loads esbuild to build islands without a snapshot.
-    const external = ["https://deno.land/x/esbuild@*"];
-    await bundle(join(SRC, "app.ts"), "app.js", { external });
-    // wrapInBoot reads the readable output, so minify in a second pass.
-    await wrapInBoot(join(SERVER, "app.js"), `file://${APP_ROOT}/app.js`);
-    if (minify) {
-      await bundle(join(SERVER, "app.js"), "app.js", {
-        external: [...external, "node:*"],
-        minify,
-      });
-    }
-    await bundle(join(SRC, "index.ts"), "index.js", {
-      external: ["./app.js", "./vfs.js"],
+  // Fresh only loads esbuild to build islands without a snapshot.
+  const external = ["https://deno.land/x/esbuild@*"];
+  await bundle(join(SRC, "app.ts"), "app.js", { external });
+  // wrapInBoot reads the readable output, so minify in a second pass.
+  await wrapInBoot(join(SERVER, "app.js"), `file://${APP_ROOT}/app.js`);
+  if (minify) {
+    await bundle(join(SERVER, "app.js"), "app.js", {
+      external: [...external, "node:*"],
       minify,
     });
-  } finally {
-    await Deno.remove(config);
   }
-
-  for (const file of ["index.js", "app.js", "vfs.js"]) {
-    const { size } = await Deno.stat(join(SERVER, file));
-    console.log(`${file.padEnd(9)} ${(size / 1024 / 1024).toFixed(2)} MB`);
-  }
-  if (!(await exists(WRANGLER_CONFIG))) {
-    console.log("no wrangler.jsonc yet: run the `init` command");
-  }
+  await bundle(join(SRC, "index.ts"), "index.js", {
+    external: ["./app.js", "./vfs.js"],
+    minify,
+  });
 }
 
 const command = Deno.args[0];

@@ -25,6 +25,13 @@ deno task worker:dev     # wrangler dev
 npx wrangler deploy
 ```
 
+`scripts/workerd.ts build` also generates the editor's static schemas
+(`genSchemas`, the expensive part of `/deco/meta`, which parses the site's
+TypeScript) and embeds them; the Worker serves `/deco/meta` and `/live/_meta`
+from them (`DECO_SCHEMAS_FILE`), plus the saved blocks of the current decofile.
+`init` writes a config with `workers_dev: false`: a `*.workers.dev` URL bypasses
+the zone WAF that blocks `/.decofile` and `/deco/meta`.
+
 `scripts/workerd.ts build` generates the Worker entry and app in
 `dist/worker/src`, bundles them, and copies `static/` and the Fresh islands to
 `dist/worker/assets`. It also embeds `.deco/blocks`, the Fresh snapshot and
@@ -68,8 +75,7 @@ npx wrangler deploy
 
 ## Not supported yet
 
-- Admin/editor routes that read TypeScript sources at runtime (`/deco/meta`
-  builds JSON schemas from the files).
+- `/live/inspect/:block` and `/deco/inspect/:block` (read block sources).
 - Background revalidation (`stale-while-revalidate`) runs outside the request
   that triggered it and may be cut short.
 - Redis loader cache (`ioredis` needs TCP sockets).
