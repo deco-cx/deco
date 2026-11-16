@@ -25,7 +25,7 @@
 // Inline (as utils/userAgent.ts does with ua-parser-js): this script also runs
 // from a deco checkout against a site's own import map (DECO_LINK).
 // deno-lint-ignore no-import-prefix
-import { tokenizer, tokTypes as tt } from "npm:acorn@^8.14.0";
+import { parse, tokenizer, tokTypes as tt } from "npm:acorn@^8.14.0";
 
 /** Global the Worker entry fills with the site modules a runtime `import()`
  *  may ask for: path from the site root (`/components/Session.tsx`) to the
@@ -103,6 +103,71 @@ const TOKENIZER_OPTIONS = {
 
 type Edit = [from: number, to: number, text: string];
 
+/** Nodes that bind their own `this` (esbuild leaves `this` alone inside). */
+const OWN_THIS = new Set([
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "PropertyDefinition",
+  "StaticBlock",
+]);
+
+type Node = {
+  type: string;
+  start: number;
+  end: number;
+  [key: string]: unknown;
+};
+
+const isNode = (value: unknown): value is Node =>
+  typeof value === "object" && value !== null &&
+  typeof (value as Node).type === "string";
+
+/**
+ * Edits that turn a module's top-level `this` back into `this`.
+ *
+ * In an ES module the top-level `this` is undefined, so esbuild (`deno bundle`)
+ * prints it as `void 0`, also inside arrow functions declared at the top level.
+ * The value doesn't change, but a function's source does: the storefront
+ * pattern of stringifying a handler for the browser (`useScript(fn)` in an
+ * `hx-on` attribute or a `<script>`) relies on `this` being the element there,
+ * and gets `(void 0).hasAttribute(...)` instead. On Deno nothing is bundled, so
+ * the handler keeps its `this`.
+ *
+ * Every `void 0` outside a function, method, class field or static block of
+ * the module becomes `this` again. The bundle body runs inside `boot()`, called
+ * without a receiver, so `this` there is still undefined when the code runs on
+ * the server. Unminified esbuild output prints `undefined` as written, so a
+ * `void 0` at that level is a rewritten `this` (or a literal `void 0`, which
+ * is the same value).
+ *
+ * Throws when `code` is not a complete program (the caller skips the module).
+ */
+export function topLevelThisEdits(code: string, offset = 0): Edit[] {
+  const edits: Edit[] = [];
+  const stack: unknown[] = [parse(code, TOKENIZER_OPTIONS)];
+  while (stack.length > 0) {
+    const value = stack.pop();
+    if (Array.isArray(value)) {
+      for (let i = value.length - 1; i >= 0; i--) stack.push(value[i]);
+      continue;
+    }
+    if (!isNode(value) || OWN_THIS.has(value.type)) continue;
+    const arg = value.argument;
+    if (
+      value.type === "UnaryExpression" && value.operator === "void" &&
+      isNode(arg) && arg.type === "Literal" && arg.raw === "0"
+    ) {
+      edits.push([offset + value.start, offset + value.end, "this"]);
+      continue;
+    }
+    for (const key of Object.keys(value).reverse()) {
+      const child = value[key];
+      if (typeof child === "object" && child !== null) stack.push(child);
+    }
+  }
+  return edits.sort((a, b) => a[0] - b[0]);
+}
+
 /** Line-based markers and text replacement: the fallback when the bundle
  *  can't be tokenized (a `// path` line inside a template would be taken for a
  *  marker here). */
@@ -130,16 +195,19 @@ const rewriteByLines = (
  * tokenized once: module markers are its real `// <path>` comments (never the
  * same text inside a string or template), and in site modules only real
  * `import.meta.url` / `import.meta.resolve(` / `import(` expressions change,
- * to the module's own URL under `appRoot` and the registry-aware resolver.
+ * to the module's own URL under `appRoot` and the registry-aware resolver,
+ * and their top-level `this` is restored ({@link topLevelThisEdits}).
  * Other modules get `selfUrl` and keep `import(`, by text as before.
  */
 export function rewriteModuleUrls(
   body: string,
-  { selfUrl, appRoot, onFallback }: {
+  { selfUrl, appRoot, onFallback, onThisSkipped }: {
     selfUrl: string;
     appRoot: string;
     /** Called when the bundle can't be tokenized (line-based fallback). */
     onFallback?: (reason: string) => void;
+    /** Called for a site module whose top-level `this` can't be restored. */
+    onThisSkipped?: (module: string, reason: string) => void;
   },
 ): string {
   const markers: { start: number; end: number; path: string }[] = [];
@@ -211,9 +279,16 @@ export function rewriteModuleUrls(
       while (e < edits.length && edits[e][0] < to) e++;
       continue;
     }
+    const chunk: Edit[] = [];
+    while (e < edits.length && edits[e][0] < to) chunk.push(edits[e++]);
+    try {
+      chunk.push(...topLevelThisEdits(body.slice(from, to), from));
+    } catch (err) {
+      onThisSkipped?.(marker.path, (err as Error).message);
+    }
+    chunk.sort((x, y) => x[0] - y[0]);
     let pos = from;
-    while (e < edits.length && edits[e][0] < to) {
-      const [a, b, text] = edits[e++];
+    for (const [a, b, text] of chunk) {
       out += body.slice(pos, a) + text;
       pos = b;
     }

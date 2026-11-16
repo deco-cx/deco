@@ -10,6 +10,7 @@ import {
   rewriteModuleUrls,
   SITE_MODULES_KEY,
   siteModuleRegistry,
+  topLevelThisEdits,
 } from "./workerd_rewrite.ts";
 
 const SELF = "file:///app/app.js";
@@ -265,4 +266,53 @@ Deno.test("resolvedTargets: never main.ts, dev.ts or files outside the component
     ),
     ["sections/B.tsx"],
   );
+});
+
+Deno.test("topLevelThisEdits: top-level and arrow `void 0` only", () => {
+  const code = [
+    "var a = (void 0).hasAttribute('x');",
+    "var f = () => { const g = void 0; return (void 0).closest('p'); };",
+    "function h() { return void 0; }",
+    "var o = { m() { return void 0; } };",
+    "class C { x = void 0; static { void 0; } m() { return void 0; } }",
+    "var u = undefined; var n = void 1;",
+  ].join("\n");
+  const edits = topLevelThisEdits(code, 100);
+  assertEquals(edits.length, 3);
+  for (const [from, to, text] of edits) {
+    assertEquals(code.slice(from - 100, to - 100), "void 0");
+    assertEquals(text, "this");
+  }
+});
+
+Deno.test("rewriteModuleUrls: site modules get their top-level `this` back", () => {
+  const body = [
+    "// deno:https://jsr.io/@deco/deco/1.0.0/hooks/useScript.ts",
+    "var lib = void 0;",
+    "// utils/a11y/drawer.ts",
+    "var drawerToggleScript = () => {",
+    "  const group = void 0;",
+    '  return group.hasAttribute("data-open");',
+    "};",
+    "function plain() { return void 0; }",
+  ].join("\n");
+  const out = rewriteModuleUrls(body, opts).split("\n");
+  assertEquals(out[1], "var lib = void 0;");
+  assertEquals(out[4], "  const group = this;");
+  assertEquals(out[7], "function plain() { return void 0; }");
+});
+
+Deno.test("rewriteModuleUrls: a site module that isn't a whole program keeps `void 0`", () => {
+  const skipped: string[] = [];
+  const body = [
+    'var init_x = __esm({ "x"() {',
+    "// components/x.tsx",
+    "var s = void 0; } });",
+  ].join("\n");
+  const out = rewriteModuleUrls(body, {
+    ...opts,
+    onThisSkipped: (m) => skipped.push(m),
+  });
+  assertEquals(skipped, ["components/x.tsx"]);
+  assert(out.includes("var s = void 0;"));
 });
