@@ -54,8 +54,11 @@ the zone WAF that blocks `/.decofile` and `/deco/meta`.
 - `runWithExecutionContext(ctx, fn)` / `waitUntil(promise)` keep background work
   alive for the current request.
 - `createWorker({ files, boot })` is the Worker module the build generates; it
-  wires the pieces above. `freshForWorkerd(manifest, config)` points Fresh at
-  the shim's file system and registers plugin islands statically.
+  wires the pieces above and sets `DENO_DEPLOYMENT_ID` when it is missing or
+  empty (from `BUILD_HASH`, else `workerd`), so deco runs in deploy mode
+  (`isDeploy`, platform `cloudflare`). `freshForWorkerd(manifest, config)`
+  points Fresh at the shim's file system and registers plugin islands
+  statically.
 
 ## Constraints a site bundle has to respect
 
