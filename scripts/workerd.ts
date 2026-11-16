@@ -183,6 +183,18 @@ const wrapInBoot = async (path: string, selfUrl: string) => {
             `warning: ${module} could not be tokenized; its import.meta / ` +
               "import( were rewritten as text (strings included)",
           ),
+        sourceOf: (module) => {
+          try {
+            return Deno.readTextFileSync(join(ROOT, module));
+          } catch {
+            return null;
+          }
+        },
+        onThisSkipped: (module, reason) =>
+          console.warn(
+            `warning: ${module}: ${reason}; its top-level \`this\` stays ` +
+              "`void 0` in the bundle",
+          ),
       }),
       `return { ${exported.join(", ")} };`,
       "}",
@@ -398,8 +410,9 @@ import files, { lazyFiles } from "./vfs.js";
 export default createWorker({
   files,
   lazyFiles,
+  // Called without a receiver: the bundle's top-level \`this\` is undefined.
   // @ts-ignore: generated
-  boot: () => import("./app.js").then((m) => m.boot()).then((a) => a.createApp()),
+  boot: () => import("./app.js").then(({ boot }) => boot()).then((a) => a.createApp()),
 });
 `,
   );

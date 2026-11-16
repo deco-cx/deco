@@ -10,6 +10,8 @@ import {
   rewriteModuleUrls,
   SITE_MODULES_KEY,
   siteModuleRegistry,
+  sourceTopLevelValues,
+  topLevelVoids,
 } from "./workerd_rewrite.ts";
 
 const SELF = "file:///app/app.js";
@@ -264,5 +266,194 @@ Deno.test("resolvedTargets: never main.ts, dev.ts or files outside the component
         ' // import.meta.resolve("./Commented.tsx")',
     ),
     ["sections/B.tsx"],
+  );
+});
+
+Deno.test("topLevelVoids: top-level and arrow `void 0` only", () => {
+  const code = [
+    "var a = (void 0).hasAttribute('x');",
+    "var f = () => { const g = void 0; return (void 0).closest('p'); };",
+    "function h() { return void 0; }",
+    "var o = { m() { return void 0; } };",
+    "class C { x = void 0; static { void 0; } m() { return void 0; } }",
+    "class D { [(void 0).key] = void 0; }",
+    "var u = undefined; var n = void 1;",
+  ].join("\n");
+  const found = topLevelVoids(code, 100);
+  assertEquals(found.length, 4);
+  for (const [from, to] of found) {
+    assertEquals(code.slice(from - 100, to - 100), "void 0");
+  }
+});
+
+Deno.test("sourceTopLevelValues: values only, in order, types and names left out", () => {
+  assertEquals(
+    sourceTopLevelValues(
+      [
+        "type T = { a?: string | undefined };",
+        "export const h = (e: CustomEvent | undefined): void => {",
+        "  if (e?.detail === undefined) return;",
+        "  const el = this as HTMLElement;",
+        "  el.dataset.undefined = typeof undefined;",
+        "  return void 0;",
+        "};",
+        "function f(this: HTMLElement) { return this ?? undefined; }",
+        "class C { x = this; m() { return undefined; } }",
+        "const o = { undefined: 1 };",
+      ].join("\n"),
+      "x.ts",
+    ),
+    ["undefined", "this", "undefined"],
+  );
+  assertEquals(
+    sourceTopLevelValues(
+      "export const C = () => <div data-x={undefined} />;\n" +
+        "export const s = () => this;",
+      "x.tsx",
+    ),
+    ["undefined", "this"],
+  );
+});
+
+const withSources = (sources: Record<string, string>) => {
+  const skipped: string[] = [];
+  return {
+    skipped,
+    options: {
+      ...opts,
+      sourceOf: (m: string) => sources[m] ?? null,
+      onThisSkipped: (m: string, reason: string) =>
+        skipped.push(`${m}: ${reason}`),
+    },
+  };
+};
+
+Deno.test("rewriteModuleUrls: site modules get their top-level `this` back", () => {
+  const body = [
+    "// deno:https://jsr.io/@deco/deco/1.0.0/hooks/useScript.ts",
+    "var lib = void 0;",
+    "// utils/a11y/drawer.ts",
+    "var drawerToggleScript = () => {",
+    "  const group = void 0;",
+    '  return group.hasAttribute("data-open");',
+    "};",
+    "function plain() { return void 0; }",
+  ].join("\n");
+  const { options, skipped } = withSources({
+    "utils/a11y/drawer.ts": "export const drawerToggleScript = () => {\n" +
+      "  const group = this as HTMLDivElement;\n" +
+      '  return group.hasAttribute("data-open");\n};\n' +
+      "function plain() { return undefined; }",
+  });
+  const out = rewriteModuleUrls(body, options).split("\n");
+  assertEquals(out[1], "var lib = void 0;");
+  assertEquals(out[4], "  const group = this;");
+  assertEquals(out[7], "function plain() { return void 0; }");
+  assertEquals(skipped, []);
+  // Without sources, nothing is restored.
+  assertEquals(
+    rewriteModuleUrls(body, opts).split("\n")[4],
+    "  const group = void 0;",
+  );
+});
+
+Deno.test("rewriteModuleUrls: an author's `undefined` or `void 0` keeps its value", () => {
+  const body = [
+    "// components/x.tsx",
+    "var h = (e) => {",
+    "  if (e.detail === void 0) return;",
+    "  return (void 0).closest(e.detail);",
+    "};",
+    "var a = () => void 0;",
+  ].join("\n");
+  const { options, skipped } = withSources({
+    "components/x.tsx": [
+      "export const h = (e: CustomEvent<string | undefined>) => {",
+      "  if (e.detail === undefined) return;",
+      "  return (this as HTMLElement).closest(e.detail);",
+      "};",
+      "export const a = () => void 0;",
+    ].join("\n"),
+  });
+  const out = rewriteModuleUrls(body, options).split("\n");
+  assertEquals(out[2], "  if (e.detail === void 0) return;");
+  assertEquals(out[3], "  return (this).closest(e.detail);");
+  assertEquals(out[5], "var a = () => void 0;");
+  assertEquals(skipped, []);
+});
+
+Deno.test("rewriteModuleUrls: counts that don't match leave the module as is", () => {
+  // Tree shaking dropped `unused`: one value short in the bundle.
+  const body = ["// components/y.tsx", "var s = () => void 0;"].join("\n");
+  const { options, skipped } = withSources({
+    "components/y.tsx": "export const unused = () => undefined;\n" +
+      "export const s = () => this;",
+  });
+  assertEquals(rewriteModuleUrls(body, options), body);
+  assertEquals(skipped, [
+    "components/y.tsx: 2 top-level this/undefined in the source, 1 void 0 in the bundle",
+  ]);
+});
+
+Deno.test("rewriteModuleUrls: `this` only in comments and strings doesn't count", () => {
+  const body = ["// components/y.tsx", "var a = void 0;"].join("\n");
+  const { options, skipped } = withSources({
+    "components/y.tsx":
+      '// this\nexport const a = undefined; const s = "this";',
+  });
+  assertEquals(rewriteModuleUrls(body, options), body);
+  assertEquals(skipped, []);
+});
+
+Deno.test("rewriteModuleUrls: a site module that isn't a whole program keeps `void 0`", () => {
+  const body = [
+    'var init_x = __esm({ "x"() {',
+    "// components/x.tsx",
+    "var s = void 0; } });",
+  ].join("\n");
+  const { options, skipped } = withSources({
+    "components/x.tsx": "export const s = this;",
+  });
+  const out = rewriteModuleUrls(body, options);
+  assertEquals(skipped.length, 1);
+  assert(skipped[0].startsWith("components/x.tsx: "));
+  assert(out.includes("var s = void 0;"));
+});
+
+Deno.test("rewriteModuleUrls: a module printed in several chunks is paired as a whole", () => {
+  const body = [
+    "// components/z.tsx",
+    "var z_exports = {};",
+    "// components/dep.ts",
+    "var dep = void 0;",
+    "// components/z.tsx",
+    "var inject = () => (void 0).id;",
+    "var skuId = (x) => x !== void 0 ? x : void 0;",
+  ].join("\n");
+  const { options, skipped } = withSources({
+    "components/z.tsx": "import './dep.ts';\n" +
+      "export const inject = () => (this as HTMLElement).id;\n" +
+      "export const skuId = (x?: string) => x !== undefined ? x : undefined;",
+    "components/dep.ts": "export const dep = undefined;",
+  });
+  const out = rewriteModuleUrls(body, options).split("\n");
+  assertEquals(out[3], "var dep = void 0;");
+  assertEquals(out[5], "var inject = () => (this).id;");
+  assertEquals(out[6], "var skuId = (x) => x !== void 0 ? x : void 0;");
+  assertEquals(skipped, []);
+});
+
+Deno.test("sourceTopLevelValues: generics in .tsx and a type named like a value", () => {
+  assertEquals(
+    sourceTopLevelValues(
+      [
+        "export type Profile = { name?: string };",
+        "export default function Profile(p: Profile) { return <div>{p.name}</div>; }",
+        "export const pick = <T extends object>(v: T) => v ?? this;",
+        "export const id = <T,>(v: T) => v;",
+      ].join("\n"),
+      "Profile.tsx",
+    ),
+    ["this"],
   );
 });
