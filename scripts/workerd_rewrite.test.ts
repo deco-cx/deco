@@ -103,14 +103,21 @@ Deno.test("rewriteModuleUrls: only real import( calls in site modules", () => {
 Deno.test("importResolver: answers registered site modules, else import()", async () => {
   const key = Symbol.for(SITE_MODULES_KEY);
   const session = { default: "Session" };
+  const priceCard = { default: "PriceCard" };
   (globalThis as Record<symbol, unknown>)[key] = {
     "/components/Session.tsx": session,
+    "/components/Price Card.tsx": priceCard,
   };
   try {
     const resolve = new Function(
       `${importResolver("/app")}\nreturn ${IMPORT_RESOLVER};`,
     )() as (s: unknown) => Promise<unknown>;
     assertEquals(await resolve("file:///app/components/Session.tsx"), session);
+    // A URL href percent-encodes the path; the registry key is raw.
+    assertEquals(
+      await resolve("file:///app/components/Price%20Card.tsx"),
+      priceCard,
+    );
     // Not registered: falls back to import() (rejects here: no such file).
     let fellBack = false;
     await resolve("file:///app/components/Missing.tsx").catch(() =>
@@ -177,7 +184,7 @@ Deno.test("rewriteModuleUrls: strings, templates, regexes and comments in site m
     "var s = \"import(\" + 'import.meta.url';",
     "var t = `call import(x) at ${import(y)}`;",
     "var r = /import\\(/.test(q);",
-    "var u = import.meta.url;",
+    "var u = import.meta.url; /* import(x) import.meta.url */",
   ].join("\n");
   const out = rewriteModuleUrls(body, opts).split("\n");
   assertEquals(out[1], "var s = \"import(\" + 'import.meta.url';");
@@ -186,7 +193,10 @@ Deno.test("rewriteModuleUrls: strings, templates, regexes and comments in site m
     `var t = \`call import(x) at \${${IMPORT_RESOLVER}(y)}\`;`,
   );
   assertEquals(out[3], "var r = /import\\(/.test(q);");
-  assertEquals(out[4], 'var u = "file:///app/components/x.tsx";');
+  assertEquals(
+    out[4],
+    'var u = "file:///app/components/x.tsx"; /* import(x) import.meta.url */',
+  );
 });
 
 Deno.test("rewriteModuleUrls: an untokenizable bundle falls back to lines, and says so", () => {

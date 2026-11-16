@@ -65,7 +65,12 @@ export const importResolver = (appRoot: string): string =>
   const prefix = ${JSON.stringify(`file://${appRoot}`)};
   if (typeof specifier === "string" && specifier.startsWith(prefix + "/")) {
     const modules = globalThis[Symbol.for(${JSON.stringify(SITE_MODULES_KEY)})];
-    const mod = modules?.[specifier.slice(prefix.length)];
+    // Registry keys are raw paths; a URL's href percent-encodes them
+    // (import.meta.resolve("./Price Card.tsx") -> Price%20Card.tsx).
+    const path = specifier.slice(prefix.length);
+    let decoded = path;
+    try { decoded = decodeURIComponent(path); } catch { /* keep it raw */ }
+    const mod = modules?.[path] ?? modules?.[decoded];
     if (mod) return Promise.resolve(mod);
   }
   return import(specifier);
