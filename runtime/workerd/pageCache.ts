@@ -54,6 +54,8 @@ const TRACKING_PARAMS = new Set([
 ]);
 
 const STORED_AT = "x-deco-stored-at";
+/** First path segment of every cache key (see `cacheKey`). */
+const KEY_PREFIX = "__deco_page_cache";
 const ORIGIN_CACHE_CONTROL = "x-deco-origin-cache-control";
 
 export interface PageCacheOptions {
@@ -95,18 +97,23 @@ export function cacheWindows(cacheControl: string | null): CacheWindows | null {
   for (const veto of ["private", "no-store", "no-cache"]) {
     if (directives.has(veto)) return null;
   }
+  // delta-seconds are digits only (RFC 9111); cap the length so the stored
+  // copy's max-age stays a plain integer.
   const seconds = (name: string) => {
-    const n = Number.parseInt(directives.get(name) ?? "", 10);
-    return Number.isFinite(n) && n > 0 ? n : 0;
+    const raw = directives.get(name) ?? "";
+    return /^\d{1,9}$/.test(raw) ? Number.parseInt(raw, 10) : 0;
   };
   const fresh = directives.has("s-maxage")
     ? seconds("s-maxage")
     : seconds("max-age");
   if (fresh <= 0) return null;
+  // A shared cache may store such a response but never serve it stale.
+  const noStale = directives.has("must-revalidate") ||
+    directives.has("proxy-revalidate");
   return {
     fresh,
-    swr: seconds("stale-while-revalidate"),
-    sie: seconds("stale-if-error"),
+    swr: noStale ? 0 : seconds("stale-while-revalidate"),
+    sie: noStale ? 0 : seconds("stale-if-error"),
   };
 }
 
@@ -190,9 +197,12 @@ export function cacheKey(
     )
     .map(([name, value]) => `${name}=${value}`)
     .sort();
-  if (version) key.searchParams.set("__v", version);
-  key.searchParams.set("__dev", deviceClass(request));
-  if (variant.length > 0) key.searchParams.set("__ck", variant.join(";"));
+  // The metadata goes in a path prefix with a fixed number of encoded segments,
+  // never in the query: a page's own `?__v=` can't collide with it.
+  const meta = [version, deviceClass(request), variant.join(";")]
+    .map(encodeURIComponent)
+    .join("/");
+  key.pathname = `/${KEY_PREFIX}/${meta}${key.pathname}`;
   return new Request(key.toString(), { method: "GET" });
 }
 
@@ -200,6 +210,9 @@ export function cacheKey(
 function notStorable(response: Response): string | null {
   if (response.status !== 200) return `status:${response.status}`;
   if (response.headers.has("set-cookie")) return "set-cookie";
+  // deco answers uncompressed and Cloudflare encodes on the way out; an encoded
+  // body would be served to clients that didn't ask for that encoding.
+  if (response.headers.has("content-encoding")) return "content-encoding";
   const vary = (response.headers.get("vary") ?? "").toLowerCase();
   const varies = vary.split(",").map((v) => v.trim()).filter(Boolean);
   if (varies.some((v) => v !== "accept-encoding")) return "vary";
@@ -220,6 +233,9 @@ const withHeaders = (
   return out;
 };
 
+/** Keys being revalidated in this isolate (stale-while-revalidate). */
+const revalidating = new Set<string>();
+
 const defaultCache = (): Cache | null => {
   const storage = (globalThis as { caches?: { default?: Cache } }).caches;
   return storage?.default ?? null;
@@ -238,11 +254,14 @@ export async function servePage(
 ): Promise<Response> {
   const bypass = bypassReason(request, options.bypassCookies);
   const cache = options.cache === undefined ? defaultCache() : options.cache;
-  if (bypass || !cache) {
+  // Without a build id, entries would outlive a deploy: don't cache at all.
+  const reason = bypass ??
+    (!cache ? "no-cache-api" : !options.version ? "no-version" : null);
+  if (reason || !cache) {
     const response = await render();
     return withHeaders(response, {
       "x-cache": "BYPASS",
-      "x-cache-reason": bypass ?? "no-cache-api",
+      "x-cache-reason": reason ?? "no-cache-api",
     });
   }
   const now = options.now ?? Date.now;
@@ -293,14 +312,20 @@ export async function servePage(
     const age = ageOf(cached);
     if (age < cachedWindows.fresh) return serve(cached, "HIT");
     if (age < cachedWindows.fresh + cachedWindows.swr) {
-      ctx.waitUntil(
-        render()
-          .then((fresh) => {
-            const windows = cacheWindows(fresh.headers.get("cache-control"));
-            if (!notStorable(fresh) && windows) store(fresh, windows);
-          })
-          .catch(() => {}),
-      );
+      // One revalidation per key at a time in this isolate. Only the key is
+      // shared, never the render's promise (it belongs to its request).
+      if (!revalidating.has(key.url)) {
+        revalidating.add(key.url);
+        ctx.waitUntil(
+          render()
+            .then((fresh) => {
+              const windows = cacheWindows(fresh.headers.get("cache-control"));
+              if (!notStorable(fresh) && windows) store(fresh, windows);
+            })
+            .catch(() => {})
+            .finally(() => revalidating.delete(key.url)),
+        );
+      }
       return serve(cached, "STALE-HIT");
     }
   }
@@ -322,11 +347,11 @@ export async function servePage(
     const stale = staleOnError(`status:${response.status}`);
     if (stale) return stale;
   }
-  const reason = notStorable(response);
-  if (reason) {
+  const unstorable = notStorable(response);
+  if (unstorable) {
     return withHeaders(response, {
       "x-cache": "BYPASS",
-      "x-cache-reason": reason,
+      "x-cache-reason": unstorable,
     });
   }
   store(response, cacheWindows(response.headers.get("cache-control"))!);

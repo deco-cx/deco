@@ -92,18 +92,24 @@ before Cloudflare's cache, so without help every visit would render the page.
 
 - **What is stored**: a `GET` answered `200` whose `Cache-Control` a shared
   cache may keep (no `private`/`no-store`/`no-cache`, a positive `s-maxage` or
-  `max-age`), without `Set-Cookie`, and with no `Vary` other than
-  `Accept-Encoding`. deco only sends a public `Cache-Control` for a cacheable
-  page, so the site's own rules decide, as they do for the CDN.
+  `max-age`), without `Set-Cookie` or `Content-Encoding`, and with no `Vary`
+  other than `Accept-Encoding`. deco only sends a public `Cache-Control` for a
+  cacheable page, so the site's own rules decide, as they do for the CDN.
 - **Freshness**: fresh for `s-maxage` (else `max-age`); then served stale while
   it renders again in `waitUntil` (`stale-while-revalidate`), or when the render
-  throws or answers 5xx/429 (`stale-if-error`). Visitors get the page's own
-  `Cache-Control`.
-- **Key**: the URL without its fragment and tracking parameters (`utm_*`,
-  `gclid`, `fbclid`...), the build (`BUILD_HASH`: the decofile is in the bundle,
-  so a publish is a new build), the device class (`cf-device-type`, else the
-  user agent), and the variant cookies: deco's matcher and segment cookies plus
-  `DECO_PAGE_CACHE_KEY_COOKIES`.
+  throws or answers 5xx/429 (`stale-if-error`); never stale with
+  `must-revalidate` / `proxy-revalidate`. One revalidation per page at a time
+  per isolate. Visitors get the page's own `Cache-Control`. A request's own
+  `Cache-Control` (a browser reload) is ignored, as Cloudflare's CDN does.
+- **Key**: the URL without its fragment and these tracking parameters:
+  `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`,
+  `utmi_campaign`, `utmi_page`, `utmi_part`, `fbclid`, `gclid`, `gclsrc`,
+  `dclid`, `msclkid`, `twclid`, `li_fat_id`, `mc_cid`, `mc_eid`, `ttclid`,
+  `srsltid`; the build (`BUILD_HASH`, else `DENO_DEPLOYMENT_ID`: the decofile is
+  in the bundle, so a publish is a new build; **without either, nothing is
+  cached**, so a deploy never serves the previous one's pages), the device class
+  (`cf-device-type`, else the user agent), and the variant cookies: deco's
+  matcher and segment cookies plus `DECO_PAGE_CACHE_KEY_COOKIES`.
 - **Never cached**: drafts (`?__draft=`, `__deco_draft`), debug (`?__d`,
   `deco_debug`), `Authorization`, deco's own endpoints under `/live/` and
   `/deco/` (except `/deco/render`, lazy sections), `/.decofile`, and requests
@@ -115,8 +121,10 @@ before Cloudflare's cache, so without help every visit would render the page.
   server is never stored, here or by the CDN. A cacheable loader whose result
   depends on a request cookie needs that cookie in the key
   (`DECO_PAGE_CACHE_KEY_COOKIES`), as it would in a CDN cache key.
-- Every answer carries `X-Cache`: `HIT`, `STALE-HIT`, `STALE-ERROR`, `MISS`, or
-  `BYPASS` with `X-Cache-Reason`; served copies also carry `X-Cache-Age`.
+- With the page cache on, every answer carries `X-Cache`: `HIT`, `STALE-HIT`,
+  `STALE-ERROR`, `MISS` or `BYPASS`. `BYPASS` and `STALE-ERROR` also carry
+  `X-Cache-Reason`; `HIT`, `STALE-HIT` and `STALE-ERROR` carry `X-Cache-Age`.
+  With it off, none of these headers are set.
 
 Turn it off with `DECO_WORKER_PAGE_CACHE=false` (or `pageCache: false`).
 
@@ -144,6 +152,6 @@ Turn it off with `DECO_WORKER_PAGE_CACHE=false` (or `pageCache: false`).
 - Background revalidation (`stale-while-revalidate`) of loaders runs outside the
   request that triggered it and may be cut short. The page cache revalidates in
   `waitUntil`, within Cloudflare's limit for it.
-- Purging a page before it expires (the page cache keys on the build, so a new
-  deploy starts clean).
+- Purging a page before it expires (the page cache keys on the build id, so a
+  new deploy starts clean).
 - Redis loader cache (`ioredis` needs TCP sockets).

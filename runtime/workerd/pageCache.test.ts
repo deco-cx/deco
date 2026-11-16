@@ -19,7 +19,9 @@ const PAGE_CC =
 class MemoryCache {
   entries = new Map<string, Response>();
   puts = 0;
+  matches = 0;
   match(req: Request) {
+    this.matches++;
     const hit = this.entries.get(req.url);
     return Promise.resolve(hit?.clone());
   }
@@ -120,7 +122,7 @@ Deno.test("cacheKey drops tracking params and splits by version, device and vari
     key("https://s.com/shoes?utm_source=x&page=2&gclid=y#top"),
     key("https://s.com/shoes?page=2"),
   );
-  assert(key("https://s.com/shoes").includes("__v=b1"));
+  assert(new URL(key("https://s.com/shoes")).pathname.includes("/b1/"));
   assert(
     key("https://s.com/shoes") !==
       key("https://s.com/shoes", { "user-agent": IPHONE_UA }),
@@ -281,6 +283,8 @@ Deno.test("Vary: Accept-Encoding is fine", async () => {
     t.options,
   );
   assertEquals(res.headers.get("x-cache"), "MISS");
+  await t.settle();
+  assertEquals(t.cache.puts, 1);
 });
 
 Deno.test("a bypassed request neither reads nor writes the cache", async () => {
@@ -297,6 +301,8 @@ Deno.test("a bypassed request neither reads nor writes the cache", async () => {
   assertEquals(signedIn.headers.get("x-cache"), "BYPASS");
   assertEquals(await signedIn.text(), "signed-in");
   assertEquals(t.cache.puts, 1);
+  // Only the first (anonymous) request read the cache.
+  assertEquals(t.cache.matches, 1);
   const draft = await servePage(
     t.req("/?__draft=p1"),
     t.ctx,
@@ -304,6 +310,7 @@ Deno.test("a bypassed request neither reads nor writes the cache", async () => {
     t.options,
   );
   assertEquals(await draft.text(), "draft");
+  assertEquals(t.cache.matches, 1);
 });
 
 Deno.test("a new build never serves the previous build's pages", async () => {
@@ -325,4 +332,99 @@ Deno.test("no Cache API: renders and says so", async () => {
   const res = await servePage(t.req(), t.ctx, t.page("x"), t.options);
   assertEquals(res.headers.get("x-cache"), "BYPASS");
   assertEquals(res.headers.get("x-cache-reason"), "no-cache-api");
+});
+
+Deno.test("cacheWindows: must-revalidate / proxy-revalidate store but never serve stale", () => {
+  assertEquals(
+    cacheWindows(
+      "public, max-age=60, must-revalidate, stale-while-revalidate=600",
+    ),
+    {
+      fresh: 60,
+      swr: 0,
+      sie: 0,
+    },
+  );
+  assertEquals(
+    cacheWindows("public, s-maxage=60, proxy-revalidate, stale-if-error=600"),
+    {
+      fresh: 60,
+      swr: 0,
+      sie: 0,
+    },
+  );
+});
+
+Deno.test("cacheWindows: delta-seconds are digits only, and bounded", () => {
+  assertEquals(cacheWindows("public, max-age=60abc"), null);
+  assertEquals(cacheWindows("public, max-age=1e3"), null);
+  assertEquals(cacheWindows("public, max-age=99999999999999999999"), null);
+  assertEquals(
+    cacheWindows("public, max-age=60, stale-while-revalidate=1e3")?.swr,
+    0,
+  );
+});
+
+Deno.test("cacheKey: a page's own query can't collide with the key's metadata", () => {
+  const key = (url: string) =>
+    cacheKey(new Request(url, { headers: { "user-agent": DESKTOP_UA } }), {
+      version: "b1",
+    }).url;
+  const plain = key("https://s.com/p");
+  for (const q of ["__v=b1", "__dev=desktop", "__ck=x", "__v=evil"]) {
+    assert(key(`https://s.com/p?${q}`) !== plain, q);
+  }
+  // A page path that looks like the prefix still maps to its own entry.
+  assert(key("https://s.com/__deco_page_cache/b1/desktop//p") !== plain);
+});
+
+Deno.test("no build version: never cached", async () => {
+  const t = setup({ version: "" });
+  const res = await servePage(t.req(), t.ctx, t.page("x"), t.options);
+  await t.settle();
+  assertEquals(res.headers.get("x-cache"), "BYPASS");
+  assertEquals(res.headers.get("x-cache-reason"), "no-version");
+  assertEquals(t.cache.matches + t.cache.puts, 0);
+});
+
+Deno.test("an encoded body is never stored", async () => {
+  const t = setup();
+  const res = await servePage(
+    t.req(),
+    t.ctx,
+    t.page("x", { "cache-control": PAGE_CC, "content-encoding": "gzip" }),
+    t.options,
+  );
+  await t.settle();
+  assertEquals(res.headers.get("x-cache-reason"), "content-encoding");
+  assertEquals(t.cache.puts, 0);
+});
+
+Deno.test("stale-while-revalidate renders once per key while a revalidation runs", async () => {
+  const t = setup();
+  await servePage(t.req(), t.ctx, t.page("v1"), t.options);
+  await t.settle();
+  t.advance(120);
+  let renders = 0;
+  let release!: () => void;
+  const slow = () => {
+    renders++;
+    return new Promise<Response>((r) => {
+      release = () =>
+        r(new Response("v2", { headers: { "cache-control": PAGE_CC } }));
+    });
+  };
+  const a = await servePage(t.req(), t.ctx, slow, t.options);
+  const b = await servePage(t.req(), t.ctx, slow, t.options);
+  assertEquals([a.headers.get("x-cache"), b.headers.get("x-cache")], [
+    "STALE-HIT",
+    "STALE-HIT",
+  ]);
+  assertEquals(renders, 1);
+  release();
+  await t.settle();
+  await t.settle();
+  t.advance(1);
+  const c = await servePage(t.req(), t.ctx, t.page("v3"), t.options);
+  assertEquals(await c.text(), "v2");
 });
