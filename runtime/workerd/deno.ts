@@ -535,7 +535,9 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
       request: (desc?: { name?: string }) =>
         Promise.resolve(permissionFor(desc)),
       requestSync: permissionFor,
-      revoke: () => Promise.resolve(denied),
+      // Permissions are fixed on workerd: revoking changes nothing.
+      revoke: (desc?: { name?: string }) =>
+        Promise.resolve(permissionFor(desc)),
     },
     // timers and signals
     unrefTimer: () => {},
