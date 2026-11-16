@@ -298,9 +298,26 @@ async function buildServer(
   ], true);
   files[SCHEMAS_FILE] = await Deno.readTextFile(schemasOut);
   await Deno.remove(schemasOut);
+  // Everything Workers Static Assets serves that Fresh may also read, so a
+  // `run_worker_first` path goes through the site's middleware and is then
+  // served by Fresh (see createWorker): shim path -> [URL path, size]. Static
+  // files map to <root>/static, island bundles to <root>/_fresh (the snapshot).
+  const islandsPrefix = `/_frsh/js/${snapshot.build_id}/`;
+  const lazyFiles: Record<string, [string, number]> = {};
+  for await (const entry of walk(ASSETS, { includeDirs: false })) {
+    const urlPath = `/${relative(ASSETS, entry.path).replaceAll("\\", "/")}`;
+    if (["/_headers", "/_redirects", "/.assetsignore"].includes(urlPath)) {
+      continue;
+    }
+    const shimPath = urlPath.startsWith(islandsPrefix)
+      ? `${APP_ROOT}/_fresh/${urlPath.slice(islandsPrefix.length)}`
+      : `${APP_ROOT}/static${urlPath}`;
+    lazyFiles[shimPath] = [urlPath, (await Deno.stat(entry.path)).size];
+  }
   await Deno.writeTextFile(
     join(SERVER, "vfs.js"),
-    `export default ${JSON.stringify(files)};\n`,
+    `export default ${JSON.stringify(files)};\n` +
+      `export const lazyFiles = ${JSON.stringify(lazyFiles)};\n`,
   );
 
   // 3. Generated sources.
@@ -308,17 +325,33 @@ async function buildServer(
   await Deno.writeTextFile(
     join(SRC, "app.ts"),
     `import { createHandler } from "$fresh/server.ts";
+import { Context } from "@deco/deco";
 import { freshForWorkerd } from "@deco/deco/workerd";
 import * as DispatchAsyncRender from "deco/runtime/fresh/islands/DispatchAsyncRender.tsx";
 import manifest from "${site("fresh.gen.ts")}";
 import config from "${site("fresh.config.ts")}";
 
-export function createApp() {
+export async function createApp() {
   const app = freshForWorkerd(manifest, config, {
     pluginIslands: { "DispatchAsyncRender.tsx": DispatchAsyncRender },
     root: "${APP_ROOT}",
   });
-  return createHandler(app.manifest, app.config);
+  const handler = await createHandler(app.manifest, app.config);
+  // Finish deco's boot (decofile, app install) in the request that started
+  // it: workerd cancels a request's pending I/O when the request ends, so a
+  // first request answered early (a middleware 403, a static file) would
+  // leave the boot hanging for every later request. The deco Fresh plugin
+  // starts Deco.init on import; it sets the runtime once it has the context.
+  const deadline = Date.now() + 30_000;
+  while (!Context.active().runtime) {
+    if (Date.now() > deadline) {
+      // A boot failure: createWorker retries it on the next request.
+      throw new Error("deco did not initialize within 30s");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  await Context.active().runtime;
+  return handler;
 }
 `,
   );
@@ -326,10 +359,11 @@ export function createApp() {
     join(SRC, "index.ts"),
     `import { createWorker } from "@deco/deco/workerd";
 // @ts-ignore: generated
-import files from "./vfs.js";
+import files, { lazyFiles } from "./vfs.js";
 
 export default createWorker({
   files,
+  lazyFiles,
   // @ts-ignore: generated
   boot: () => import("./app.js").then((m) => m.boot()).then((a) => a.createApp()),
 });

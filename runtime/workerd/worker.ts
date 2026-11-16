@@ -23,6 +23,16 @@ export interface WorkerOptions {
    * the first request, after the Deno shim is installed.
    */
   boot: () => Promise<FreshHandler>;
+  /**
+   * Files served by Workers Static Assets that Fresh may also read, generated
+   * by the build: absolute path in the shim's file system (static files under
+   * `<root>/static`, island bundles under `<root>/_fresh`) to `[URL path in
+   * Static Assets, size]`. Their content is fetched through the `ASSETS`
+   * binding, so a path routed to the Worker first (`assets.run_worker_first`
+   * in wrangler.jsonc) goes through the site's `_middleware` and is then
+   * served by Fresh, as on Deno.
+   */
+  lazyFiles?: Record<string, [string, number]>;
 }
 
 /** A Cloudflare Worker module (`export default`). */
@@ -51,7 +61,13 @@ export const SCHEMAS_FILE = "/app/.deco/schemas.gen.json";
  *   run inside a request);
  * - makes loader cache writes part of the request's `waitUntil`.
  */
-export function createWorker({ files, boot }: WorkerOptions): Worker {
+interface AssetsBinding {
+  fetch(req: Request): Promise<Response>;
+}
+
+export function createWorker(
+  { files, boot, lazyFiles }: WorkerOptions,
+): Worker {
   let app: Promise<FreshHandler> | undefined;
   return {
     async fetch(
@@ -77,6 +93,7 @@ export function createWorker({ files, boot }: WorkerOptions): Worker {
               : {}),
           },
           files,
+          ...fromAssets(lazyFiles, env.ASSETS),
         });
         keepCacheWritesAlive();
         return boot();
@@ -152,3 +169,43 @@ export function freshForWorkerd<
     } as any,
   };
 }
+
+/** Lazy files for the shim: sizes up front, content from `ASSETS`. */
+const fromAssets = (
+  index: Record<string, [string, number]> | undefined,
+  assets: unknown,
+) => {
+  const binding = assets as AssetsBinding | undefined;
+  if (!index || typeof binding?.fetch !== "function") return {};
+  const lazyFiles: Record<string, number> = {};
+  for (const [path, [, size]] of Object.entries(index)) {
+    lazyFiles[path] = size;
+  }
+  return {
+    lazyFiles,
+    loadLazyFile: async (path: string) => {
+      const urlPath = index[path]?.[0];
+      if (!urlPath) throw new Error(`not an asset: ${path}`);
+      // Encode each segment: file names may contain `?`, `#`, `%`...
+      const encoded = urlPath.split("/").map(encodeURIComponent).join("/");
+      // The host is ignored by the ASSETS binding. Its HTML handling answers
+      // `/page.html` with a redirect to `/page`: follow a few, in the binding.
+      let url = new URL(encoded, "https://assets.invalid");
+      let res = await binding.fetch(new Request(url));
+      for (
+        let hop = 0;
+        hop < 3 && res.status >= 300 && res.status < 400;
+        hop++
+      ) {
+        const location = res.headers.get("location");
+        if (!location) break;
+        url = new URL(location, url);
+        res = await binding.fetch(new Request(url));
+      }
+      if (!res.ok) {
+        throw new Error(`asset ${urlPath}: ASSETS ${res.status}`);
+      }
+      return new Uint8Array(await res.arrayBuffer());
+    },
+  };
+};
