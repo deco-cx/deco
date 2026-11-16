@@ -10,6 +10,12 @@ export {
 } from "./context.ts";
 export { type DenoShimOptions, installDenoShim } from "./deno.ts";
 export {
+  cacheKey,
+  cacheWindows,
+  type PageCacheOptions,
+  servePage,
+} from "./pageCache.ts";
+export {
   createWorker,
   freshForWorkerd,
   type FreshHandler,
