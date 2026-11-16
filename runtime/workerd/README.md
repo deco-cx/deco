@@ -136,7 +136,15 @@ Turn it off with `DECO_WORKER_PAGE_CACHE=false` (or `pageCache: false`).
   and I/O are forbidden, even for modules imported lazily. Fresh, deco and the
   apps do all three at module level, so the site bundle has to be wrapped so its
   body runs inside a request (`wrapInBoot` in `scripts/workerd.ts`).
-- `import.meta.url` is undefined on workerd; replace it at build time.
+- `import.meta.url` is undefined on workerd; the build replaces it per module
+  (`scripts/workerd_rewrite.ts`): each site module gets its own URL under `/app`
+  (`file:///app/components/Session.tsx`), the rest the bundle's. Site modules
+  under `components/`, `sections/` and `islands/` that name themselves
+  (`import.meta.url`) or are named with `import.meta.resolve("./x")` are
+  registered so a runtime `import()` of their URL works from the bundle (the
+  storefront template's `useComponent(import.meta.url)` +
+  `sections/Component.tsx`). A runtime `import()` of any other computed file URL
+  still fails.
 - There is no `window` global (Deno 1.x aliases it to `globalThis`, but hides it
   from npm packages). Server code must use `globalThis.location?.x` instead of
   `window.location?.x`; aliasing `window` globally makes npm packages such as
