@@ -76,11 +76,43 @@ request runs the Worker.
 - `runWithExecutionContext(ctx, fn)` / `waitUntil(promise)` keep background work
   alive for the current request.
 - `createWorker({ files, boot })` is the Worker module the build generates; it
-  wires the pieces above and sets `DENO_DEPLOYMENT_ID` when it is missing or
-  empty (from `BUILD_HASH`, else `workerd`), so deco runs in deploy mode
-  (`isDeploy`, platform `cloudflare`). `freshForWorkerd(manifest, config)`
-  points Fresh at the shim's file system and registers plugin islands
-  statically.
+  wires the pieces above, answers through the page cache (below), and sets
+  `DENO_DEPLOYMENT_ID` when it is missing or empty (from `BUILD_HASH`, else
+  `workerd`), so deco runs in deploy mode (`isDeploy`, platform `cloudflare`).
+  `freshForWorkerd(manifest, config)` points Fresh at the shim's file system and
+  registers plugin islands statically.
+
+## Page cache
+
+On Deno, the CDN in front of the site keeps the pages deco marks public
+(`applyPageCacheDecision` in `runtime/middleware.ts`). A Worker route runs
+before Cloudflare's cache, so without help every visit would render the page.
+`createWorker` keeps that cache itself (`pageCache.ts`), on the Cache API
+(`caches.default`, per data center):
+
+- **What is stored**: a `GET` answered `200` whose `Cache-Control` a shared
+  cache may keep (no `private`/`no-store`/`no-cache`, a positive `s-maxage` or
+  `max-age`), without `Set-Cookie`, and with no `Vary` other than
+  `Accept-Encoding`. deco only sends a public `Cache-Control` for a cacheable
+  page, so the site's own rules decide, as they do for the CDN.
+- **Freshness**: fresh for `s-maxage` (else `max-age`); then served stale while
+  it renders again in `waitUntil` (`stale-while-revalidate`), or when the render
+  throws or answers 5xx/429 (`stale-if-error`). Visitors get the page's own
+  `Cache-Control`.
+- **Key**: the URL without its fragment and tracking parameters (`utm_*`,
+  `gclid`, `fbclid`...), the build (`BUILD_HASH`: the decofile is in the bundle,
+  so a publish is a new build), the device class (`cf-device-type`, else the
+  user agent), and the variant cookies: deco's matcher and segment cookies plus
+  `DECO_PAGE_CACHE_KEY_COOKIES`.
+- **Never cached**: drafts (`?__draft=`, `__deco_draft`), debug (`?__d`,
+  `deco_debug`), `Authorization`, deco's own endpoints under `/live/` and
+  `/deco/` (except `/deco/render`, lazy sections), `/.decofile`, and requests
+  with a cookie in `DECO_PAGE_CACHE_BYPASS_COOKIES` (e.g. a signed-in shopper:
+  `VtexIdclientAutCookie`).
+- Every answer carries `X-Cache`: `HIT`, `STALE-HIT`, `STALE-ERROR`, `MISS`, or
+  `BYPASS` with `X-Cache-Reason`; served copies also carry `X-Cache-Age`.
+
+Turn it off with `DECO_WORKER_PAGE_CACHE=false` (or `pageCache: false`).
 
 ## Constraints a site bundle has to respect
 
@@ -103,6 +135,9 @@ request runs the Worker.
 ## Not supported yet
 
 - `/live/inspect/:block` and `/deco/inspect/:block` (read block sources).
-- Background revalidation (`stale-while-revalidate`) runs outside the request
-  that triggered it and may be cut short.
+- Background revalidation (`stale-while-revalidate`) of loaders runs outside the
+  request that triggered it and may be cut short. The page cache revalidates in
+  `waitUntil`, within Cloudflare's limit for it.
+- Purging a page before it expires (the page cache keys on the build, so a new
+  deploy starts clean).
 - Redis loader cache (`ioredis` needs TCP sockets).

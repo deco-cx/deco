@@ -5,6 +5,7 @@ import {
   runWithExecutionContext,
 } from "./context.ts";
 import { installDenoShim } from "./deno.ts";
+import { listFromEnv, servePage } from "./pageCache.ts";
 
 /** Fresh's request handler, as returned by `createHandler`. */
 export type FreshHandler = (
@@ -33,6 +34,14 @@ export interface WorkerOptions {
    * served by Fresh, as on Deno.
    */
   lazyFiles?: Record<string, [string, number]>;
+  /**
+   * The page cache (`pageCache.ts`): on by default, as the CDN caches the
+   * site's pages on Deno. `false` turns it off; so does the env var
+   * `DECO_WORKER_PAGE_CACHE=false`. `keyCookies` / `bypassCookies` default to
+   * the env vars `DECO_PAGE_CACHE_KEY_COOKIES` /
+   * `DECO_PAGE_CACHE_BYPASS_COOKIES` (comma-separated cookie name prefixes).
+   */
+  pageCache?: false | { keyCookies?: string[]; bypassCookies?: string[] };
 }
 
 /** A Cloudflare Worker module (`export default`). */
@@ -59,14 +68,16 @@ export const SCHEMAS_FILE = "/app/.deco/schemas.gen.json";
  * - boots the site on the first request (workerd forbids timers, random
  *   values and I/O while modules are evaluated, so the bundle body has to
  *   run inside a request);
- * - makes loader cache writes part of the request's `waitUntil`.
+ * - makes loader cache writes part of the request's `waitUntil`;
+ * - caches the pages deco marks public (`pageCache.ts`), as the CDN does on
+ *   Deno: a Worker route runs before Cloudflare's own cache.
  */
 interface AssetsBinding {
   fetch(req: Request): Promise<Response>;
 }
 
 export function createWorker(
-  { files, boot, lazyFiles }: WorkerOptions,
+  { files, boot, lazyFiles, pageCache }: WorkerOptions,
 ): Worker {
   let app: Promise<FreshHandler> | undefined;
   return {
@@ -106,15 +117,26 @@ export function createWorker(
         app = undefined;
         throw err;
       }
-      return runWithExecutionContext(ctx, () =>
-        handler(req, {
-          remoteAddr: {
-            hostname: req.headers.get("cf-connecting-ip") ?? "127.0.0.1",
-            port: 0,
-            transport: "tcp",
-          },
-          completed: Promise.resolve(),
-        }));
+      const render = () =>
+        runWithExecutionContext(ctx, () =>
+          handler(req, {
+            remoteAddr: {
+              hostname: req.headers.get("cf-connecting-ip") ?? "127.0.0.1",
+              port: 0,
+              transport: "tcp",
+            },
+            completed: Promise.resolve(),
+          }));
+      if (pageCache === false || env.DECO_WORKER_PAGE_CACHE === "false") {
+        return render();
+      }
+      return servePage(req, ctx, render, {
+        version: firstNonEmpty(env.BUILD_HASH, env.DENO_DEPLOYMENT_ID) ?? "",
+        keyCookies: pageCache?.keyCookies ??
+          listFromEnv(env.DECO_PAGE_CACHE_KEY_COOKIES),
+        bypassCookies: pageCache?.bypassCookies ??
+          listFromEnv(env.DECO_PAGE_CACHE_BYPASS_COOKIES),
+      });
     },
   };
 }
