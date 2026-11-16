@@ -6,7 +6,9 @@
  *
  *   deno run -A --config <site config> scripts/workerd_schemas.ts <out.json>
  */
+import { exists } from "@std/fs";
 import { join, toFileUrl } from "@std/path";
+import { fromJSON } from "../engine/decofile/fetcher.ts";
 import { genSchemas } from "../engine/schema/reader.ts";
 import { Deco } from "../runtime/mod.ts";
 
@@ -18,7 +20,15 @@ if (!out) {
 const manifest = (
   await import(toFileUrl(join(Deno.cwd(), "manifest.gen.ts")).href)
 ).default;
-const deco = await Deco.init({ manifest });
+// Keep the site's decofile when it has one: apps installed through it (e.g.
+// decohub) add their blocks to the manifest, and so to the schemas. Without
+// one, deco has no decofile provider at all, so pass an empty decofile.
+const hasDecofile = Deno.env.has("DECO_RELEASE") ||
+  await exists(join(Deno.cwd(), ".deco", "blocks"), { isDirectory: true });
+const deco = await Deco.init({
+  manifest,
+  ...(hasDecofile ? {} : { decofile: fromJSON({}) }),
+});
 const { manifest: resolved, importMap } = await deco.ctx.runtime!;
 const schemas = await genSchemas(resolved, importMap);
 await Deno.writeTextFile(out, JSON.stringify(schemas));

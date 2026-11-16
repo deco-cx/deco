@@ -187,7 +187,7 @@ async function build() {
     }),
   );
   try {
-    await buildServer(siteConfig, snapshot, config, minify);
+    await buildServer(siteConfig, snapshot, config, minify, link);
   } finally {
     await Deno.remove(config);
   }
@@ -198,6 +198,18 @@ async function build() {
   }
   if (!(await exists(WRANGLER_CONFIG))) {
     console.log("no wrangler.jsonc yet: run the `init` command");
+  } else {
+    // An existing config is not rewritten by `init`: flag the WAF bypass.
+    const text = await Deno.readTextFile(WRANGLER_CONFIG);
+    for (const key of ["workers_dev", "preview_urls"]) {
+      if (!new RegExp(`"${key}"\\s*:\\s*false`).test(text)) {
+        console.warn(
+          `warning: wrangler.jsonc should set "${key}": false. A *.workers.dev ` +
+            "or preview URL bypasses the zone WAF that blocks /.decofile and " +
+            "/deco/meta.",
+        );
+      }
+    }
   }
 }
 
@@ -206,6 +218,7 @@ async function buildServer(
   snapshot: { build_id: string; files: Record<string, string[]> },
   config: string,
   minify: boolean,
+  link: string | undefined,
 ) {
   // 2. Files the runtime reads at boot, served by the Deno shim.
   const files: Record<string, string> = {
@@ -230,7 +243,11 @@ async function buildServer(
     "--quiet",
     "--config",
     config,
-    new URL("./workerd_schemas.ts", import.meta.url).href,
+    // With DECO_LINK, the generator must come from the same checkout as
+    // the bundle (links don't redirect this URL's relative imports).
+    link
+      ? toFileUrl(join(link, "scripts", "workerd_schemas.ts")).href
+      : new URL("./workerd_schemas.ts", import.meta.url).href,
     schemasOut,
   ], true);
   files[SCHEMAS_FILE] = await Deno.readTextFile(schemasOut);

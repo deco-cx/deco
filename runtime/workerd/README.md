@@ -75,7 +75,7 @@ the zone WAF that blocks `/.decofile` and `/deco/meta`.
 
 ## Not supported yet
 
-- `/live/inspect/:block` (reads block sources; also fails on Deno deploys).
+- `/live/inspect/:block` and `/deco/inspect/:block` (read block sources).
 - Background revalidation (`stale-while-revalidate`) runs outside the request
   that triggered it and may be cut short.
 - Redis loader cache (`ioredis` needs TCP sockets).
