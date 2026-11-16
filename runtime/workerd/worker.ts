@@ -56,10 +56,19 @@ export function createWorker({ files, boot }: WorkerOptions): Worker {
     ): Promise<Response> {
       app ??= runWithExecutionContext(ctx, () => {
         installDenoShim({
-          // /deco/meta reads the build-time schemas (no TS parsing on workerd).
-          env: SCHEMAS_FILE in files
-            ? { ...env, DECO_SCHEMAS_FILE: SCHEMAS_FILE }
-            : env,
+          env: {
+            ...env,
+            // A Worker is always a deploy: without a deployment id deco runs in
+            // dev mode (section errors rendered to visitors, a missing site
+            // name tolerated). The control-plane builder passes the commit as
+            // BUILD_HASH; fall back to a fixed id for hand-made deploys.
+            DENO_DEPLOYMENT_ID: env.DENO_DEPLOYMENT_ID ?? env.BUILD_HASH ??
+              "workerd",
+            // /deco/meta reads the build-time schemas (no TS parsing on workerd).
+            ...(SCHEMAS_FILE in files
+              ? { DECO_SCHEMAS_FILE: SCHEMAS_FILE }
+              : {}),
+          },
           files,
         });
         keepCacheWritesAlive();
