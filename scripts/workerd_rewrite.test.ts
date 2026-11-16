@@ -1,10 +1,11 @@
-import { assert, assertEquals } from "@std/assert";
+import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
   codeOf,
   IMPORT_RESOLVER,
   importResolver,
   isSiteModule,
   moduleMarker,
+  nodeModeInterop,
   offersItself,
   resolvedTargets,
   rewriteModuleUrls,
@@ -456,4 +457,84 @@ Deno.test("sourceTopLevelValues: generics in .tsx and a type named like a value"
     ),
     ["this"],
   );
+});
+
+// esbuild's CommonJS helpers as `deno bundle` emits them (Deno 2.6.5).
+const INTEROP_PREAMBLE = `var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+`;
+const toEsm = (condition: string) =>
+  `var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  ${condition} ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+`;
+const BEFORE_2_9 = toEsm("isNodeMode || !mod || !mod.__esModule");
+const SINCE_2_9 = toEsm("1");
+
+// What `import tslib from "tslib"` yields: tslib sets `__esModule`.
+const defaultImport = (helpers: string) => {
+  const tslib = { __esModule: true, __extends: () => {} };
+  return new Function("mod", `${helpers}\nreturn __toESM(mod).default;`)(
+    tslib,
+  ) as unknown;
+};
+
+Deno.test("nodeModeInterop: Deno < 2.9 helper becomes Deno 2.9's", () => {
+  const body = `${INTEROP_PREAMBLE}${BEFORE_2_9}var x = 1;\n`;
+  assertEquals(
+    nodeModeInterop(body),
+    `${INTEROP_PREAMBLE}${SINCE_2_9}var x = 1;\n`,
+  );
+});
+
+Deno.test("nodeModeInterop: renamed parameters (mod2)", () => {
+  const renamed = BEFORE_2_9.replaceAll("mod", "mod2");
+  assertEquals(nodeModeInterop(renamed), SINCE_2_9.replaceAll("mod", "mod2"));
+});
+
+Deno.test("nodeModeInterop: only the __toESM helper changes", () => {
+  const user = "const ok = a || !b || !b.__esModule ? 1 : 2;\n";
+  const body = `${user}${INTEROP_PREAMBLE}${BEFORE_2_9}${user}`;
+  assertEquals(
+    nodeModeInterop(body),
+    `${user}${INTEROP_PREAMBLE}${SINCE_2_9}${user}`,
+  );
+});
+
+Deno.test("nodeModeInterop: an __esModule CommonJS module gets its default", () => {
+  assertEquals(defaultImport(INTEROP_PREAMBLE + BEFORE_2_9), undefined);
+  const fixed = defaultImport(nodeModeInterop(INTEROP_PREAMBLE + BEFORE_2_9));
+  assertEquals(typeof (fixed as { __extends: unknown }).__extends, "function");
+});
+
+Deno.test("nodeModeInterop: nothing to change on Deno 2.9+ or without CommonJS", () => {
+  const since = `${INTEROP_PREAMBLE}${SINCE_2_9}`;
+  assertEquals(nodeModeInterop(since), since);
+  assertEquals(nodeModeInterop("var a = 1;\n"), "var a = 1;\n");
+});
+
+Deno.test("nodeModeInterop: an unknown __esModule check fails the build", () => {
+  // Same helper, another shape of the check (not one this knows).
+  const other = BEFORE_2_9.replace(
+    "isNodeMode || !mod || !mod.__esModule",
+    "!(mod && mod.__esModule) || isNodeMode",
+  ).replace("__toESM", "__toESM2");
+  assertThrows(() => nodeModeInterop(other), Error, "__toESM2");
 });

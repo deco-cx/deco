@@ -149,6 +149,12 @@ Turn it off with `DECO_WORKER_PAGE_CACHE=false` (or `pageCache: false`).
   from npm packages). Server code must use `globalThis.location?.x` instead of
   `window.location?.x`; aliasing `window` globally makes npm packages such as
   `brotli` take their browser path and crash.
+- A CommonJS default import is `module.exports`, as on Deno and Node.
+  `deno bundle` before Deno 2.9 leaves `default` undefined for a CommonJS module
+  marked `__esModule` (tslib, used by `@supabase/supabase-js`), so the build
+  rewrites esbuild's `__toESM` helper the way Deno 2.9 emits it
+  (`nodeModeInterop` in `scripts/workerd_rewrite.ts`). On Deno 2.9+ there is
+  nothing to rewrite; a helper shape it doesn't know fails the build.
 - Do not use `--keep-names`: esbuild then injects `__name()` into functions that
   deco serializes to the browser.
 - Code must not rely on `Function.prototype.name` (bundlers rename functions).

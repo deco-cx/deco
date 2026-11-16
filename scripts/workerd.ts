@@ -22,6 +22,7 @@ import { join, relative, resolve, toFileUrl } from "@std/path";
 import { SCHEMAS_FILE } from "../runtime/workerd/worker.ts";
 import {
   importResolver,
+  nodeModeInterop,
   offersItself,
   resolvedTargets,
   rewriteModuleUrls,
@@ -138,6 +139,15 @@ const run = async (cmd: string, args: string[], quiet = false) => {
   }
 };
 
+/** CommonJS default imports as on Deno (workerd_rewrite.ts nodeModeInterop). */
+const cjsInterop = (body: string, path: string): string => {
+  try {
+    return nodeModeInterop(body);
+  } catch (e) {
+    return fail(`${path}: ${(e as Error).message}`);
+  }
+};
+
 /**
  * workerd runs every module body in "global scope", where timers, random
  * values and I/O are forbidden, even for modules imported lazily from a
@@ -175,7 +185,7 @@ const wrapInBoot = async (path: string, selfUrl: string) => {
       importResolver(APP_ROOT),
       // import.meta.url is undefined on workerd: each site module gets its own
       // URL under APP_ROOT, everything else the bundle's (workerd_rewrite.ts).
-      rewriteModuleUrls(body.join("\n"), {
+      rewriteModuleUrls(cjsInterop(body.join("\n"), path), {
         selfUrl,
         appRoot: APP_ROOT,
         onFallback: (module) =>
