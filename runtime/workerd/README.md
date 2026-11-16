@@ -117,11 +117,12 @@ before Cloudflare's cache, so without help every visit would render the page.
 - **What keeps shopper data out**: a loader is `cache: "no-store"` unless it
   opts in, and one that runs on the server with `no-store` (or a `null` cache
   key) sets `vary.shouldCache = false`, which makes the page `no-store`
-  (`blocks/loader.ts`). A page whose cart or shopper data comes from such a
-  loader is never stored, here or by the CDN. A loader that opts into caching
-  takes that responsibility: its cache key must return `null` for a shopper's
-  request, or every cookie its result depends on must also be in the page key
-  (`DECO_PAGE_CACHE_KEY_COOKIES`), as it would in a CDN cache key.
+  (`blocks/loader.ts`). A page rendered with a shopper's data is therefore never
+  stored, here or by the CDN. That keeps one shopper's data from reaching
+  another; it does not make a shopper's request skip an anonymous copy that is
+  already stored (the CDN serves it the same way). A page that must be
+  personalized on the server needs the cookies it depends on in the page key
+  (`DECO_PAGE_CACHE_KEY_COOKIES`) or in `DECO_PAGE_CACHE_BYPASS_COOKIES`.
 - With the page cache on, every answer carries `X-Cache`: `HIT`, `STALE-HIT`,
   `STALE-ERROR`, `MISS` or `BYPASS`. `BYPASS` and `STALE-ERROR` also carry
   `X-Cache-Reason`; `HIT`, `STALE-HIT` and `STALE-ERROR` carry `X-Cache-Age`.
