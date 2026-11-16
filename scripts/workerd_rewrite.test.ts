@@ -1,5 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
 import {
+  codeOf,
   IMPORT_RESOLVER,
   importResolver,
   isSiteModule,
@@ -167,5 +168,91 @@ Deno.test("resolvedTargets: site files named with import.meta.resolve", () => {
         " import.meta.resolve(`./${name}.tsx`);",
     ),
     [],
+  );
+});
+
+Deno.test("rewriteModuleUrls: strings, templates, regexes and comments in site modules keep their text", () => {
+  const body = [
+    "// components/x.tsx",
+    "var s = \"import(\" + 'import.meta.url';",
+    "var t = `call import(x) at ${import(y)}`;",
+    "var r = /import\\(/.test(q);",
+    "var u = import.meta.url;",
+  ].join("\n");
+  const out = rewriteModuleUrls(body, opts).split("\n");
+  assertEquals(out[1], "var s = \"import(\" + 'import.meta.url';");
+  assertEquals(
+    out[2],
+    `var t = \`call import(x) at \${${IMPORT_RESOLVER}(y)}\`;`,
+  );
+  assertEquals(out[3], "var r = /import\\(/.test(q);");
+  assertEquals(out[4], 'var u = "file:///app/components/x.tsx";');
+});
+
+Deno.test("rewriteModuleUrls: an untokenizable bundle falls back to lines, and says so", () => {
+  const seen: string[] = [];
+  const out = rewriteModuleUrls(
+    ["// components/bad.tsx", "var a = import.meta.url; @@@ import(p)"].join(
+      "\n",
+    ),
+    { ...opts, onFallback: (m) => seen.push(m) },
+  );
+  assertEquals(seen.length, 1);
+  assert(out.includes('"file:///app/components/bad.tsx"'));
+  assert(out.includes(`${IMPORT_RESOLVER}(p)`));
+});
+
+Deno.test("rewriteModuleUrls: a `// path` line inside a template is not a module marker", () => {
+  const body = [
+    "// deno:https://jsr.io/@deco/deco/1.0.0/plugins/htmx.ts",
+    "var help = `",
+    "// fresh.config.ts",
+    "export default defineConfig({ url: import.meta.url });",
+    "`;",
+    "var lib = import.meta.url;",
+    "var dyn = await import(x);",
+  ].join("\n");
+  const out = rewriteModuleUrls(body, opts).split("\n");
+  // Still the deco module: bundle URL, plain import(.
+  assertEquals(out[5], `var lib = "${SELF}";`);
+  assertEquals(out[6], "var dyn = await import(x);");
+});
+
+Deno.test("codeOf: drops comments, optionally blanks strings", () => {
+  const src = [
+    "// import.meta.url in a comment",
+    "/* import.meta.url */ const a = 'import.meta.url';",
+    "const b = `x ${import.meta.url} y`;",
+    "const re = /'/g; const c = import.meta.url;",
+  ].join("\n");
+  const masked = codeOf(src, true);
+  assertEquals(masked.match(/import\.meta\.url/g)?.length, 2);
+  assert(!masked.includes("in a comment"));
+  assert(codeOf(src, false).includes("'import.meta.url'"));
+});
+
+Deno.test("offersItself: a mention in a comment or a string doesn't count", () => {
+  assert(
+    !offersItself(
+      "components/A.tsx",
+      "// uses import.meta.url\nexport default 1;",
+    ),
+  );
+  assert(
+    !offersItself("components/A.tsx", 'export const s = "import.meta.url";'),
+  );
+  assert(offersItself("components/A.tsx", "useComponent(import.meta.url);"));
+});
+
+Deno.test("resolvedTargets: never main.ts, dev.ts or files outside the component dirs", () => {
+  assertEquals(
+    resolvedTargets(
+      "components/a.tsx",
+      'import.meta.resolve("../main.ts"); import.meta.resolve("../dev.ts");' +
+        ' import.meta.resolve("../sdk/util.ts");' +
+        ' import.meta.resolve("../sections/B.tsx");' +
+        ' // import.meta.resolve("./Commented.tsx")',
+    ),
+    ["sections/B.tsx"],
   );
 });

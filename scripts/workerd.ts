@@ -175,7 +175,15 @@ const wrapInBoot = async (path: string, selfUrl: string) => {
       importResolver(APP_ROOT),
       // import.meta.url is undefined on workerd: each site module gets its own
       // URL under APP_ROOT, everything else the bundle's (workerd_rewrite.ts).
-      rewriteModuleUrls(body.join("\n"), { selfUrl, appRoot: APP_ROOT }),
+      rewriteModuleUrls(body.join("\n"), {
+        selfUrl,
+        appRoot: APP_ROOT,
+        onFallback: (module) =>
+          console.warn(
+            `warning: ${module} could not be tokenized; its import.meta / ` +
+              "import( were rewritten as text (strings included)",
+          ),
+      }),
       `return { ${exported.join(", ")} };`,
       "}",
     ].join("\n"),
