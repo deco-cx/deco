@@ -8,6 +8,16 @@ export interface ExecutionContextLike {
 
 const storage = new AsyncLocalStorage<ExecutionContextLike>();
 
+// The request a promise belongs to (`REQUEST_SCOPE` in engine/core/utils.ts):
+// deco's singleFlight then only joins calls made by the same request. On
+// workerd a promise created by a request that has ended can never settle, so a
+// request waiting on another request's loader call failed with "This promise
+// was created by a request that has since ended". The key is copied, not
+// imported: this module is evaluated before deco boots.
+(globalThis as unknown as Record<symbol, unknown>)[
+  Symbol.for("deco.requestScope")
+] = () => storage.getStore();
+
 /** Runs `fn` with `ctx` as the current execution context. */
 export const runWithExecutionContext = <T>(
   ctx: ExecutionContextLike,

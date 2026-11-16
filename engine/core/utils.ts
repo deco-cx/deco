@@ -64,9 +64,38 @@ export interface SingleFlight<T> {
   run: (f: () => Promise<T>) => Promise<T>;
 }
 
+/**
+ * Global hook a runtime sets when a promise must not outlive the request that
+ * created it (Cloudflare Workers: `runtime/workerd/context.ts`). It returns an
+ * object that identifies the current request, or undefined outside one.
+ */
+export const REQUEST_SCOPE: symbol = Symbol.for("deco.requestScope");
+
+const currentRequestScope = (): object | undefined => {
+  const hook = (globalThis as unknown as Record<symbol, unknown>)[
+    REQUEST_SCOPE
+  ];
+  return typeof hook === "function" ? hook() ?? undefined : undefined;
+};
+
+/**
+ * Deduplicates concurrent calls by key. Calls share one promise; on a runtime
+ * that sets {@link REQUEST_SCOPE} (workerd), only calls of the same request
+ * share it: there a promise created by a request that has ended can never
+ * settle, so a request must not wait on another request's call.
+ */
 export const singleFlight = <T>(): SingleFlight<T> => {
-  const active: Record<string, Promise<T>> = {};
+  const shared: Record<string, Promise<T>> = {};
+  const byRequest = new WeakMap<object, Record<string, Promise<T>>>();
+  const activeFor = (): Record<string, Promise<T>> => {
+    const scope = currentRequestScope();
+    if (!scope) return shared;
+    let active = byRequest.get(scope);
+    if (!active) byRequest.set(scope, active = {});
+    return active;
+  };
   const sfDo = (key: string, f: () => Promise<T>) => {
+    const active = activeFor();
     const promise = active[key];
     if (promise !== undefined) {
       return promise;
