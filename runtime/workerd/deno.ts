@@ -30,6 +30,16 @@ export interface DenoShimOptions {
    * directory.
    */
   files?: Record<string, string | Uint8Array>;
+  /**
+   * Files whose size is known up front but whose content is fetched on first
+   * async read (`Deno.readFile`, `Deno.readTextFile`, `Deno.open`) through
+   * `loadLazyFile`: absolute path to size in bytes. Used to expose the site's
+   * static files, which live in Workers Static Assets, to Fresh. Sync reads of
+   * these paths throw `NotSupported`.
+   */
+  lazyFiles?: Record<string, number>;
+  /** Loads the content of a {@link DenoShimOptions.lazyFiles} entry. */
+  loadLazyFile?: (path: string) => Promise<Uint8Array>;
   /** Value of `Deno.cwd()`. Defaults to `/app`. */
   cwd?: string;
   /** Value of `Deno.version.deno`. Defaults to `1.46.3`. */
@@ -158,6 +168,8 @@ const fileInfo = (isDirectory: boolean, size: number): FileInfo => ({
 
 class MemoryFs {
   files = new Map<string, Uint8Array | string>();
+  /** Lazy files: path to size; content comes from a loader on async reads. */
+  lazy = new Map<string, number>();
   dirs = new Set<string>(["/"]);
 
   constructor(private cwd: () => string) {}
@@ -175,7 +187,13 @@ class MemoryFs {
   }
 
   write(path: string, content: Uint8Array | string) {
+    this.lazy.delete(path);
     this.files.set(path, content);
+    this.addDir(dirname(path));
+  }
+
+  addLazy(path: string, size: number) {
+    this.lazy.set(path, size);
     this.addDir(dirname(path));
   }
 
@@ -193,6 +211,8 @@ class MemoryFs {
 
   stat(path: string): FileInfo | undefined {
     if (this.dirs.has(path)) return fileInfo(true, 0);
+    const lazySize = this.lazy.get(path);
+    if (lazySize !== undefined) return fileInfo(false, lazySize);
     const content = this.files.get(path);
     if (content === undefined) return undefined;
     return fileInfo(
@@ -206,7 +226,7 @@ class MemoryFs {
   list(path: string) {
     const prefix = path === "/" ? "/" : `${path}/`;
     const entries = new Map<string, boolean>();
-    for (const file of this.files.keys()) {
+    for (const file of [...this.files.keys(), ...this.lazy.keys()]) {
       if (!file.startsWith(prefix)) continue;
       const name = file.slice(prefix.length).split("/")[0];
       if (name && !entries.has(name)) {
@@ -227,15 +247,15 @@ class MemoryFs {
   }
 
   remove(path: string, recursive = false) {
-    if (this.files.delete(path)) return true;
+    if (this.files.delete(path) || this.lazy.delete(path)) return true;
     if (!this.dirs.has(path)) return false;
     const prefix = `${path}/`;
-    const children = [...this.files.keys(), ...this.dirs].filter((p) =>
-      p.startsWith(prefix)
-    );
+    const children = [...this.files.keys(), ...this.lazy.keys(), ...this.dirs]
+      .filter((p) => p.startsWith(prefix));
     if (children.length && !recursive) return false;
     for (const child of children) {
       this.files.delete(child);
+      this.lazy.delete(child);
       this.dirs.delete(child);
     }
     this.dirs.delete(path);
@@ -273,6 +293,11 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
     if (path.endsWith("/")) fs.addDir(normalized);
     else fs.write(normalized, content);
   }
+  if (opts.loadLazyFile) {
+    for (const [path, size] of Object.entries(opts.lazyFiles ?? {})) {
+      fs.addLazy(normalize(path, cwd), size);
+    }
+  }
 
   const envStore = new Map<string, string>();
   const setEnv = (env: Record<string, unknown>) => {
@@ -295,8 +320,21 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
     if (!info) throw notFound("stat", resolved);
     return info;
   };
+  const assertNotLazy = (resolved: string) => {
+    if (fs.lazy.has(resolved)) {
+      throw new errors.NotSupported(
+        `'${resolved}' is loaded lazily: use the async Deno API`,
+      );
+    }
+  };
+  const loadLazy = async (resolved: string) => {
+    const bytes = await opts.loadLazyFile!(resolved);
+    if (!bytes) throw notFound("readfile", resolved);
+    return bytes;
+  };
   const readFileSync = (path: string | URL) => {
     const resolved = fs.resolve(path);
+    assertNotLazy(resolved);
     if (fs.dirs.has(resolved)) {
       throw new errors.IsADirectory(`Is a directory: '${resolved}'`);
     }
@@ -306,6 +344,7 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
   };
   const readTextFileSync = (path: string | URL) => {
     const resolved = fs.resolve(path);
+    assertNotLazy(resolved);
     const text = fs.text(resolved);
     if (text === undefined) throw notFound("readfile", resolved);
     return text;
@@ -388,7 +427,20 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
         [Symbol.dispose]() {},
       };
     }
-    const bytes = readFileSync(resolved);
+    return readHandle(readFileSync(resolved), resolved);
+  };
+
+  /** A read-only `Deno.FsFile`-like handle over `bytes`: `readable` plus the
+   *  Reader API (`read`/`readSync`), which `readAll` and friends use. */
+  const readHandle = (bytes: Uint8Array, resolved: string) => {
+    let offset = 0;
+    const readSync = (p: Uint8Array): number | null => {
+      if (offset >= bytes.byteLength) return null;
+      const n = Math.min(p.byteLength, bytes.byteLength - offset);
+      p.set(bytes.subarray(offset, offset + n));
+      offset += n;
+      return n;
+    };
     return {
       rid: -1,
       readable: new ReadableStream<Uint8Array>({
@@ -397,6 +449,8 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
           controller.close();
         },
       }),
+      read: (p: Uint8Array) => Promise.resolve(readSync(p)),
+      readSync,
       stat: () => Promise.resolve(stat(resolved)),
       statSync: () => stat(resolved),
       close() {},
@@ -565,8 +619,18 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
     // fs (async)
     stat: async(stat),
     lstat: async(stat),
-    readFile: async(readFileSync),
-    readTextFile: async(readTextFileSync),
+    readFile: (path: string | URL) => {
+      const resolved = fs.resolve(path);
+      return fs.lazy.has(resolved)
+        ? loadLazy(resolved)
+        : async(readFileSync)(path);
+    },
+    readTextFile: (path: string | URL) => {
+      const resolved = fs.resolve(path);
+      return fs.lazy.has(resolved)
+        ? loadLazy(resolved).then((bytes) => decoder.decode(bytes))
+        : async(readTextFileSync)(path);
+    },
     readDir: (path: string | URL) => {
       const entries = readDirSync(path);
       return (async function* () {
@@ -579,7 +643,19 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
     remove: async(removeSync),
     realPath: async(realPathSync),
     makeTempDir: async(makeTempDirSync),
-    open: async(openSync),
+    open: (
+      path: string | URL,
+      options?: { write?: boolean; create?: boolean; append?: boolean },
+    ) => {
+      const resolved = fs.resolve(path);
+      if (
+        fs.lazy.has(resolved) &&
+        !(options?.write || options?.create || options?.append)
+      ) {
+        return loadLazy(resolved).then((bytes) => readHandle(bytes, resolved));
+      }
+      return async(openSync)(path, options);
+    },
     rename: async((from: string | URL, to: string | URL) => {
       const bytes = readFileSync(from);
       writeFileSync(to, bytes);
