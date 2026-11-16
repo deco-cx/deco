@@ -427,7 +427,20 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
         [Symbol.dispose]() {},
       };
     }
-    const bytes = readFileSync(resolved);
+    return readHandle(readFileSync(resolved), resolved);
+  };
+
+  /** A read-only `Deno.FsFile`-like handle over `bytes`: `readable` plus the
+   *  Reader API (`read`/`readSync`), which `readAll` and friends use. */
+  const readHandle = (bytes: Uint8Array, resolved: string) => {
+    let offset = 0;
+    const readSync = (p: Uint8Array): number | null => {
+      if (offset >= bytes.byteLength) return null;
+      const n = Math.min(p.byteLength, bytes.byteLength - offset);
+      p.set(bytes.subarray(offset, offset + n));
+      offset += n;
+      return n;
+    };
     return {
       rid: -1,
       readable: new ReadableStream<Uint8Array>({
@@ -436,6 +449,8 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
           controller.close();
         },
       }),
+      read: (p: Uint8Array) => Promise.resolve(readSync(p)),
+      readSync,
       stat: () => Promise.resolve(stat(resolved)),
       statSync: () => stat(resolved),
       close() {},
@@ -637,19 +652,7 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
         fs.lazy.has(resolved) &&
         !(options?.write || options?.create || options?.append)
       ) {
-        return loadLazy(resolved).then((bytes) => ({
-          rid: -1,
-          readable: new ReadableStream<Uint8Array>({
-            start(controller) {
-              controller.enqueue(bytes);
-              controller.close();
-            },
-          }),
-          stat: () => Promise.resolve(stat(resolved)),
-          statSync: () => stat(resolved),
-          close() {},
-          [Symbol.dispose]() {},
-        }));
+        return loadLazy(resolved).then((bytes) => readHandle(bytes, resolved));
       }
       return async(openSync)(path, options);
     },

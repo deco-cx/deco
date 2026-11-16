@@ -298,23 +298,26 @@ async function buildServer(
   ], true);
   files[SCHEMAS_FILE] = await Deno.readTextFile(schemasOut);
   await Deno.remove(schemasOut);
-  // The static files Workers Static Assets serves (URL path to size), minus
-  // the islands (served from the snapshot) and the platform's own files.
-  // Fresh sees them through the shim so a `run_worker_first` path goes
-  // through the site's middleware first (see createWorker).
-  const staticFiles: Record<string, number> = {};
+  // Everything Workers Static Assets serves that Fresh may also read, so a
+  // `run_worker_first` path goes through the site's middleware and is then
+  // served by Fresh (see createWorker): shim path -> [URL path, size]. Static
+  // files map to <root>/static, island bundles to <root>/_fresh (the snapshot).
+  const islandsPrefix = `/_frsh/js/${snapshot.build_id}/`;
+  const lazyFiles: Record<string, [string, number]> = {};
   for await (const entry of walk(ASSETS, { includeDirs: false })) {
     const urlPath = `/${relative(ASSETS, entry.path).replaceAll("\\", "/")}`;
-    if (
-      urlPath.startsWith("/_frsh/") ||
-      ["/_headers", "/_redirects", "/.assetsignore"].includes(urlPath)
-    ) continue;
-    staticFiles[urlPath] = (await Deno.stat(entry.path)).size;
+    if (["/_headers", "/_redirects", "/.assetsignore"].includes(urlPath)) {
+      continue;
+    }
+    const shimPath = urlPath.startsWith(islandsPrefix)
+      ? `${APP_ROOT}/_fresh/${urlPath.slice(islandsPrefix.length)}`
+      : `${APP_ROOT}/static${urlPath}`;
+    lazyFiles[shimPath] = [urlPath, (await Deno.stat(entry.path)).size];
   }
   await Deno.writeTextFile(
     join(SERVER, "vfs.js"),
     `export default ${JSON.stringify(files)};\n` +
-      `export const staticFiles = ${JSON.stringify(staticFiles)};\n`,
+      `export const lazyFiles = ${JSON.stringify(lazyFiles)};\n`,
   );
 
   // 3. Generated sources.
@@ -340,7 +343,11 @@ export async function createApp() {
   // leave the boot hanging for every later request. The deco Fresh plugin
   // starts Deco.init on import; it sets the runtime once it has the context.
   const deadline = Date.now() + 30_000;
-  while (!Context.active().runtime && Date.now() < deadline) {
+  while (!Context.active().runtime) {
+    if (Date.now() > deadline) {
+      // A boot failure: createWorker retries it on the next request.
+      throw new Error("deco did not initialize within 30s");
+    }
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
   await Context.active().runtime;
@@ -352,11 +359,11 @@ export async function createApp() {
     join(SRC, "index.ts"),
     `import { createWorker } from "@deco/deco/workerd";
 // @ts-ignore: generated
-import files, { staticFiles } from "./vfs.js";
+import files, { lazyFiles } from "./vfs.js";
 
 export default createWorker({
   files,
-  staticFiles,
+  lazyFiles,
   // @ts-ignore: generated
   boot: () => import("./app.js").then((m) => m.boot()).then((a) => a.createApp()),
 });
