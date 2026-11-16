@@ -18,7 +18,7 @@
  * deco checkout (its version must match the site's @deco/deco).
  */
 import { copy, emptyDir, exists, walk } from "@std/fs";
-import { join, relative, toFileUrl } from "@std/path";
+import { join, relative, resolve, toFileUrl } from "@std/path";
 import { SCHEMAS_FILE } from "../runtime/workerd/worker.ts";
 
 const ROOT = Deno.cwd();
@@ -177,7 +177,8 @@ async function build() {
   // A copy of the site config for the deno subprocesses (schemas, bundles),
   // so DECO_LINK can add `links`. Removed at the end.
   const config = join(ROOT, ".deno.worker.json");
-  const link = Deno.env.get("DECO_LINK");
+  const linkEnv = Deno.env.get("DECO_LINK");
+  const link = linkEnv ? resolve(ROOT, linkEnv) : undefined;
   await Deno.writeTextFile(
     config,
     JSON.stringify({
