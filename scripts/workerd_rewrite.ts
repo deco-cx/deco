@@ -103,13 +103,16 @@ const TOKENIZER_OPTIONS = {
 
 type Edit = [from: number, to: number, text: string];
 
-/** Nodes that bind their own `this` (esbuild leaves `this` alone inside). */
+/** Nodes that bind their own `this` (esbuild leaves `this` alone inside).
+ *  A class field's initializer does too; its computed key doesn't. */
 const OWN_THIS = new Set([
   "FunctionDeclaration",
   "FunctionExpression",
-  "PropertyDefinition",
   "StaticBlock",
 ]);
+
+/** A `void 0` written in a source (code only: no comments, strings masked). */
+const EXPLICIT_VOID_0 = /\bvoid\s*\(?\s*0\b/;
 
 type Node = {
   type: string;
@@ -133,12 +136,13 @@ const isNode = (value: unknown): value is Node =>
  * and gets `(void 0).hasAttribute(...)` instead. On Deno nothing is bundled, so
  * the handler keeps its `this`.
  *
- * Every `void 0` outside a function, method, class field or static block of
- * the module becomes `this` again. The bundle body runs inside `boot()`, called
- * without a receiver, so `this` there is still undefined when the code runs on
- * the server. Unminified esbuild output prints `undefined` as written, so a
- * `void 0` at that level is a rewritten `this` (or a literal `void 0`, which
- * is the same value).
+ * Every `void 0` outside a function, method, class field initializer or
+ * static block of the module becomes `this` again. The bundle body runs inside
+ * `boot()`, called without a receiver, so `this` there is still undefined when
+ * the code runs on the server. Unminified esbuild output prints `undefined` as
+ * written, so a `void 0` at that level is a rewritten `this` unless the source
+ * wrote `void 0` itself: the caller only applies this to modules whose source
+ * has a `this` and no `void 0` ({@link rewriteModuleUrls}).
  *
  * Throws when `code` is not a complete program (the caller skips the module).
  */
@@ -152,6 +156,10 @@ export function topLevelThisEdits(code: string, offset = 0): Edit[] {
       continue;
     }
     if (!isNode(value) || OWN_THIS.has(value.type)) continue;
+    if (value.type === "PropertyDefinition") {
+      if (value.computed) stack.push(value.key);
+      continue;
+    }
     const arg = value.argument;
     if (
       value.type === "UnaryExpression" && value.operator === "void" &&
@@ -196,16 +204,20 @@ const rewriteByLines = (
  * same text inside a string or template), and in site modules only real
  * `import.meta.url` / `import.meta.resolve(` / `import(` expressions change,
  * to the module's own URL under `appRoot` and the registry-aware resolver,
- * and their top-level `this` is restored ({@link topLevelThisEdits}).
+ * and their top-level `this` is restored ({@link topLevelThisEdits}) when
+ * `sourceOf` shows the source has a `this` and writes no `void 0` itself.
  * Other modules get `selfUrl` and keep `import(`, by text as before.
  */
 export function rewriteModuleUrls(
   body: string,
-  { selfUrl, appRoot, onFallback, onThisSkipped }: {
+  { selfUrl, appRoot, onFallback, sourceOf, onThisSkipped }: {
     selfUrl: string;
     appRoot: string;
     /** Called when the bundle can't be tokenized (line-based fallback). */
     onFallback?: (reason: string) => void;
+    /** A site module's source by its marker path, or null. Without it, no
+     *  module gets its top-level `this` back. */
+    sourceOf?: (module: string) => string | null;
     /** Called for a site module whose top-level `this` can't be restored. */
     onThisSkipped?: (module: string, reason: string) => void;
   },
@@ -264,6 +276,29 @@ export function rewriteModuleUrls(
     }
   }
 
+  // Top-level `this` edits of a site module, when its source shows that every
+  // top-level `void 0` in the bundle was a `this`.
+  const restoreThis = (module: string, code: string, offset: number) => {
+    if (!sourceOf) return [];
+    const source = sourceOf(module);
+    if (source === null) {
+      onThisSkipped?.(module, "source not found");
+      return [];
+    }
+    const written = codeOf(source, true);
+    if (!/\bthis\b/.test(written)) return [];
+    if (EXPLICIT_VOID_0.test(written)) {
+      onThisSkipped?.(module, "the source writes `void 0` itself");
+      return [];
+    }
+    try {
+      return topLevelThisEdits(code, offset);
+    } catch (err) {
+      onThisSkipped?.(module, (err as Error).message);
+      return [];
+    }
+  };
+
   // Assemble chunk by chunk: site chunks take their token edits, the others
   // the text replacement they always had.
   const bounds = [0, ...markers.map((m) => m.start), body.length];
@@ -281,11 +316,7 @@ export function rewriteModuleUrls(
     }
     const chunk: Edit[] = [];
     while (e < edits.length && edits[e][0] < to) chunk.push(edits[e++]);
-    try {
-      chunk.push(...topLevelThisEdits(body.slice(from, to), from));
-    } catch (err) {
-      onThisSkipped?.(marker.path, (err as Error).message);
-    }
+    chunk.push(...restoreThis(marker.path, body.slice(from, to), from));
     chunk.sort((x, y) => x[0] - y[0]);
     let pos = from;
     for (const [a, b, text] of chunk) {

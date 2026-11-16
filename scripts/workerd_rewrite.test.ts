@@ -275,10 +275,11 @@ Deno.test("topLevelThisEdits: top-level and arrow `void 0` only", () => {
     "function h() { return void 0; }",
     "var o = { m() { return void 0; } };",
     "class C { x = void 0; static { void 0; } m() { return void 0; } }",
+    "class D { [(void 0).key] = void 0; }",
     "var u = undefined; var n = void 1;",
   ].join("\n");
   const edits = topLevelThisEdits(code, 100);
-  assertEquals(edits.length, 3);
+  assertEquals(edits.length, 4);
   for (const [from, to, text] of edits) {
     assertEquals(code.slice(from - 100, to - 100), "void 0");
     assertEquals(text, "this");
@@ -296,10 +297,63 @@ Deno.test("rewriteModuleUrls: site modules get their top-level `this` back", () 
     "};",
     "function plain() { return void 0; }",
   ].join("\n");
-  const out = rewriteModuleUrls(body, opts).split("\n");
+  const sources: Record<string, string> = {
+    "utils/a11y/drawer.ts": "export const drawerToggleScript = () => {\n" +
+      "  const group = this as HTMLDivElement;\n" +
+      '  return group.hasAttribute("data-open");\n};',
+  };
+  const out = rewriteModuleUrls(body, {
+    ...opts,
+    sourceOf: (m) => sources[m] ?? null,
+  }).split("\n");
   assertEquals(out[1], "var lib = void 0;");
   assertEquals(out[4], "  const group = this;");
   assertEquals(out[7], "function plain() { return void 0; }");
+  // Without sources, nothing is restored.
+  assertEquals(
+    rewriteModuleUrls(body, opts).split("\n")[4],
+    "  const group = void 0;",
+  );
+});
+
+Deno.test("rewriteModuleUrls: a source that writes `void 0` itself keeps every `void 0`", () => {
+  const skipped: string[] = [];
+  const body = [
+    "// components/x.tsx",
+    "var a = () => void 0;",
+    "var b = () => (void 0).id;",
+  ].join("\n");
+  const out = rewriteModuleUrls(body, {
+    ...opts,
+    sourceOf: () =>
+      "export const a = () => void 0; // undefined\n" +
+      "export const b = () => this.id;",
+    onThisSkipped: (m, reason) => skipped.push(`${m}: ${reason}`),
+  });
+  assertEquals(out, body);
+  assertEquals(skipped, [
+    "components/x.tsx: the source writes `void 0` itself",
+  ]);
+});
+
+Deno.test("rewriteModuleUrls: `this` or `void 0` only in comments and strings don't count", () => {
+  const body = ["// components/y.tsx", "var a = void 0;"].join("\n");
+  // No `this` in code: nothing to restore.
+  assertEquals(
+    rewriteModuleUrls(body, {
+      ...opts,
+      sourceOf: () => '// this\nexport const a = undefined; const s = "this";',
+    }),
+    body,
+  );
+  // `void 0` only in a comment: the `this` is restored.
+  assertEquals(
+    rewriteModuleUrls(body, {
+      ...opts,
+      sourceOf: () => "// void 0\nexport const a = this;",
+    }).split("\n")[1],
+    "var a = this;",
+  );
 });
 
 Deno.test("rewriteModuleUrls: a site module that isn't a whole program keeps `void 0`", () => {
@@ -311,6 +365,7 @@ Deno.test("rewriteModuleUrls: a site module that isn't a whole program keeps `vo
   ].join("\n");
   const out = rewriteModuleUrls(body, {
     ...opts,
+    sourceOf: () => "export const s = this;",
     onThisSkipped: (m) => skipped.push(m),
   });
   assertEquals(skipped, ["components/x.tsx"]);

@@ -183,10 +183,17 @@ const wrapInBoot = async (path: string, selfUrl: string) => {
             `warning: ${module} could not be tokenized; its import.meta / ` +
               "import( were rewritten as text (strings included)",
           ),
+        sourceOf: (module) => {
+          try {
+            return Deno.readTextFileSync(join(ROOT, module));
+          } catch {
+            return null;
+          }
+        },
         onThisSkipped: (module, reason) =>
           console.warn(
-            `warning: ${module} could not be parsed (${reason}); its ` +
-              "top-level `this` stays `void 0` in the bundle",
+            `warning: ${module}: ${reason}; its top-level \`this\` stays ` +
+              "`void 0` in the bundle",
           ),
       }),
       `return { ${exported.join(", ")} };`,
