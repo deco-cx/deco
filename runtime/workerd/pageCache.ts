@@ -303,7 +303,9 @@ export async function servePage(
       `public, max-age=${windows.fresh + Math.max(windows.swr, windows.sie)}`,
     );
     copy.headers.set(STORED_AT, String(now()));
-    ctx.waitUntil(cache.put(key, copy).catch(() => {}));
+    const written = cache.put(key, copy).catch(() => {});
+    ctx.waitUntil(written);
+    return written;
   };
 
   const cached = await cache.match(key).catch(() => undefined);
@@ -320,7 +322,9 @@ export async function servePage(
           render()
             .then((fresh) => {
               const windows = cacheWindows(fresh.headers.get("cache-control"));
-              if (!notStorable(fresh) && windows) store(fresh, windows);
+              // Keep the key marked until the new copy is written, so no
+              // request starts a second render against the old one.
+              if (!notStorable(fresh) && windows) return store(fresh, windows);
             })
             .catch(() => {})
             .finally(() => revalidating.delete(key.url)),
