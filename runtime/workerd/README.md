@@ -42,9 +42,11 @@ the zone WAF that blocks `/.decofile` and `/deco/meta`.
 
 - `installDenoShim({ env, files, cwd })` installs a `globalThis.Deno` backed by
   the Worker env (string bindings only) and an in-memory, read-only file system
-  (`files`). Writes go to an ephemeral overlay. Subprocesses, `Deno.serve`, KV
-  and cron throw `Deno.errors.NotSupported`. `Deno.upgradeWebSocket` uses
-  `WebSocketPair`.
+  (`files`). Writes go to an ephemeral overlay, but `Deno.permissions` reports
+  `write` as denied, so a disk cache (`WEB_CACHE_ENGINE=FILE_SYSTEM`) falls back
+  to the Cache API instead of filling the isolate's memory. Subprocesses,
+  `Deno.serve`, KV and cron throw `Deno.errors.NotSupported`.
+  `Deno.upgradeWebSocket` uses `WebSocketPair`.
 - `keepCacheWritesAlive()` wraps `caches.open()` so `put`/`delete` join the
   current request's `waitUntil`. deco writes loader results without awaiting
   them; without this, workerd cancels the write when the response is sent and
