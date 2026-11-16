@@ -26,6 +26,8 @@
 // from a deco checkout against a site's own import map (DECO_LINK).
 // deno-lint-ignore no-import-prefix
 import { parse, tokenizer, tokTypes as tt } from "npm:acorn@^8.14.0";
+// deno-lint-ignore no-import-prefix
+import ts from "npm:typescript@^5.8.3";
 
 /** Global the Worker entry fills with the site modules a runtime `import()`
  *  may ask for: path from the site root (`/components/Session.tsx`) to the
@@ -111,8 +113,26 @@ const OWN_THIS = new Set([
   "StaticBlock",
 ]);
 
-/** A `void 0` written in a source (code only: no comments, strings masked). */
-const EXPLICIT_VOID_0 = /\bvoid\s*\(?\s*0\b/;
+/** TS nodes that wrap a value; every other `TS*` node is a type or a
+ *  declaration esbuild compiles into functions (enums, namespaces). */
+const TS_VALUE_WRAPPERS = new Set([
+  "TSAsExpression",
+  "TSSatisfiesExpression",
+  "TSNonNullExpression",
+  "TSTypeAssertion",
+  "TSInstantiationExpression",
+]);
+
+/** Keys that hold types, never values. */
+const TYPE_KEYS = new Set([
+  "typeAnnotation",
+  "returnType",
+  "typeParameters",
+  "typeArguments",
+  "superTypeParameters",
+  "superTypeArguments",
+  "implements",
+]);
 
 type Node = {
   type: string;
@@ -125,55 +145,155 @@ const isNode = (value: unknown): value is Node =>
   typeof value === "object" && value !== null &&
   typeof (value as Node).type === "string";
 
-/**
- * Edits that turn a module's top-level `this` back into `this`.
- *
- * In an ES module the top-level `this` is undefined, so esbuild (`deno bundle`)
- * prints it as `void 0`, also inside arrow functions declared at the top level.
- * The value doesn't change, but a function's source does: the storefront
- * pattern of stringifying a handler for the browser (`useScript(fn)` in an
- * `hx-on` attribute or a `<script>`) relies on `this` being the element there,
- * and gets `(void 0).hasAttribute(...)` instead. On Deno nothing is bundled, so
- * the handler keeps its `this`.
- *
- * Every `void 0` outside a function, method, class field initializer or
- * static block of the module becomes `this` again. The bundle body runs inside
- * `boot()`, called without a receiver, so `this` there is still undefined when
- * the code runs on the server. Unminified esbuild output prints `undefined` as
- * written, so a `void 0` at that level is a rewritten `this` unless the source
- * wrote `void 0` itself: the caller only applies this to modules whose source
- * has a `this` and no `void 0` ({@link rewriteModuleUrls}).
- *
- * Throws when `code` is not a complete program (the caller skips the module).
- */
-export function topLevelThisEdits(code: string, offset = 0): Edit[] {
-  const edits: Edit[] = [];
-  const stack: unknown[] = [parse(code, TOKENIZER_OPTIONS)];
+const isVoid0 = (node: Node) => {
+  const arg = node.argument;
+  return node.type === "UnaryExpression" && node.operator === "void" &&
+    isNode(arg) && arg.type === "Literal" && arg.raw === "0";
+};
+
+/** Visits the nodes in a module's top-level `this` scope: outside functions,
+ *  methods, class field initializers and static blocks (arrows don't count),
+ *  skipping types and non-computed property names. `visit` returning true
+ *  skips the node's children. */
+function walkTopLevel(root: unknown, visit: (node: Node) => boolean) {
+  const stack: unknown[] = [root];
   while (stack.length > 0) {
     const value = stack.pop();
     if (Array.isArray(value)) {
-      for (let i = value.length - 1; i >= 0; i--) stack.push(value[i]);
+      stack.push(...value);
       continue;
     }
     if (!isNode(value) || OWN_THIS.has(value.type)) continue;
+    if (value.type.startsWith("TS") && !TS_VALUE_WRAPPERS.has(value.type)) {
+      continue;
+    }
     if (value.type === "PropertyDefinition") {
       if (value.computed) stack.push(value.key);
       continue;
     }
-    const arg = value.argument;
-    if (
-      value.type === "UnaryExpression" && value.operator === "void" &&
-      isNode(arg) && arg.type === "Literal" && arg.raw === "0"
-    ) {
-      edits.push([offset + value.start, offset + value.end, "this"]);
-      continue;
-    }
-    for (const key of Object.keys(value).reverse()) {
+    if (visit(value)) continue;
+    for (const key of Object.keys(value)) {
+      if (TYPE_KEYS.has(key)) continue;
+      if (
+        !value.computed &&
+        ((key === "key" &&
+          (value.type === "Property" || value.type === "MethodDefinition")) ||
+          (key === "property" && value.type === "MemberExpression"))
+      ) continue;
       const child = value[key];
       if (typeof child === "object" && child !== null) stack.push(child);
     }
   }
-  return edits.sort((a, b) => a[0] - b[0]);
+}
+
+/**
+ * The `void 0` expressions at a bundle chunk's top level, by position.
+ *
+ * In an ES module the top-level `this` is undefined, so esbuild (`deno bundle`)
+ * prints it as `void 0`, also inside arrow functions declared at the top level.
+ * It prints the global `undefined` as `void 0` too, so these are the source's
+ * top-level `this`, `undefined` and `void 0`, in order ({@link
+ * sourceTopLevelValues} tells which is which).
+ *
+ * Throws when `code` is not a complete program.
+ */
+export function topLevelVoids(
+  code: string,
+  offset = 0,
+): [from: number, to: number][] {
+  const found: [number, number][] = [];
+  walkTopLevel(parse(code, TOKENIZER_OPTIONS), (node) => {
+    if (!isVoid0(node)) return false;
+    found.push([offset + node.start, offset + node.end]);
+    return true;
+  });
+  return found.sort((a, b) => a[0] - b[0]);
+}
+
+/** What esbuild prints as a top-level `void 0`. */
+export type TopLevelValue = "this" | "undefined";
+
+/**
+ * A site source's top-level `this`, `undefined` and `void 0` values, in order
+ * (types excluded: `x?: string | undefined` is not a value). `typeof
+ * undefined` is left out: esbuild folds it into a string. TypeScript strips
+ * the types and JSX and leaves every value as written.
+ *
+ * Throws when the source can't be parsed.
+ */
+export function sourceTopLevelValues(
+  source: string,
+  path: string,
+): TopLevelValue[] {
+  const { outputText: code, diagnostics } = ts.transpileModule(source, {
+    fileName: path,
+    reportDiagnostics: true,
+    compilerOptions: {
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.ESNext,
+      jsx: ts.JsxEmit.ReactJSX,
+      useDefineForClassFields: true,
+    },
+  });
+  if (diagnostics?.length) {
+    throw new Error(
+      ts.flattenDiagnosticMessageText(diagnostics[0].messageText, " "),
+    );
+  }
+  const found: [number, TopLevelValue][] = [];
+  walkTopLevel(parse(code, TOKENIZER_OPTIONS), (node) => {
+    if (node.type === "ThisExpression") found.push([node.start, "this"]);
+    else if (node.type === "Identifier" && node.name === "undefined") {
+      found.push([node.start, "undefined"]);
+    } else if (isVoid0(node)) found.push([node.start, "undefined"]);
+    else {
+      const arg = node.argument;
+      return node.type === "UnaryExpression" && node.operator === "typeof" &&
+        isNode(arg) && arg.type === "Identifier" && arg.name === "undefined";
+    }
+    return true;
+  });
+  return found.sort((a, b) => a[0] - b[0]).map(([, value]) => value);
+}
+
+/**
+ * Edits that turn a site module's top-level `this` back into `this`.
+ *
+ * The value doesn't change on the server, but a function's source does: the
+ * storefront pattern of stringifying a handler for the browser (`useScript(fn)`
+ * in an `hx-on` attribute or a `<script>`) relies on `this` being the element
+ * there, and gets `(void 0).hasAttribute(...)` instead. On Deno nothing is
+ * bundled, so the handler keeps its `this`.
+ *
+ * The bundle can't tell a rewritten `this` from an author's `undefined`, so
+ * the module's source does: its top-level values are paired, in order, with
+ * the top-level `void 0`s of the module's chunks, and only the ones that were
+ * `this` change.
+ * When the counts differ (tree shaking dropped a statement, or esbuild folded
+ * an expression), nothing changes and `reason` says why. The bundle body runs
+ * inside `boot()`, called without a receiver, so `this` there is still
+ * undefined when the code runs on the server.
+ */
+export function topLevelThisEdits(
+  chunks: { code: string; offset: number }[],
+  source: string,
+  path: string,
+): { edits: Edit[]; reason?: string } {
+  const values = sourceTopLevelValues(source, path);
+  if (!values.includes("this")) return { edits: [] };
+  const voids = chunks.flatMap((c) => topLevelVoids(c.code, c.offset));
+  if (voids.length !== values.length) {
+    return {
+      edits: [],
+      reason: `${values.length} top-level this/undefined in the source, ` +
+        `${voids.length} void 0 in the bundle`,
+    };
+  }
+  return {
+    edits: voids.flatMap(([from, to], i): Edit[] =>
+      values[i] === "this" ? [[from, to, "this"]] : []
+    ),
+  };
 }
 
 /** Line-based markers and text replacement: the fallback when the bundle
@@ -204,8 +324,8 @@ const rewriteByLines = (
  * same text inside a string or template), and in site modules only real
  * `import.meta.url` / `import.meta.resolve(` / `import(` expressions change,
  * to the module's own URL under `appRoot` and the registry-aware resolver,
- * and their top-level `this` is restored ({@link topLevelThisEdits}) when
- * `sourceOf` shows the source has a `this` and writes no `void 0` itself.
+ * and their top-level `this` is restored ({@link topLevelThisEdits}) from
+ * their source (`sourceOf`).
  * Other modules get `selfUrl` and keep `import(`, by text as before.
  */
 export function rewriteModuleUrls(
@@ -276,28 +396,40 @@ export function rewriteModuleUrls(
     }
   }
 
-  // Top-level `this` edits of a site module, when its source shows that every
-  // top-level `void 0` in the bundle was a `this`.
-  const restoreThis = (module: string, code: string, offset: number) => {
-    if (!sourceOf) return [];
-    const source = sourceOf(module);
-    if (source === null) {
-      onThisSkipped?.(module, "source not found");
-      return [];
+  // Top-level `this` edits, per site module, paired with its source. A
+  // module may come in several chunks (esbuild prints its exports object
+  // before the modules it imports), so they are paired together.
+  if (sourceOf) {
+    const chunksOf = new Map<string, { code: string; offset: number }[]>();
+    markers.forEach((m, i) => {
+      if (!isSiteModule(m.path)) return;
+      const to = i + 1 < markers.length ? markers[i + 1].start : body.length;
+      const chunks = chunksOf.get(m.path) ?? [];
+      chunks.push({ code: body.slice(m.start, to), offset: m.start });
+      chunksOf.set(m.path, chunks);
+    });
+    for (const [module, chunks] of chunksOf) {
+      if (!chunks.some((c) => c.code.includes("void 0"))) continue;
+      const source = sourceOf(module);
+      if (source === null) {
+        onThisSkipped?.(module, "source not found");
+        continue;
+      }
+      if (!/\bthis\b/.test(source)) continue;
+      try {
+        const { edits: found, reason } = topLevelThisEdits(
+          chunks,
+          source,
+          module,
+        );
+        if (reason) onThisSkipped?.(module, reason);
+        edits.push(...found);
+      } catch (err) {
+        onThisSkipped?.(module, (err as Error).message);
+      }
     }
-    const written = codeOf(source, true);
-    if (!/\bthis\b/.test(written)) return [];
-    if (EXPLICIT_VOID_0.test(written)) {
-      onThisSkipped?.(module, "the source writes `void 0` itself");
-      return [];
-    }
-    try {
-      return topLevelThisEdits(code, offset);
-    } catch (err) {
-      onThisSkipped?.(module, (err as Error).message);
-      return [];
-    }
-  };
+    edits.sort((x, y) => x[0] - y[0]);
+  }
 
   // Assemble chunk by chunk: site chunks take their token edits, the others
   // the text replacement they always had.
@@ -314,12 +446,9 @@ export function rewriteModuleUrls(
       while (e < edits.length && edits[e][0] < to) e++;
       continue;
     }
-    const chunk: Edit[] = [];
-    while (e < edits.length && edits[e][0] < to) chunk.push(edits[e++]);
-    chunk.push(...restoreThis(marker.path, body.slice(from, to), from));
-    chunk.sort((x, y) => x[0] - y[0]);
     let pos = from;
-    for (const [a, b, text] of chunk) {
+    while (e < edits.length && edits[e][0] < to) {
+      const [a, b, text] = edits[e++];
       out += body.slice(pos, a) + text;
       pos = b;
     }
