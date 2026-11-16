@@ -34,6 +34,14 @@ export interface Worker {
   ): Promise<Response>;
 }
 
+/** The first value that is a non-empty string (env bindings can be empty or
+ *  not text at all). */
+const firstNonEmpty = (...values: unknown[]): string | undefined =>
+  values.find((v): v is string => typeof v === "string" && v.trim() !== "");
+
+/** Where `scripts/workerd.ts` embeds the precomputed editor schemas. */
+export const SCHEMAS_FILE = "/app/.deco/schemas.gen.json";
+
 /**
  * The Cloudflare Worker for a Fresh + deco site:
  *
@@ -43,14 +51,6 @@ export interface Worker {
  *   run inside a request);
  * - makes loader cache writes part of the request's `waitUntil`.
  */
-/** The first value that is a non-empty string (env bindings can be empty or
- *  not text at all). */
-const firstNonEmpty = (...values: unknown[]): string | undefined =>
-  values.find((v): v is string => typeof v === "string" && v.trim() !== "");
-
-/** Where `scripts/workerd.ts` embeds the precomputed editor schemas. */
-export const SCHEMAS_FILE = "/app/.deco/schemas.gen.json";
-
 export function createWorker({ files, boot }: WorkerOptions): Worker {
   let app: Promise<FreshHandler> | undefined;
   return {
