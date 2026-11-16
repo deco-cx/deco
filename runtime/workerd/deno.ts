@@ -442,6 +442,14 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
   });
 
   const granted = { state: "granted", onchange: null, partial: false };
+  const denied = { state: "denied", onchange: null, partial: false };
+  // "write" is denied: the file system is an in-memory overlay that lives as
+  // long as the isolate (128 MB). Code that probes for a writable disk before
+  // using one (deco's FILE_SYSTEM loader cache, `WEB_CACHE_ENGINE=FILE_SYSTEM`)
+  // must fall back instead of filling the isolate's memory. Writes themselves
+  // still work, for code that writes small files without asking.
+  const permissionFor = (desc?: { name?: string }) =>
+    desc?.name === "write" ? denied : granted;
   const neverWatcher = () => {
     let close: () => void = () => {};
     const closed = new Promise<void>((resolve) => (close = resolve));
@@ -522,11 +530,14 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
     stdout: output((msg) => console.log(msg.trimEnd())),
     stderr: output((msg) => console.error(msg.trimEnd())),
     permissions: {
-      query: () => Promise.resolve(granted),
-      querySync: () => granted,
-      request: () => Promise.resolve(granted),
-      requestSync: () => granted,
-      revoke: () => Promise.resolve(granted),
+      query: (desc?: { name?: string }) => Promise.resolve(permissionFor(desc)),
+      querySync: permissionFor,
+      request: (desc?: { name?: string }) =>
+        Promise.resolve(permissionFor(desc)),
+      requestSync: permissionFor,
+      // Permissions are fixed on workerd: revoking changes nothing.
+      revoke: (desc?: { name?: string }) =>
+        Promise.resolve(permissionFor(desc)),
     },
     // timers and signals
     unrefTimer: () => {},
