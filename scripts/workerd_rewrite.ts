@@ -605,3 +605,45 @@ export function siteModuleRegistry(modules: Record<string, string>): {
   })] = {\n${map}\n};`;
   return { imports, register };
 }
+
+/** The condition in esbuild's `__toESM` helper that skips `default` for a
+ *  CommonJS module marked `__esModule`, as `deno bundle` emits it unminified.
+ *  esbuild renames the parameters when a bundle already uses the names
+ *  (`mod2`). */
+const ESM_FLAG_CHECK = /\b[\w$]+ \|\| ![\w$]+ \|\| ![\w$]+\.__esModule \?/;
+
+/**
+ * Makes CommonJS default imports behave as on Deno (and Node): `default` is
+ * always `module.exports`.
+ *
+ * Before Deno 2.9, `deno bundle` emits esbuild's `__toESM` helper in
+ * Babel-compatible mode: a CommonJS module that sets `__esModule` gets no
+ * `default`. tslib sets it, so `import tslib from "tslib"` (used by
+ * @supabase/supabase-js, among others) is `undefined` in the bundle and the
+ * Worker throws while it boots. Deno 2.9 emits the same helper with the
+ * condition already replaced by `1 ?`, which is what this writes. On such a
+ * bundle there is nothing to change.
+ *
+ * Throws when a `__toESM` helper still reads `__esModule` in a shape this
+ * doesn't know, so a future `deno bundle` can't ship that Worker silently.
+ */
+export function nodeModeInterop(body: string): string {
+  let out = "";
+  let last = 0;
+  for (const match of body.matchAll(/^var (__toESM\w*) = /gm)) {
+    const end = body.indexOf("\n));", match.index);
+    const to = end === -1 ? body.length : end;
+    const helper = body.slice(match.index, to).replace(ESM_FLAG_CHECK, "1 ?");
+    // `.__esModule`, the property read: the helper's comment names the flag.
+    if (/\.__esModule\b/.test(helper)) {
+      throw new Error(
+        `${match[1]} in the bundle still checks __esModule; CommonJS default ` +
+          "imports would differ from Deno. Update nodeModeInterop " +
+          "(scripts/workerd_rewrite.ts) for this deno bundle output.",
+      );
+    }
+    out += body.slice(last, match.index) + helper;
+    last = to;
+  }
+  return out + body.slice(last);
+}
