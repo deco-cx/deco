@@ -29,9 +29,37 @@ const SRC = join(OUT, "src");
 const FRESH = join(ROOT, "_fresh");
 /** `_headers` rule for the Fresh island bundles (immutable: the path has the
  *  build id). */
+// `! Cache-Control` first: Workers joins the values of every matching rule,
+// so a site rule such as `/*` would otherwise be combined with ours.
 const ISLANDS_HEADERS = `/_frsh/js/*
+  ! Cache-Control
   Cache-Control: public, max-age=31536000, immutable
 `;
+/** Workers Static Assets limit on `_headers` rules. */
+const MAX_HEADER_RULES = 100;
+
+/** The site's `_headers` files (if any) followed by the islands rule. */
+const mergeHeaders = async (sources: string[]): Promise<string> => {
+  const parts: string[] = [];
+  for (const source of sources) {
+    if (await exists(source)) {
+      parts.push((await Deno.readTextFile(source)).trimEnd());
+    }
+  }
+  // A rule starts with an unindented URL pattern (comments start with #).
+  const rules =
+    parts.join("\n").split("\n").filter((line) =>
+      line.trim() !== "" && !/^\s/.test(line) && !line.startsWith("#")
+    ).length;
+  if (rules + 1 > MAX_HEADER_RULES) {
+    fail(
+      `static/_headers has ${rules} rules; adding the islands cache rule ` +
+        `would exceed the ${MAX_HEADER_RULES}-rule limit of Workers Static ` +
+        "Assets. Merge some rules (e.g. into a wildcard).",
+    );
+  }
+  return [...parts, ISLANDS_HEADERS].join("\n\n");
+};
 /** Deno.cwd() inside the Worker. */
 const APP_ROOT = "/app";
 const WRANGLER_CONFIG = join(ROOT, "wrangler.jsonc");
@@ -181,14 +209,14 @@ async function build() {
   // Workers Static Assets answers these files before the Worker runs, so it
   // also sets their headers (default: `max-age=0, must-revalidate`). Island
   // bundles live under the build id, like Fresh serves them on Deno: cache them
-  // for a year. A site's own `static/_headers` is kept, ours is appended.
-  const headersFile = join(ASSETS, "_headers");
-  const siteHeaders = (await exists(headersFile))
-    ? `${(await Deno.readTextFile(headersFile)).trimEnd()}\n\n`
-    : "";
+  // for a year. The site's own `_headers` (static/ and Fresh's static/) is
+  // kept, ours is appended.
   await Deno.writeTextFile(
-    headersFile,
-    `${siteHeaders}${ISLANDS_HEADERS}`,
+    join(ASSETS, "_headers"),
+    await mergeHeaders([
+      join(ROOT, "static", "_headers"),
+      join(FRESH, "static", "_headers"),
+    ]),
   );
 
   // A copy of the site config for the deno subprocesses (schemas, bundles),
