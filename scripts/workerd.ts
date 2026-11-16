@@ -20,6 +20,14 @@
 import { copy, emptyDir, exists, walk } from "@std/fs";
 import { join, relative, resolve, toFileUrl } from "@std/path";
 import { SCHEMAS_FILE } from "../runtime/workerd/worker.ts";
+import {
+  importResolver,
+  offersItself,
+  resolvedTargets,
+  rewriteModuleUrls,
+  SITE_MODULE_DIRS,
+  siteModuleRegistry,
+} from "./workerd_rewrite.ts";
 
 const ROOT = Deno.cwd();
 const OUT = join(ROOT, "dist", "worker");
@@ -158,19 +166,24 @@ const wrapInBoot = async (path: string, selfUrl: string) => {
       const [local, name] = s.split(/\s+as\s+/);
       return `${name ?? local}: ${local}`;
     });
-  const url = JSON.stringify(selfUrl);
   await Deno.writeTextFile(
     path,
     [
       ...imports,
       "export async function boot() {",
-      // import.meta.url is undefined on workerd.
-      body.join("\n")
-        .replaceAll("import.meta.url", url)
-        .replaceAll(
-          "import.meta.resolve(",
-          `((s) => new URL(s, ${url}).href)(`,
-        ),
+      // Site modules' runtime import() of other site modules (workerd_rewrite).
+      importResolver(APP_ROOT),
+      // import.meta.url is undefined on workerd: each site module gets its own
+      // URL under APP_ROOT, everything else the bundle's (workerd_rewrite.ts).
+      rewriteModuleUrls(body.join("\n"), {
+        selfUrl,
+        appRoot: APP_ROOT,
+        onFallback: (module) =>
+          console.warn(
+            `warning: ${module} could not be tokenized; its import.meta / ` +
+              "import( were rewritten as text (strings included)",
+          ),
+      }),
       `return { ${exported.join(", ")} };`,
       "}",
     ].join("\n"),
@@ -322,6 +335,24 @@ async function buildServer(
 
   // 3. Generated sources.
   const site = (file: string) => toFileUrl(join(ROOT, file)).href;
+  // Site modules a runtime import() may ask for by their own URL (the
+  // storefront template's useComponent(import.meta.url) + Component.tsx).
+  const offered: Record<string, string> = {};
+  for (const dir of SITE_MODULE_DIRS) {
+    if (!(await exists(join(ROOT, dir)))) continue;
+    for await (const entry of walk(join(ROOT, dir), { includeDirs: false })) {
+      const rel = relative(ROOT, entry.path).replaceAll("\\", "/");
+      const source = await Deno.readTextFile(entry.path);
+      if (offersItself(rel, source)) offered[`/${rel}`] = site(rel);
+      // ...and the site files it names with import.meta.resolve("./x").
+      for (const target of resolvedTargets(rel, source)) {
+        if (await exists(join(ROOT, target))) {
+          offered[`/${target}`] = site(target);
+        }
+      }
+    }
+  }
+  const registry = siteModuleRegistry(offered);
   await Deno.writeTextFile(
     join(SRC, "app.ts"),
     `import { createHandler } from "$fresh/server.ts";
@@ -330,6 +361,9 @@ import { freshForWorkerd } from "@deco/deco/workerd";
 import * as DispatchAsyncRender from "deco/runtime/fresh/islands/DispatchAsyncRender.tsx";
 import manifest from "${site("fresh.gen.ts")}";
 import config from "${site("fresh.config.ts")}";
+${registry.imports}
+
+${registry.register}
 
 export async function createApp() {
   const app = freshForWorkerd(manifest, config, {
