@@ -27,6 +27,11 @@ const SERVER = join(OUT, "server");
 const ASSETS = join(OUT, "assets");
 const SRC = join(OUT, "src");
 const FRESH = join(ROOT, "_fresh");
+/** `_headers` rule for the Fresh island bundles (immutable: the path has the
+ *  build id). */
+const ISLANDS_HEADERS = `/_frsh/js/*
+  Cache-Control: public, max-age=31536000, immutable
+`;
 /** Deno.cwd() inside the Worker. */
 const APP_ROOT = "/app";
 const WRANGLER_CONFIG = join(ROOT, "wrangler.jsonc");
@@ -173,6 +178,18 @@ async function build() {
   if (await exists(join(FRESH, "static"))) {
     await copy(join(FRESH, "static"), ASSETS, { overwrite: true });
   }
+  // Workers Static Assets answers these files before the Worker runs, so it
+  // also sets their headers (default: `max-age=0, must-revalidate`). Island
+  // bundles live under the build id, like Fresh serves them on Deno: cache them
+  // for a year. A site's own `static/_headers` is kept, ours is appended.
+  const headersFile = join(ASSETS, "_headers");
+  const siteHeaders = (await exists(headersFile))
+    ? `${(await Deno.readTextFile(headersFile)).trimEnd()}\n\n`
+    : "";
+  await Deno.writeTextFile(
+    headersFile,
+    `${siteHeaders}${ISLANDS_HEADERS}`,
+  );
 
   // A copy of the site config for the deno subprocesses (schemas, bundles),
   // so DECO_LINK can add `links`. Removed at the end.

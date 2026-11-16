@@ -34,9 +34,11 @@ the zone WAF that blocks `/.decofile` and `/deco/meta`.
 
 `scripts/workerd.ts build` generates the Worker entry and app in
 `dist/worker/src`, bundles them, and copies `static/` and the Fresh islands to
-`dist/worker/assets`. It also embeds `.deco/blocks`, the Fresh snapshot and
-`deno.json` for the shim's file system. `--no-minify` keeps the bundle readable.
-`DECO_LINK=/path/to/deco` bundles against a local deco checkout.
+`dist/worker/assets` (with a `_headers` rule that caches the islands,
+`/_frsh/js/<build id>/*`, for a year). It also embeds `.deco/blocks`, the Fresh
+snapshot and `deno.json` for the shim's file system. `--no-minify` keeps the
+bundle readable. `DECO_LINK=/path/to/deco` bundles against a local deco
+checkout.
 
 ## What each piece does
 
