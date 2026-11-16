@@ -64,7 +64,9 @@ export interface PageCacheOptions {
    *  matcher and segment cookies. */
   keyCookies?: string[];
   /** Request cookies (name prefixes) that skip the cache: the page renders and
-   *  is neither read from nor written to it (e.g. a signed-in shopper). */
+   *  is neither read from nor written to it. Rarely needed: a page that renders
+   *  shopper data on the server is already `no-store` (a `no-store` loader
+   *  sets `vary.shouldCache = false`). */
   bypassCookies?: string[];
   /** The Cache API cache (default `caches.default`; tests inject one). */
   cache?: Cache | null;

@@ -107,8 +107,14 @@ before Cloudflare's cache, so without help every visit would render the page.
 - **Never cached**: drafts (`?__draft=`, `__deco_draft`), debug (`?__d`,
   `deco_debug`), `Authorization`, deco's own endpoints under `/live/` and
   `/deco/` (except `/deco/render`, lazy sections), `/.decofile`, and requests
-  with a cookie in `DECO_PAGE_CACHE_BYPASS_COOKIES` (e.g. a signed-in shopper:
-  `VtexIdclientAutCookie`).
+  with a cookie in `DECO_PAGE_CACHE_BYPASS_COOKIES` (empty by default).
+- **Why user data never leaks**: a loader is `cache: "no-store"` unless it opts
+  in, and one that runs on the server with `no-store` (or a `null` cache key)
+  sets `vary.shouldCache = false`, which makes the page `no-store`
+  (`blocks/loader.ts`). So a page that renders cart or shopper data on the
+  server is never stored, here or by the CDN. A cacheable loader whose result
+  depends on a request cookie needs that cookie in the key
+  (`DECO_PAGE_CACHE_KEY_COOKIES`), as it would in a CDN cache key.
 - Every answer carries `X-Cache`: `HIT`, `STALE-HIT`, `STALE-ERROR`, `MISS`, or
   `BYPASS` with `X-Cache-Reason`; served copies also carry `X-Cache-Age`.
 
