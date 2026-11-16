@@ -113,27 +113,6 @@ const OWN_THIS = new Set([
   "StaticBlock",
 ]);
 
-/** TS nodes that wrap a value; every other `TS*` node is a type or a
- *  declaration esbuild compiles into functions (enums, namespaces). */
-const TS_VALUE_WRAPPERS = new Set([
-  "TSAsExpression",
-  "TSSatisfiesExpression",
-  "TSNonNullExpression",
-  "TSTypeAssertion",
-  "TSInstantiationExpression",
-]);
-
-/** Keys that hold types, never values. */
-const TYPE_KEYS = new Set([
-  "typeAnnotation",
-  "returnType",
-  "typeParameters",
-  "typeArguments",
-  "superTypeParameters",
-  "superTypeArguments",
-  "implements",
-]);
-
 type Node = {
   type: string;
   start: number;
@@ -153,7 +132,8 @@ const isVoid0 = (node: Node) => {
 
 /** Visits the nodes in a module's top-level `this` scope: outside functions,
  *  methods, class field initializers and static blocks (arrows don't count),
- *  skipping types and non-computed property names. `visit` returning true
+ *  skipping non-computed property names. Plain JS only: sources go through
+ *  `ts.transpileModule` first. `visit` returning true
  *  skips the node's children. */
 function walkTopLevel(root: unknown, visit: (node: Node) => boolean) {
   const stack: unknown[] = [root];
@@ -164,16 +144,12 @@ function walkTopLevel(root: unknown, visit: (node: Node) => boolean) {
       continue;
     }
     if (!isNode(value) || OWN_THIS.has(value.type)) continue;
-    if (value.type.startsWith("TS") && !TS_VALUE_WRAPPERS.has(value.type)) {
-      continue;
-    }
     if (value.type === "PropertyDefinition") {
       if (value.computed) stack.push(value.key);
       continue;
     }
     if (visit(value)) continue;
     for (const key of Object.keys(value)) {
-      if (TYPE_KEYS.has(key)) continue;
       if (
         !value.computed &&
         ((key === "key" &&
