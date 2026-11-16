@@ -188,10 +188,20 @@ const fromAssets = (
       if (!urlPath) throw new Error(`not an asset: ${path}`);
       // Encode each segment: file names may contain `?`, `#`, `%`...
       const encoded = urlPath.split("/").map(encodeURIComponent).join("/");
-      // The host is ignored by the ASSETS binding.
-      const res = await binding.fetch(
-        new Request(new URL(encoded, "https://assets.invalid")),
-      );
+      // The host is ignored by the ASSETS binding. Its HTML handling answers
+      // `/page.html` with a redirect to `/page`: follow a few, in the binding.
+      let url = new URL(encoded, "https://assets.invalid");
+      let res = await binding.fetch(new Request(url));
+      for (
+        let hop = 0;
+        hop < 3 && res.status >= 300 && res.status < 400;
+        hop++
+      ) {
+        const location = res.headers.get("location");
+        if (!location) break;
+        url = new URL(location, url);
+        res = await binding.fetch(new Request(url));
+      }
       if (!res.ok) {
         throw new Error(`asset ${urlPath}: ASSETS ${res.status}`);
       }
