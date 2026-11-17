@@ -52,6 +52,28 @@ Deno.test("sharedBoot: a waiter boots again when another request's boot fails", 
   );
 });
 
+Deno.test("sharedBoot: concurrent waiters share one replacement boot", async () => {
+  const app = sharedBoot<string>();
+  const first = deferred<string>();
+  const second = deferred<string>();
+  let starts = 0;
+  const start = () => (++starts === 1 ? first.promise : second.promise);
+  const a = ctx(), b = ctx(), c = ctx();
+  const pa = app(a, start);
+  // b and c wait on a's boot; a's request is cancelled.
+  const pb = app(b, start);
+  const pc = app(c, start);
+  first.reject(CROSS_REQUEST);
+  await assertRejects(() => pa);
+  await new Promise((r) => setTimeout(r, 0)); // let b and c retry
+  // One replacement boot, started (and kept alive) by one of the waiters only.
+  assertEquals(starts, 2);
+  assertEquals(b.kept.length + c.kept.length, 1);
+  second.resolve("rebooted");
+  assertEquals(await Promise.all([pb, pc]), ["rebooted", "rebooted"]);
+  assertEquals(starts, 2);
+});
+
 Deno.test("sharedBoot: a failed boot is not cached, and retries only once", async () => {
   const app = sharedBoot<string>();
   await assertRejects(() =>
