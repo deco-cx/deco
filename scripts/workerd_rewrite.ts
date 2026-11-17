@@ -647,3 +647,39 @@ export function nodeModeInterop(body: string): string {
   }
   return out + body.slice(last);
 }
+
+/**
+ * Site files the decofile points at by path, which the runtime reads from the
+ * site root (`website/loaders/redirectsFromCsv.ts` with `from:
+ * "/redirects.csv"`). On Deno they are on disk; the Worker only has vfs.js, so
+ * the build must embed them. Returns root-relative paths (`redirects.csv`) of
+ * every `.csv` string in the blocks that is not a URL and stays inside the
+ * site. Files under `static/` are left out: the Worker reads those from
+ * Workers Static Assets already.
+ */
+export function decofileLocalFiles(blocks: unknown[]): string[] {
+  const found = new Set<string>();
+  const visit = (value: unknown) => {
+    if (typeof value === "string") {
+      const path = localCsvPath(value);
+      if (path) found.add(path);
+    } else if (Array.isArray(value)) {
+      value.forEach(visit);
+    } else if (value && typeof value === "object") {
+      Object.values(value).forEach(visit);
+    }
+  };
+  blocks.forEach(visit);
+  return [...found].sort();
+}
+
+const localCsvPath = (value: string): string | null => {
+  const path = value.trim();
+  // A URL (http:, https:, data:, file:...) or a query/fragment: not a file.
+  if (!/\.csv$/i.test(path) || /^[a-z][a-z\d+.-]*:/i.test(path)) return null;
+  const parts = path.split("/").filter((part) => part && part !== ".");
+  if (parts.length === 0 || parts.includes("..") || parts[0] === "static") {
+    return null;
+  }
+  return parts.join("/");
+};
