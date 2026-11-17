@@ -5,6 +5,7 @@ import {
   runWithExecutionContext,
 } from "./context.ts";
 import { installDenoShim } from "./deno.ts";
+import { installDenoFetch, sendAsIs } from "./encoding.ts";
 import { listFromEnv, servePage } from "./pageCache.ts";
 
 /** Fresh's request handler, as returned by `createHandler`. */
@@ -69,6 +70,7 @@ export const SCHEMAS_FILE = "/app/.deco/schemas.gen.json";
  *   values and I/O while modules are evaluated, so the bundle body has to
  *   run inside a request);
  * - makes loader cache writes part of the request's `waitUntil`;
+ * - handles Content-Encoding as Deno does (`encoding.ts`);
  * - caches the pages deco marks public (`pageCache.ts`), as the CDN does on
  *   Deno: a Worker route runs before Cloudflare's own cache.
  */
@@ -107,6 +109,7 @@ export function createWorker(
           ...fromAssets(lazyFiles, env.ASSETS),
         });
         keepCacheWritesAlive();
+        installDenoFetch();
         return boot();
       });
       let handler: FreshHandler;
@@ -128,15 +131,17 @@ export function createWorker(
             completed: Promise.resolve(),
           }));
       if (pageCache === false || env.DECO_WORKER_PAGE_CACHE === "false") {
-        return render();
+        return sendAsIs(await render());
       }
-      return servePage(req, ctx, render, {
-        version: firstNonEmpty(env.BUILD_HASH, env.DENO_DEPLOYMENT_ID) ?? "",
-        keyCookies: pageCache?.keyCookies ??
-          listFromEnv(env.DECO_PAGE_CACHE_KEY_COOKIES),
-        bypassCookies: pageCache?.bypassCookies ??
-          listFromEnv(env.DECO_PAGE_CACHE_BYPASS_COOKIES),
-      });
+      return sendAsIs(
+        await servePage(req, ctx, render, {
+          version: firstNonEmpty(env.BUILD_HASH, env.DENO_DEPLOYMENT_ID) ?? "",
+          keyCookies: pageCache?.keyCookies ??
+            listFromEnv(env.DECO_PAGE_CACHE_KEY_COOKIES),
+          bypassCookies: pageCache?.bypassCookies ??
+            listFromEnv(env.DECO_PAGE_CACHE_BYPASS_COOKIES),
+        }),
+      );
     },
   };
 }

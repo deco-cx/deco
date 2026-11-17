@@ -77,6 +77,13 @@ request runs the Worker.
   later hits read truncated JSON.
 - `runWithExecutionContext(ctx, fn)` / `waitUntil(promise)` keep background work
   alive for the current request.
+- `Content-Encoding` works as on Deno (`encoding.ts`): `fetch` drops
+  `Content-Encoding` / `Content-Length` from a body workerd decoded (`gzip`,
+  `br`; not with `encodeResponseBody: "manual"`, which keeps the raw body and
+  its headers), and a response that carries `Content-Encoding` is sent as is
+  (`encodeBody: "manual"`). Without it, a site that compresses its own HTML in
+  `_middleware.ts` was compressed twice, and forwarding a `fetch` response
+  depended on workerd re-encoding it.
 - `createWorker({ files, boot })` is the Worker module the build generates; it
   wires the pieces above, answers through the page cache (below), and sets
   `DENO_DEPLOYMENT_ID` when it is missing or empty (from `BUILD_HASH`, else
