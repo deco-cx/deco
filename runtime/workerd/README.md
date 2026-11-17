@@ -68,7 +68,9 @@ request runs the Worker.
   `write` as denied, so a disk cache (`WEB_CACHE_ENGINE=FILE_SYSTEM`) falls back
   to the Cache API instead of filling the isolate's memory. Subprocesses,
   `Deno.serve`, KV and cron throw `Deno.errors.NotSupported`.
-  `Deno.upgradeWebSocket` uses `WebSocketPair`.
+  `Deno.upgradeWebSocket` uses `WebSocketPair`. `Deno.test` and `Deno.bench`
+  (and their `.ignore` / `.only` forms) are no-ops, as outside `deno test`, so a
+  test file that ends up in the manifest loads cleanly.
 - `keepCacheWritesAlive()` wraps `caches.open()` so `put`/`delete` join the
   current request's `waitUntil`. deco writes loader results without awaiting
   them; without this, workerd cancels the write when the response is sent and
