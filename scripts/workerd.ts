@@ -11,17 +11,19 @@
  *
  *   dist/worker/server/index.js  Worker entry (createWorker from ./workerd)
  *   dist/worker/server/app.js    the site: Fresh + deco + apps, one bundle
- *   dist/worker/server/vfs.js    .deco/blocks, _fresh/snapshot.json, deno.json
+ *   dist/worker/server/vfs.js    .deco/blocks, _fresh/snapshot.json, deno.json,
+ *                                site files the decofile reads (redirects CSV)
  *   dist/worker/assets/          static/ + islands at /_frsh/js/<BUILD_ID>/
  *
  * Flags: `--no-minify`. Set DECO_LINK=/path/to/deco to bundle against a local
  * deco checkout (its version must match the site's @deco/deco).
  */
 import { copy, emptyDir, exists, walk } from "@std/fs";
-import { join, relative, resolve, toFileUrl } from "@std/path";
+import { join, relative, resolve, SEPARATOR, toFileUrl } from "@std/path";
 import { SCHEMAS_FILE } from "../runtime/workerd/worker.ts";
 import {
   asyncImportCycles,
+  decofileLocalFiles,
   importResolver,
   nodeModeInterop,
   offersItself,
@@ -326,11 +328,35 @@ async function buildServer(
     [`${APP_ROOT}/static/`]: "",
   };
   const blocks = join(ROOT, ".deco", "blocks");
+  const decofile: unknown[] = [];
   if (await exists(blocks)) {
     for await (const entry of walk(blocks, { includeDirs: false })) {
-      files[`${APP_ROOT}/${relative(ROOT, entry.path)}`] = await Deno
-        .readTextFile(entry.path);
+      const text = await Deno.readTextFile(entry.path);
+      files[`${APP_ROOT}/${relative(ROOT, entry.path)}`] = text;
+      if (entry.path.endsWith(".json")) {
+        try {
+          decofile.push(JSON.parse(text));
+        } catch {
+          // Not a block the runtime can read either.
+        }
+      }
     }
+  }
+  // Site files the decofile reads by path (a redirects CSV): on disk for
+  // Deno, so they must be in the vfs for the Worker.
+  // Resolved first, so a symlink cannot embed a file from outside the site.
+  const realRoot = await Deno.realPath(ROOT);
+  for (const path of decofileLocalFiles(decofile)) {
+    const file = join(ROOT, path);
+    if (!await exists(file, { isFile: true })) continue;
+    const real = await Deno.realPath(file);
+    if (!real.startsWith(realRoot + SEPARATOR)) {
+      console.warn(
+        `warning: not embedding ${path}: it resolves outside the site`,
+      );
+      continue;
+    }
+    files[`${APP_ROOT}/${path}`] = await Deno.readTextFile(real);
   }
   // The editor's static schemas (/deco/meta). Generating them parses the
   // site's TypeScript, which the Worker cannot do at runtime.

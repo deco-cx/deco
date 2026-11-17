@@ -68,13 +68,22 @@ request runs the Worker.
   `write` as denied, so a disk cache (`WEB_CACHE_ENGINE=FILE_SYSTEM`) falls back
   to the Cache API instead of filling the isolate's memory. Subprocesses,
   `Deno.serve`, KV and cron throw `Deno.errors.NotSupported`.
-  `Deno.upgradeWebSocket` uses `WebSocketPair`.
+  `Deno.upgradeWebSocket` uses `WebSocketPair`. `Deno.test` and `Deno.bench`
+  (and their `.ignore` / `.only` forms) are no-ops, as outside `deno test`, so a
+  test file that ends up in the manifest loads cleanly.
 - `keepCacheWritesAlive()` wraps `caches.open()` so `put`/`delete` join the
   current request's `waitUntil`. deco writes loader results without awaiting
   them; without this, workerd cancels the write when the response is sent and
   later hits read truncated JSON.
 - `runWithExecutionContext(ctx, fn)` / `waitUntil(promise)` keep background work
   alive for the current request.
+- `Content-Encoding` works as on Deno (`encoding.ts`): `fetch` drops
+  `Content-Encoding` / `Content-Length` from a body workerd decoded (`gzip`,
+  `br`; not with `encodeResponseBody: "manual"`, which keeps the raw body and
+  its headers), and a response that carries `Content-Encoding` is sent as is
+  (`encodeBody: "manual"`). Without it, a site that compresses its own HTML in
+  `_middleware.ts` was compressed twice, and forwarding a `fetch` response
+  depended on workerd re-encoding it.
 - `createWorker({ files, boot })` is the Worker module the build generates; it
   wires the pieces above, answers through the page cache (below), and sets
   `DENO_DEPLOYMENT_ID` when it is missing or empty (from `BUILD_HASH`, else

@@ -25,7 +25,12 @@
 // Inline (as utils/userAgent.ts does with ua-parser-js): this script also runs
 // from a deco checkout against a site's own import map (DECO_LINK).
 // deno-lint-ignore no-import-prefix
-import { parse, tokenizer, tokTypes as tt } from "npm:acorn@^8.14.0";
+import {
+  parse,
+  type Token,
+  tokenizer,
+  tokTypes as tt,
+} from "npm:acorn@^8.14.0";
 // deno-lint-ignore no-import-prefix
 import ts from "npm:typescript@^5.8.3";
 
@@ -318,20 +323,32 @@ export function rewriteModuleUrls(
     onThisSkipped?: (module: string, reason: string) => void;
   },
 ): string {
-  const markers: { start: number; end: number; path: string }[] = [];
-  let tokens;
+  let markers: { start: number; end: number; path: string }[] = [];
+  const onComment = (
+    block: boolean,
+    text: string,
+    start: number,
+    end: number,
+  ) => {
+    if (block || (start > 0 && body[start - 1] !== "\n")) return;
+    const path = moduleMarker(`//${text}`);
+    if (path !== null) markers.push({ start, end, path });
+  };
+  let tokens: Token[];
   try {
-    tokens = [...tokenizer(body, {
-      ...TOKENIZER_OPTIONS,
-      onComment: (block: boolean, text: string, start: number, end: number) => {
-        if (block || (start > 0 && body[start - 1] !== "\n")) return;
-        const path = moduleMarker(`//${text}`);
-        if (path !== null) markers.push({ start, end, path });
-      },
-    })];
-  } catch (err) {
-    onFallback?.((err as Error).message);
-    return rewriteByLines(body, selfUrl, appRoot);
+    // The parser's tokens: acorn's standalone tokenizer loses track of a
+    // template after a keyword property name (`${props?.class}`), then reads
+    // the rest of the bundle with strings and code swapped.
+    tokens = [];
+    parse(body, { ...TOKENIZER_OPTIONS, onToken: tokens, onComment });
+  } catch {
+    markers = [];
+    try {
+      tokens = [...tokenizer(body, { ...TOKENIZER_OPTIONS, onComment })];
+    } catch (err) {
+      onFallback?.((err as Error).message);
+      return rewriteByLines(body, selfUrl, appRoot);
+    }
   }
 
   // The module a position belongs to: the last marker before it.
@@ -760,3 +777,39 @@ function shortestCycle(
     }
   }
 }
+
+/**
+ * Site files the decofile points at by path, which the runtime reads from the
+ * site root (`website/loaders/redirectsFromCsv.ts` with `from:
+ * "/redirects.csv"`). On Deno they are on disk; the Worker only has vfs.js, so
+ * the build must embed them. Returns root-relative paths (`redirects.csv`) of
+ * every `.csv` string in the blocks that is not a URL and stays inside the
+ * site. Files under `static/` are left out: the Worker reads those from
+ * Workers Static Assets already.
+ */
+export function decofileLocalFiles(blocks: unknown[]): string[] {
+  const found = new Set<string>();
+  const visit = (value: unknown) => {
+    if (typeof value === "string") {
+      const path = localCsvPath(value);
+      if (path) found.add(path);
+    } else if (Array.isArray(value)) {
+      value.forEach(visit);
+    } else if (value && typeof value === "object") {
+      Object.values(value).forEach(visit);
+    }
+  };
+  blocks.forEach(visit);
+  return [...found].sort();
+}
+
+// Not trimmed: the loader joins `from` as is, so the path must match it.
+const localCsvPath = (path: string): string | null => {
+  // A URL (http:, https:, data:, file:...) or a query/fragment: not a file.
+  if (!/\.csv$/i.test(path) || /^[a-z][a-z\d+.-]*:/i.test(path)) return null;
+  const parts = path.split("/").filter((part) => part && part !== ".");
+  if (parts.length === 0 || parts.includes("..") || parts[0] === "static") {
+    return null;
+  }
+  return parts.join("/");
+};

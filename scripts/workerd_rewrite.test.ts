@@ -2,6 +2,7 @@ import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
   asyncImportCycles,
   codeOf,
+  decofileLocalFiles,
   IMPORT_RESOLVER,
   importResolver,
   isSiteModule,
@@ -214,6 +215,27 @@ Deno.test("rewriteModuleUrls: an untokenizable bundle falls back to lines, and s
   assertEquals(seen.length, 1);
   assert(out.includes('"file:///app/components/bad.tsx"'));
   assert(out.includes(`${IMPORT_RESOLVER}(p)`));
+});
+
+Deno.test("rewriteModuleUrls: a keyword property inside a template doesn't derail it", () => {
+  // acorn's standalone tokenizer loses the template after `?.class` and then
+  // reads the rest with strings and code swapped; the parser's tokens don't.
+  const seen: string[] = [];
+  const body = [
+    "// components/x.tsx",
+    "var c = `a ${props?.class} b`;",
+    "var u = import.meta.url;",
+    'var s = "import(";',
+    "var w = `w-1/2 2xl:w-2/3`;",
+  ].join("\n");
+  const out = rewriteModuleUrls(body, {
+    ...opts,
+    onFallback: (m) => seen.push(m),
+  }).split("\n");
+  assertEquals(seen, []);
+  assertEquals(out[1], "var c = `a ${props?.class} b`;");
+  assertEquals(out[2], 'var u = "file:///app/components/x.tsx";');
+  assertEquals(out[3], 'var s = "import(";');
 });
 
 Deno.test("rewriteModuleUrls: a `// path` line inside a template is not a module marker", () => {
@@ -649,4 +671,45 @@ Deno.test("asyncImportCycles: reports an actual cycle, in import order", () => {
     ),
     [["x.ts"]],
   );
+});
+
+Deno.test("decofileLocalFiles: site CSVs the decofile reads by path", () => {
+  const blocks = [
+    {
+      routes: [
+        {
+          __resolveType: "website/loaders/redirectsFromCsv.ts",
+          from: "/redirect.csv",
+        },
+        {
+          __resolveType: "website/loaders/redirectsFromCsv.ts",
+          from: "./a/b.CSV",
+        },
+        { from: "/redirect.csv" },
+      ],
+    },
+    { list: ["data/x.csv", { nested: "/data/x.csv" }] },
+  ];
+  assertEquals(decofileLocalFiles(blocks), [
+    "a/b.CSV",
+    "data/x.csv",
+    "redirect.csv",
+  ]);
+});
+
+Deno.test("decofileLocalFiles: no URLs, static files or paths outside the site", () => {
+  const blocks = [{
+    a: "https://example.com/redirects.csv",
+    b: "file:///etc/x.csv",
+    c: "/static/redirects.csv",
+    d: "../outside.csv",
+    e: "/a/../../x.csv",
+    f: "/redirects.csv?x=1",
+    g: "/redirects.json",
+    // The loader reads `from` untrimmed, and rejects this one.
+    j: "/redirects.csv ",
+    h: 1,
+    i: null,
+  }];
+  assertEquals(decofileLocalFiles(blocks), []);
 });

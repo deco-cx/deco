@@ -6,7 +6,17 @@ export interface ExecutionContextLike {
   waitUntil(promise: Promise<unknown>): void;
 }
 
-const storage = new AsyncLocalStorage<ExecutionContextLike>();
+// One store per isolate, shared through globalThis: the Worker entry
+// (`createWorker`) and the site bundle (`freshForWorkerd`) each embed a copy of
+// this module. With a store per copy, the app copy (evaluated last, at boot)
+// replaced the request-scope hook below with a store that never holds the
+// request, so the request scope and `waitUntil` were lost inside the app.
+const STORAGE = Symbol.for("deco.workerd.executionContext");
+const storage =
+  ((globalThis as unknown as Record<symbol, unknown>)[STORAGE] ??=
+    new AsyncLocalStorage<ExecutionContextLike>()) as AsyncLocalStorage<
+      ExecutionContextLike
+    >;
 
 // The request a promise belongs to (`REQUEST_SCOPE` in engine/core/utils.ts):
 // deco's singleFlight then only joins calls made by the same request. On
