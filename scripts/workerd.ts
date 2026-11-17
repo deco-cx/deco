@@ -272,7 +272,9 @@ async function build() {
     JSON.stringify({
       ...siteConfig,
       nodeModulesDir: "none",
-      ...(link ? { links: [link] } : {}),
+      // Relative to the config: on Windows an absolute `C:\...` link loads, but
+      // Deno then resolves the linked package's exports one directory up.
+      ...(link ? { links: [relative(ROOT, link).replaceAll("\\", "/")] } : {}),
     }),
   );
   try {
@@ -321,7 +323,10 @@ async function buildServer(
   if (await exists(blocks)) {
     for await (const entry of walk(blocks, { includeDirs: false })) {
       const text = await Deno.readTextFile(entry.path);
-      files[`${APP_ROOT}/${relative(ROOT, entry.path)}`] = text;
+      // POSIX separators: a build on Windows would embed `.deco\blocks\x`,
+      // and the shim (always POSIX) would find no blocks folder.
+      files[`${APP_ROOT}/${relative(ROOT, entry.path).replaceAll("\\", "/")}`] =
+        text;
       if (entry.path.endsWith(".json")) {
         try {
           decofile.push(JSON.parse(text));
