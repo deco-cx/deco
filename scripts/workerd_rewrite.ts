@@ -25,7 +25,12 @@
 // Inline (as utils/userAgent.ts does with ua-parser-js): this script also runs
 // from a deco checkout against a site's own import map (DECO_LINK).
 // deno-lint-ignore no-import-prefix
-import { parse, tokenizer, tokTypes as tt } from "npm:acorn@^8.14.0";
+import {
+  parse,
+  type Token,
+  tokenizer,
+  tokTypes as tt,
+} from "npm:acorn@^8.14.0";
 // deno-lint-ignore no-import-prefix
 import ts from "npm:typescript@^5.8.3";
 
@@ -318,20 +323,32 @@ export function rewriteModuleUrls(
     onThisSkipped?: (module: string, reason: string) => void;
   },
 ): string {
-  const markers: { start: number; end: number; path: string }[] = [];
-  let tokens;
+  let markers: { start: number; end: number; path: string }[] = [];
+  const onComment = (
+    block: boolean,
+    text: string,
+    start: number,
+    end: number,
+  ) => {
+    if (block || (start > 0 && body[start - 1] !== "\n")) return;
+    const path = moduleMarker(`//${text}`);
+    if (path !== null) markers.push({ start, end, path });
+  };
+  let tokens: Token[];
   try {
-    tokens = [...tokenizer(body, {
-      ...TOKENIZER_OPTIONS,
-      onComment: (block: boolean, text: string, start: number, end: number) => {
-        if (block || (start > 0 && body[start - 1] !== "\n")) return;
-        const path = moduleMarker(`//${text}`);
-        if (path !== null) markers.push({ start, end, path });
-      },
-    })];
-  } catch (err) {
-    onFallback?.((err as Error).message);
-    return rewriteByLines(body, selfUrl, appRoot);
+    // The parser's tokens: acorn's standalone tokenizer loses track of a
+    // template after a keyword property name (`${props?.class}`), then reads
+    // the rest of the bundle with strings and code swapped.
+    tokens = [];
+    parse(body, { ...TOKENIZER_OPTIONS, onToken: tokens, onComment });
+  } catch {
+    markers = [];
+    try {
+      tokens = [...tokenizer(body, { ...TOKENIZER_OPTIONS, onComment })];
+    } catch (err) {
+      onFallback?.((err as Error).message);
+      return rewriteByLines(body, selfUrl, appRoot);
+    }
   }
 
   // The module a position belongs to: the last marker before it.
