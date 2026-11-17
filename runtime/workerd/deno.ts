@@ -672,6 +672,11 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
     connect: notSupported(errors, "connect"),
     openKv: notSupported(errors, "openKv"),
     cron: notSupported(errors, "cron"),
+    // Outside `deno test` / `deno bench`, Deno.test and Deno.bench are no-ops.
+    // A site's test files can end up in its manifest (a `*.test.ts` under
+    // sections/ or loaders/), and must not throw when they are loaded.
+    test: () => {},
+    bench: () => {},
     upgradeWebSocket: (_req: Request) => {
       const Pair = g.WebSocketPair;
       if (!Pair) throw new errors.NotSupported("WebSocketPair is unavailable");
