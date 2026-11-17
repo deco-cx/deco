@@ -6,6 +6,7 @@ import {
   normalizePath,
   POLL_INTERVAL_MS,
   REDIRECT_TTL_MS,
+  revisionOf,
 } from "./kvDecofile.ts";
 import { fastDeployFromEnv } from "./worker.ts";
 
@@ -42,10 +43,13 @@ async function request<T>(fn: () => Promise<T>): Promise<T> {
   return result;
 }
 
+const V1 = JSON.stringify({ home: { v: 1 } });
+const V2 = JSON.stringify({ home: { v: 2 } });
+
 Deno.test("serves the decofile from KV and swaps it on a new revision", async () => {
   const kv = memoryKV({
-    [`decofile:${ID}`]: JSON.stringify({ home: { v: 1 } }),
-    [`index:revision:${ID}`]: "r1",
+    [`decofile:${ID}`]: V1,
+    [`index:revision:${ID}`]: revisionOf(V1),
   });
   let t = 0;
   const provider = kvDecofileProvider({
@@ -60,11 +64,14 @@ Deno.test("serves the decofile from KV and swaps it on a new revision", async ()
   });
 
   assertEquals(await request(() => provider.state()), { home: { v: 1 } });
-  assertEquals(await request(() => provider.revision()), "kv:r1");
-  assertEquals(provider.kvRevision(), "r1");
+  assertEquals(
+    await request(() => provider.revision()),
+    `kv:${revisionOf(V1)}`,
+  );
+  assertEquals(provider.kvRevision(), revisionOf(V1));
 
-  kv.data.set(`decofile:${ID}`, JSON.stringify({ home: { v: 2 } }));
-  kv.data.set(`index:revision:${ID}`, "r2");
+  kv.data.set(`decofile:${ID}`, V2);
+  kv.data.set(`index:revision:${ID}`, revisionOf(V2));
   // Within the poll interval: still the old decofile.
   t = POLL_INTERVAL_MS - 1;
   assertEquals(await request(() => provider.state()), { home: { v: 1 } });
@@ -72,7 +79,47 @@ Deno.test("serves the decofile from KV and swaps it on a new revision", async ()
   t = POLL_INTERVAL_MS * 2;
   await request(() => provider.state());
   assertEquals(await request(() => provider.state()), { home: { v: 2 } });
+  assertEquals(provider.kvRevision(), revisionOf(V2));
   assertEquals(changes, 1);
+});
+
+Deno.test("a new revision next to a stale cached snapshot never pins the old content", async () => {
+  // KV caches each key separately per data center: the revision key can be
+  // fresh while the snapshot is still the cached old one.
+  const kv = memoryKV({
+    [`decofile:${ID}`]: V1,
+    [`index:revision:${ID}`]: revisionOf(V1),
+  });
+  let t = 0;
+  const provider = kvDecofileProvider({
+    kv,
+    deploymentId: ID,
+    fallback: embedded,
+    now: () => t,
+  });
+  let changes = 0;
+  provider.onChange(() => {
+    changes++;
+  });
+  await request(() => provider.state());
+
+  kv.data.set(`index:revision:${ID}`, revisionOf(V2)); // snapshot still V1
+  t = POLL_INTERVAL_MS;
+  await request(() => provider.state());
+  assertEquals(provider.kvRevision(), revisionOf(V1), "not advanced");
+  assertEquals(changes, 0);
+
+  kv.data.set(`decofile:${ID}`, V2); // the cached copy expires
+  t = POLL_INTERVAL_MS * 2;
+  await request(() => provider.state());
+  assertEquals(await request(() => provider.state()), { home: { v: 2 } });
+  assertEquals(changes, 1);
+});
+
+Deno.test("revisionOf matches @decocms/blocks' djb2Hex", () => {
+  // Reference values from packages/blocks/src/sdk/djb2.ts.
+  assertEquals(revisionOf(V1), "1y2qi0x");
+  assertEquals(revisionOf("Liga Retrô ✓"), "yc54o6");
 });
 
 Deno.test("falls back to the embedded decofile when KV has none", async () => {
@@ -133,6 +180,19 @@ Deno.test("exact redirects: matched by source as written, cached for the TTL", a
   t = REDIRECT_TTL_MS + 1;
   await provider.exactRedirect!("/missing");
   assertEquals(kv.reads.length, reads + 1);
+});
+
+Deno.test("exact redirects: a malformed value or an over-long key is no redirect", async () => {
+  const kv = memoryKV({ [`redirect:${ID}:/bad`]: "[null]" });
+  const provider = kvDecofileProvider({
+    kv,
+    deploymentId: ID,
+    fallback: embedded,
+  });
+  assertEquals(await provider.exactRedirect!("/bad"), null);
+  const reads = kv.reads.length;
+  assertEquals(await provider.exactRedirect!(`/${"a".repeat(600)}`), null);
+  assertEquals(kv.reads.length, reads, "never asked KV");
 });
 
 Deno.test("exact redirects: a KV failure is no redirect", async () => {

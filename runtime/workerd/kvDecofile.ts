@@ -34,6 +34,23 @@ export const REDIRECT_TTL_MS = 60_000;
 /** Bounded: a crawler walking unique URLs must not grow the isolate. */
 const REDIRECT_CACHE_MAX = 2_000;
 
+/** Cloudflare KV's key size limit. */
+const MAX_KV_KEY_BYTES = 512;
+const utf8 = new TextEncoder();
+
+/**
+ * The revision of a stored snapshot: `djb2Hex` from @decocms/blocks
+ * (sdk/djb2.ts), which the writer stores as `index:revision:<id>` for exactly
+ * these bytes. Copied byte for byte; change it only together with that one.
+ */
+export const revisionOf = (snapshot: string): string => {
+  let hash = 5381;
+  for (let i = 0; i < snapshot.length; i++) {
+    hash = ((hash << 5) + hash + snapshot.charCodeAt(i)) | 0;
+  }
+  return (hash >>> 0).toString(36);
+};
+
 /** The part of a KV binding this reads. */
 export interface KVLike {
   get(key: string): Promise<string | null>;
@@ -117,15 +134,17 @@ export function kvDecofileProvider(
     { value: StoredRedirect | StoredRedirect[] | null; expiresAt: number }
   >();
 
+  // The revision is hashed from the bytes actually read, never taken from the
+  // `index:revision` key: KV caches each key separately per data center, so a
+  // fresh revision can come back next to a stale cached snapshot, and pairing
+  // them would pin the old content under the new revision (and seed the page
+  // cache with it).
   const read = async () => {
-    const [snapshot, revision] = await Promise.all([
-      kv.get(`decofile:${id}`),
-      kv.get(`index:revision:${id}`),
-    ]);
+    const snapshot = await kv.get(`decofile:${id}`);
     if (!snapshot) return null;
     return {
       state: JSON.parse(snapshot) as Decofile,
-      revision: revision ?? "",
+      revision: revisionOf(snapshot),
     };
   };
 
@@ -155,10 +174,12 @@ export function kvDecofileProvider(
     lastPoll = t;
     waitUntil(
       (async () => {
+        // The key is only a cheap "something changed" signal.
         const revision = await kv.get(`index:revision:${id}`);
         if (!revision || revision === current?.revision) return;
         const next = await read();
-        if (!next) return;
+        // Still the cached old snapshot: keep polling until it expires.
+        if (!next || next.revision === current?.revision) return;
         current = next;
         redirects.clear();
         await Promise.all([...callbacks].map((cb) => cb()));
@@ -185,28 +206,31 @@ export function kvDecofileProvider(
       return { [Symbol.dispose]: () => callbacks.delete(callback) };
     },
     kvRevision: () => current?.revision,
+    // A failure here (KV, a malformed value) must not fail a page that would
+    // render: it is no redirect.
     async exactRedirect(pathname) {
       const key = `redirect:${id}:${normalizePath(pathname)}`;
-      const cached = redirects.get(key);
-      let value: StoredRedirect | StoredRedirect[] | null;
-      if (cached && cached.expiresAt > now()) {
-        value = cached.value;
-      } else {
-        try {
+      // Longer than a KV key can be: the writer keeps such rules in the decofile.
+      if (utf8.encode(key).length > MAX_KV_KEY_BYTES) return null;
+      try {
+        const cached = redirects.get(key);
+        let value: StoredRedirect | StoredRedirect[] | null;
+        if (cached && cached.expiresAt > now()) {
+          value = cached.value;
+        } else {
           const raw = await kv.get(key);
           value = raw ? JSON.parse(raw) : null;
-        } catch (err) {
-          // A KV failure must not fail a page that would render: no redirect.
-          console.error(`[deco/kv] reading ${key} failed`, err);
-          return null;
+          redirects.delete(key);
+          redirects.set(key, { value, expiresAt: now() + REDIRECT_TTL_MS });
+          if (redirects.size > REDIRECT_CACHE_MAX) {
+            redirects.delete(redirects.keys().next().value!);
+          }
         }
-        redirects.delete(key);
-        redirects.set(key, { value, expiresAt: now() + REDIRECT_TTL_MS });
-        if (redirects.size > REDIRECT_CACHE_MAX) {
-          redirects.delete(redirects.keys().next().value!);
-        }
+        return value ? selectRedirect(value, pathname) : null;
+      } catch (err) {
+        console.error(`[deco/kv] redirect lookup for ${key} failed`, err);
+        return null;
       }
-      return value ? selectRedirect(value, pathname) : null;
     },
   };
 }
