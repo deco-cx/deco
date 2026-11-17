@@ -647,3 +647,61 @@ export function nodeModeInterop(body: string): string {
   }
   return out + body.slice(last);
 }
+
+/**
+ * Import cycles between async modules in a readable `deno bundle` body.
+ * esbuild wraps a module that a top-level await reaches (Fresh's build id has
+ * one, so most site modules) in an `async` `__esm` init that awaits the inits
+ * of its imports. Deno evaluates a cycle of such modules; in the bundle, two
+ * inits of a cycle end up waiting on each other's promise, and the Worker
+ * hangs on boot ("code had hung") on every request. Returns each cycle as its
+ * module paths.
+ */
+export function asyncImportCycles(body: string): string[][] {
+  const paths = new Map<string, string>();
+  const deps = new Map<string, string[]>();
+  const decl = /^var (init_[\w$]+) = __esm\(\{\n {2}async "([^"]+)"\(\) \{\n/gm;
+  for (const m of body.matchAll(decl)) {
+    const start = m.index + m[0].length;
+    const end = body.indexOf("\n});", start);
+    const code = body.slice(start, end === -1 ? body.length : end);
+    paths.set(m[1], m[2]);
+    deps.set(
+      m[1],
+      [...code.matchAll(/\bawait (init_[\w$]+)\(\)/g)].map((d) => d[1]),
+    );
+  }
+
+  // Tarjan's strongly connected components over the async inits.
+  const index = new Map<string, number>();
+  const low = new Map<string, number>();
+  const stack: string[] = [];
+  const onStack = new Set<string>();
+  const cycles: string[][] = [];
+  const visit = (v: string) => {
+    index.set(v, index.size);
+    low.set(v, index.get(v)!);
+    stack.push(v);
+    onStack.add(v);
+    for (const w of deps.get(v) ?? []) {
+      if (!paths.has(w)) continue;
+      if (!index.has(w)) {
+        visit(w);
+        low.set(v, Math.min(low.get(v)!, low.get(w)!));
+      } else if (onStack.has(w)) {
+        low.set(v, Math.min(low.get(v)!, index.get(w)!));
+      }
+    }
+    if (low.get(v) !== index.get(v)) return;
+    const component: string[] = [];
+    let w: string;
+    do {
+      w = stack.pop()!;
+      onStack.delete(w);
+      component.push(paths.get(w)!);
+    } while (w !== v);
+    if (component.length > 1) cycles.push(component.reverse());
+  };
+  for (const v of paths.keys()) if (!index.has(v)) visit(v);
+  return cycles;
+}

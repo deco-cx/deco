@@ -21,6 +21,7 @@ import { copy, emptyDir, exists, walk } from "@std/fs";
 import { join, relative, resolve, toFileUrl } from "@std/path";
 import { SCHEMAS_FILE } from "../runtime/workerd/worker.ts";
 import {
+  asyncImportCycles,
   importResolver,
   nodeModeInterop,
   offersItself,
@@ -149,6 +150,20 @@ const cjsInterop = (body: string, path: string): string => {
   }
 };
 
+/** A cycle of async modules hangs the Worker on boot (workerd_rewrite.ts
+ *  asyncImportCycles): fail the build instead of shipping it. Throws, as
+ *  cjsInterop does. */
+const assertNoAsyncImportCycle = (body: string, path: string) => {
+  const cycles = asyncImportCycles(body);
+  if (cycles.length === 0) return;
+  throw new Error(
+    `${path}: these modules import each other and are async (a top-level ` +
+      "await reaches them), so the Worker would hang on boot:\n" +
+      cycles.map((c) => `  ${[...c, c[0]].join(" -> ")}`).join("\n") +
+      "\nBreak each cycle, e.g. move what they share to a module of its own.",
+  );
+};
+
 /**
  * workerd runs every module body in "global scope", where timers, random
  * values and I/O are forbidden, even for modules imported lazily from a
@@ -167,6 +182,7 @@ const wrapInBoot = async (path: string, selfUrl: string) => {
   const start = body.lastIndexOf("export {");
   const end = body.indexOf("};", start);
   if (start === -1 || end === -1) fail(`no export block in ${path}`);
+  assertNoAsyncImportCycle(body.join("\n"), path);
   const exported = body.splice(start, end - start + 1).join("\n")
     .replace(/^export \{/, "")
     .replace(/\};?\s*$/, "")

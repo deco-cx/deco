@@ -1,5 +1,6 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
+  asyncImportCycles,
   codeOf,
   IMPORT_RESOLVER,
   importResolver,
@@ -537,4 +538,36 @@ Deno.test("nodeModeInterop: an unknown __esModule check fails the build", () => 
     "!(mod && mod.__esModule) || isNodeMode",
   ).replace("__toESM", "__toESM2");
   assertThrows(() => nodeModeInterop(other), Error, "__toESM2");
+});
+
+Deno.test("asyncImportCycles: async modules that import each other", () => {
+  const init = (name: string, path: string, deps: string[], async = true) =>
+    [
+      `var ${name} = __esm({`,
+      `  ${async ? "async " : ""}"${path}"() {`,
+      ...deps.map((d) => `    await ${d}();`),
+      "    x = () => {",
+      "    };",
+      "  }",
+      "});",
+    ].join("\n");
+  const body = [
+    init("init_build_id", "deno:https://deno.land/x/fresh/build_id.ts", []),
+    init("init_Selector", "components/ui/Selector.tsx", [
+      "init_build_id",
+      "init_SelectorIsland",
+    ]),
+    init("init_SelectorIsland", "islands/SelectorIsland.tsx", [
+      "init_build_id",
+      "init_Selector",
+    ]),
+    init("init_a", "sdk/a.ts", ["init_b"]),
+    init("init_b", "sdk/b.ts", ["init_build_id"]),
+    init("init_sync", "sdk/sync.ts", [], false),
+  ].join("\n");
+  assertEquals(asyncImportCycles(body), [[
+    "components/ui/Selector.tsx",
+    "islands/SelectorIsland.tsx",
+  ]]);
+  assertEquals(asyncImportCycles(init("init_a", "a.ts", ["init_a2"])), []);
 });
