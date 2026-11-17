@@ -263,6 +263,10 @@ class MemoryFs {
   }
 }
 
+/** A no-op `Deno.test` / `Deno.bench`, with its `.ignore` / `.only` forms. */
+const noRun = () =>
+  Object.assign(() => {}, { ignore: () => {}, only: () => {} });
+
 const notSupported = (errors: ReturnType<typeof makeErrors>, what: string) => {
   return (..._args: unknown[]): never => {
     throw new errors.NotSupported(`Deno.${what} is not supported on workerd`);
@@ -672,6 +676,12 @@ export function installDenoShim(opts: DenoShimOptions = {}): void {
     connect: notSupported(errors, "connect"),
     openKv: notSupported(errors, "openKv"),
     cron: notSupported(errors, "cron"),
+    // Outside `deno test` / `deno bench`, Deno.test and Deno.bench are no-ops
+    // (with their `.ignore` / `.only` forms). A site's test files can end up in
+    // its manifest (a `*.test.ts` under sections/ or loaders/), and must not
+    // throw when they are loaded.
+    test: noRun(),
+    bench: noRun(),
     upgradeWebSocket: (_req: Request) => {
       const Pair = g.WebSocketPair;
       if (!Pair) throw new errors.NotSupported("WebSocketPair is unavailable");
