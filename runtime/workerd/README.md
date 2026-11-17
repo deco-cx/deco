@@ -76,8 +76,9 @@ request runs the Worker.
 - `runWithExecutionContext(ctx, fn)` / `waitUntil(promise)` keep background work
   alive for the current request.
 - `Content-Encoding` works as on Deno (`encoding.ts`): `fetch` drops
-  `Content-Encoding` / `Content-Length` from a body workerd decoded, and a
-  response that carries `Content-Encoding` is sent as is
+  `Content-Encoding` / `Content-Length` from a body workerd decoded (`gzip`,
+  `br`; not with `encodeResponseBody: "manual"`, which keeps the raw body and
+  its headers), and a response that carries `Content-Encoding` is sent as is
   (`encodeBody: "manual"`). Without it, a site that compresses its own HTML in
   `_middleware.ts` was compressed twice, and forwarding a `fetch` response
   depended on workerd re-encoding it.

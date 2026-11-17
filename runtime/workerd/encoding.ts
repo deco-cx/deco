@@ -15,32 +15,46 @@
  * gzip. Both halves together give Deno's behaviour.
  */
 
-/** Codings workerd's `fetch` decodes when the caller doesn't opt out. */
-const DECODED = new Set(["gzip", "x-gzip", "br", "deflate"]);
+/**
+ * Codings workerd's `fetch` decodes when the caller doesn't opt out. Exact,
+ * case-sensitive values: workerd leaves `x-gzip`, `deflate`, `GZIP`... encoded
+ * (checked on wrangler 4 / compatibility date 2026-11-01).
+ */
+const DECODED = new Set(["gzip", "br"]);
 
 /**
  * A `fetch` response as Deno returns it: when workerd decoded the body, drop
  * the headers that described the encoded one.
  */
 export function asDenoFetchResponse(res: Response): Response {
-  const coding = res.headers.get("content-encoding")?.trim().toLowerCase();
+  const coding = res.headers.get("content-encoding");
   if (!coding || !DECODED.has(coding) || (res as any).webSocket) return res;
   const headers = new Headers(res.headers);
   headers.delete("content-encoding");
   headers.delete("content-length");
-  const out = new Response(res.body, {
-    status: res.status,
-    statusText: res.statusText,
-    headers,
-  });
-  // `url` / `redirected` aren't constructor options; code reads them (e.g.
-  // to follow where a redirect landed).
-  Object.defineProperties(out, {
-    url: { value: res.url, enumerable: true },
-    redirected: { value: res.redirected, enumerable: true },
-  });
-  return out;
+  return withUrl(
+    new Response(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers,
+    }),
+    res.url,
+    res.redirected,
+  );
 }
+
+/**
+ * `url` / `redirected` aren't constructor options, and code reads them (e.g.
+ * to follow where a redirect landed). Kept on clones too.
+ */
+const withUrl = (res: Response, url: string, redirected: boolean) => {
+  const clone = res.clone.bind(res);
+  return Object.defineProperties(res, {
+    url: { value: url, enumerable: true },
+    redirected: { value: redirected, enumerable: true },
+    clone: { value: () => withUrl(clone(), url, redirected) },
+  });
+};
 
 const WRAPPED = Symbol.for("deco.workerd.fetch");
 
@@ -50,11 +64,12 @@ export function installDenoFetch(): void {
   if (typeof g.fetch !== "function" || g.fetch[WRAPPED]) return;
   const original = g.fetch.bind(globalThis);
   const fetch = async (input: unknown, init?: Record<string, unknown>) => {
+    // `encodeResponseBody: "manual"` (workerd): the body is not decoded. Read
+    // before the call, as workerd does. Only `init` counts: workerd ignores it
+    // on a `Request` (checked: such a body still comes back decoded).
+    const manual = init?.encodeResponseBody === "manual";
     const res: Response = await original(input, init);
-    // `encodeResponseBody: "manual"` (workerd): the body was not decoded.
-    return init?.encodeResponseBody === "manual"
-      ? res
-      : asDenoFetchResponse(res);
+    return manual ? res : asDenoFetchResponse(res);
   };
   fetch[WRAPPED] = true;
   g.fetch = fetch;
