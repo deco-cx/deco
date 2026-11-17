@@ -111,8 +111,13 @@ const wranglerConfig = (name: string) =>
   "workers_dev": false,
   "preview_urls": false,
   "observability": { "enabled": true },
+  // Fast deploy: content from KV, no rebuild on a publish (see
+  // runtime/workerd/README.md in deco). The control-plane builder replaces
+  // this id with the site's own namespace; locally, wrangler dev simulates it.
+  "kv_namespaces": [{ "binding": "DECO_KV", "id": "deco-kv-local" }],
   "vars": {
-    "DECO_SITE_NAME": ${JSON.stringify(name)}
+    "DECO_SITE_NAME": ${JSON.stringify(name)},
+    "DECO_FAST_DEPLOY": "1"
   }
 }
 `;

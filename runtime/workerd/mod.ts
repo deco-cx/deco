@@ -10,6 +10,11 @@ export {
 } from "./context.ts";
 export { type DenoShimOptions, installDenoShim } from "./deno.ts";
 export {
+  type KVDecofileOptions,
+  type KVDecofileProvider,
+  kvDecofileProvider,
+} from "./kvDecofile.ts";
+export {
   cacheKey,
   cacheWindows,
   type PageCacheOptions,
