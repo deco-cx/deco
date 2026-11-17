@@ -673,8 +673,8 @@ export function decofileLocalFiles(blocks: unknown[]): string[] {
   return [...found].sort();
 }
 
-const localCsvPath = (value: string): string | null => {
-  const path = value.trim();
+// Not trimmed: the loader joins `from` as is, so the path must match it.
+const localCsvPath = (path: string): string | null => {
   // A URL (http:, https:, data:, file:...) or a query/fragment: not a file.
   if (!/\.csv$/i.test(path) || /^[a-z][a-z\d+.-]*:/i.test(path)) return null;
   const parts = path.split("/").filter((part) => part && part !== ".");

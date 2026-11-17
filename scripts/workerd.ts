@@ -19,7 +19,7 @@
  * deco checkout (its version must match the site's @deco/deco).
  */
 import { copy, emptyDir, exists, walk } from "@std/fs";
-import { join, relative, resolve, toFileUrl } from "@std/path";
+import { join, relative, resolve, SEPARATOR, toFileUrl } from "@std/path";
 import { SCHEMAS_FILE } from "../runtime/workerd/worker.ts";
 import {
   decofileLocalFiles,
@@ -328,11 +328,19 @@ async function buildServer(
   }
   // Site files the decofile reads by path (a redirects CSV): on disk for
   // Deno, so they must be in the vfs for the Worker.
+  // Resolved first, so a symlink cannot embed a file from outside the site.
+  const realRoot = await Deno.realPath(ROOT);
   for (const path of decofileLocalFiles(decofile)) {
     const file = join(ROOT, path);
-    if (await exists(file, { isFile: true })) {
-      files[`${APP_ROOT}/${path}`] = await Deno.readTextFile(file);
+    if (!await exists(file, { isFile: true })) continue;
+    const real = await Deno.realPath(file);
+    if (!real.startsWith(realRoot + SEPARATOR)) {
+      console.warn(
+        `warning: not embedding ${path}: it resolves outside the site`,
+      );
+      continue;
     }
+    files[`${APP_ROOT}/${path}`] = await Deno.readTextFile(real);
   }
   // The editor's static schemas (/deco/meta). Generating them parses the
   // site's TypeScript, which the Worker cannot do at runtime.

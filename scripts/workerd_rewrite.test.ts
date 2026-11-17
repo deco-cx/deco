@@ -573,6 +573,8 @@ Deno.test("decofileLocalFiles: no URLs, static files or paths outside the site",
     e: "/a/../../x.csv",
     f: "/redirects.csv?x=1",
     g: "/redirects.json",
+    // The loader reads `from` untrimmed, and rejects this one.
+    j: "/redirects.csv ",
     h: 1,
     i: null,
   }];
