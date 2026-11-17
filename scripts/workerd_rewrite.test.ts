@@ -216,6 +216,27 @@ Deno.test("rewriteModuleUrls: an untokenizable bundle falls back to lines, and s
   assert(out.includes(`${IMPORT_RESOLVER}(p)`));
 });
 
+Deno.test("rewriteModuleUrls: a keyword property inside a template doesn't derail it", () => {
+  // acorn's standalone tokenizer loses the template after `?.class` and then
+  // reads the rest with strings and code swapped; the parser's tokens don't.
+  const seen: string[] = [];
+  const body = [
+    "// components/x.tsx",
+    "var c = `a ${props?.class} b`;",
+    "var u = import.meta.url;",
+    'var s = "import(";',
+    "var w = `w-1/2 2xl:w-2/3`;",
+  ].join("\n");
+  const out = rewriteModuleUrls(body, {
+    ...opts,
+    onFallback: (m) => seen.push(m),
+  }).split("\n");
+  assertEquals(seen, []);
+  assertEquals(out[1], "var c = `a ${props?.class} b`;");
+  assertEquals(out[2], 'var u = "file:///app/components/x.tsx";');
+  assertEquals(out[3], 'var s = "import(";');
+});
+
 Deno.test("rewriteModuleUrls: a `// path` line inside a template is not a module marker", () => {
   const body = [
     "// deno:https://jsr.io/@deco/deco/1.0.0/plugins/htmx.ts",
