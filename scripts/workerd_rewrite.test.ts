@@ -1,6 +1,7 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
   codeOf,
+  decofileLocalFiles,
   IMPORT_RESOLVER,
   importResolver,
   isSiteModule,
@@ -537,4 +538,45 @@ Deno.test("nodeModeInterop: an unknown __esModule check fails the build", () => 
     "!(mod && mod.__esModule) || isNodeMode",
   ).replace("__toESM", "__toESM2");
   assertThrows(() => nodeModeInterop(other), Error, "__toESM2");
+});
+
+Deno.test("decofileLocalFiles: site CSVs the decofile reads by path", () => {
+  const blocks = [
+    {
+      routes: [
+        {
+          __resolveType: "website/loaders/redirectsFromCsv.ts",
+          from: "/redirect.csv",
+        },
+        {
+          __resolveType: "website/loaders/redirectsFromCsv.ts",
+          from: "./a/b.CSV",
+        },
+        { from: "/redirect.csv" },
+      ],
+    },
+    { list: ["data/x.csv", { nested: "/data/x.csv" }] },
+  ];
+  assertEquals(decofileLocalFiles(blocks), [
+    "a/b.CSV",
+    "data/x.csv",
+    "redirect.csv",
+  ]);
+});
+
+Deno.test("decofileLocalFiles: no URLs, static files or paths outside the site", () => {
+  const blocks = [{
+    a: "https://example.com/redirects.csv",
+    b: "file:///etc/x.csv",
+    c: "/static/redirects.csv",
+    d: "../outside.csv",
+    e: "/a/../../x.csv",
+    f: "/redirects.csv?x=1",
+    g: "/redirects.json",
+    // The loader reads `from` untrimmed, and rejects this one.
+    j: "/redirects.csv ",
+    h: 1,
+    i: null,
+  }];
+  assertEquals(decofileLocalFiles(blocks), []);
 });
