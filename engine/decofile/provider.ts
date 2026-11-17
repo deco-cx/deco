@@ -16,6 +16,13 @@ export type OnChangeCallback = () => PromiseOrValue<void>;
 export interface ReadOptions {
   forceFresh?: boolean;
 }
+/** An exact redirect kept outside the decofile (see `exactRedirect`). */
+export interface ExactRedirect {
+  to: string;
+  type: "permanent" | "temporary";
+  discardQueryParameters?: boolean;
+}
+
 export interface DecofileProvider {
   state(options?: ReadOptions): Promise<Decofile>;
   revision(): Promise<string>;
@@ -23,7 +30,22 @@ export interface DecofileProvider {
   notify?(): Promise<void>;
   dispose?: () => void;
   set?(state: Decofile, revision?: string): Promise<void>;
+  /**
+   * The exact redirect for a request path, for a provider that keeps exact
+   * redirects outside the decofile (one KV key each on Cloudflare Workers,
+   * runtime/workerd/kvDecofile.ts). The website app's router checks it where
+   * it checks the decofile's exact redirects.
+   */
+  exactRedirect?(pathname: string): Promise<ExactRedirect | null>;
 }
+
+/**
+ * Lets a runtime replace the provider `getProvider` builds, keeping it as a
+ * fallback. Set on globalThis because the Worker entry that sets it and the
+ * deco bundle that reads it are separate bundles (runtime/workerd/worker.ts).
+ */
+export const WRAP_PROVIDER = Symbol.for("deco.wrapDecofileProvider");
+type WrapProvider = (provider: DecofileProvider) => DecofileProvider;
 
 interface RoutesSelection extends SelectionConfig {
   __resolveType: "$live/handlers/routesSelection.ts";
@@ -150,7 +172,11 @@ export const getProvider = async (
     providers.push(newFsProvider());
   }
 
-  return compose(
+  const provider = compose(
     ...providers,
   );
+  const wrap = (globalThis as Record<symbol, unknown>)[WRAP_PROVIDER] as
+    | WrapProvider
+    | undefined;
+  return wrap ? wrap(provider) : provider;
 };

@@ -91,6 +91,40 @@ request runs the Worker.
   `freshForWorkerd(manifest, config)` points Fresh at the shim's file system and
   registers plugin islands statically.
 
+## Fast deploy (content from KV)
+
+The build embeds `.deco/blocks`, so by default a publish needs a new build.
+With fast deploy the Worker reads its decofile from Cloudflare KV and a
+content-only push needs no build (`kvDecofile.ts`). The keys are the ones the
+TanStack sites use, written by `deco-sync-blocks-to-kv` (@decocms/blocks-cli,
+which detects a Fresh repo and keeps its block keys and redirect blocks the way
+Fresh reads them):
+
+| Key | What |
+| --- | --- |
+| `decofile:<id>` | the decofile; `<id>` is the commit the Worker was built from |
+| `index:revision:<id>` | its revision |
+| `redirect:<id>:<path>` | one exact redirect each, kept out of the decofile |
+| `index:live` | the live `<id>`, which a content-only push rewrites |
+
+- **Opt in**: a `DECO_KV` binding and `"DECO_FAST_DEPLOY": "1"` in
+  `wrangler.jsonc` (`workerd init` writes both). The id comes from
+  `DECO_DEPLOYMENT_ID`, else `BUILD_HASH`. The control-plane builder replaces
+  the namespace id with the site's own, seeds `decofile:<sha>` before deploying
+  and sets `index:live` after.
+- **Reads**: the first request loads `decofile:<id>`; afterwards each isolate
+  checks `index:revision:<id>` at most every 10 s, in `waitUntil`, and swaps the
+  new decofile in (deco reinstalls its apps, as on a Knative publish). When KV
+  has no decofile for this id, or can't be read, the embedded one is served.
+- **Exact redirects**: the website app's router asks
+  `DecofileProvider.exactRedirect(path)` where it checks the decofile's exact
+  redirects. The KV key is the folded path (`normalizePath`, shared with
+  @decocms/blocks); the match is the source as written against the request
+  path, byte for byte, as Fresh matched it. A lookup is cached per isolate for
+  60 s (hit or miss), which is also how long a redirect edit takes to show. A
+  KV error is no redirect, never a 5xx. Glob, `/:param` and query-scoped rules
+  stay in the decofile.
+
 ## Page cache
 
 On Deno, the CDN in front of the site keeps the pages deco marks public
@@ -114,9 +148,10 @@ before Cloudflare's cache, so without help every visit would render the page.
   `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`,
   `utmi_campaign`, `utmi_page`, `utmi_part`, `fbclid`, `gclid`, `gclsrc`,
   `dclid`, `msclkid`, `twclid`, `li_fat_id`, `mc_cid`, `mc_eid`, `ttclid`,
-  `srsltid`; the build (`BUILD_HASH`, else `DENO_DEPLOYMENT_ID`: the decofile is
-  in the bundle, so a publish is a new build; **without either, nothing is
-  cached**, so a deploy never serves the previous one's pages), the device class
+  `srsltid`; the build (`BUILD_HASH`, else `DENO_DEPLOYMENT_ID`; **without
+  either, nothing is cached**, so a deploy never serves the previous one's
+  pages) plus, with fast deploy, the KV decofile's revision (a publish changes
+  it without a build), the device class
   (`cf-device-type`, else the user agent), and the variant cookies: deco's
   matcher and segment cookies plus `DECO_PAGE_CACHE_KEY_COOKIES`.
 - **Never cached**: drafts (`?__draft=`, `__deco_draft`), debug (`?__d`,
@@ -177,6 +212,7 @@ Turn it off with `DECO_WORKER_PAGE_CACHE=false` (or `pageCache: false`).
 - Background revalidation (`stale-while-revalidate`) of loaders runs outside the
   request that triggered it and may be cut short. The page cache revalidates in
   `waitUntil`, within Cloudflare's limit for it.
-- Purging a page before it expires (the page cache keys on the build id, so a
-  new deploy starts clean).
+- Purging a page before it expires (the page cache keys on the build id and,
+  with fast deploy, the decofile revision, so a new deploy or publish starts
+  clean).
 - Redis loader cache (`ioredis` needs TCP sockets).

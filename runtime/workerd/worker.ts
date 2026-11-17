@@ -4,7 +4,13 @@ import {
   keepCacheWritesAlive,
   runWithExecutionContext,
 } from "./context.ts";
+import type { DecofileProvider } from "../../engine/decofile/provider.ts";
 import { installDenoShim } from "./deno.ts";
+import {
+  type KVDecofileProvider,
+  kvDecofileProvider,
+  type KVLike,
+} from "./kvDecofile.ts";
 import { installDenoFetch, sendAsIs } from "./encoding.ts";
 import { listFromEnv, servePage } from "./pageCache.ts";
 
@@ -59,6 +65,10 @@ export interface Worker {
 const firstNonEmpty = (...values: unknown[]): string | undefined =>
   values.find((v): v is string => typeof v === "string" && v.trim() !== "");
 
+/** `WRAP_PROVIDER` in engine/decofile/provider.ts. Copied, not imported: that
+ *  module does I/O when evaluated, and this one runs before the Deno shim. */
+const WRAP_PROVIDER = Symbol.for("deco.wrapDecofileProvider");
+
 /** Where `scripts/workerd.ts` embeds the precomputed editor schemas. */
 export const SCHEMAS_FILE = "/app/.deco/schemas.gen.json";
 
@@ -82,6 +92,7 @@ export function createWorker(
   { files, boot, lazyFiles, pageCache }: WorkerOptions,
 ): Worker {
   let app: Promise<FreshHandler> | undefined;
+  let kvDecofile: KVDecofileProvider | undefined;
   return {
     async fetch(
       req: Request,
@@ -89,6 +100,15 @@ export function createWorker(
       ctx: ExecutionContextLike,
     ): Promise<Response> {
       app ??= runWithExecutionContext(ctx, () => {
+        const fastDeploy = fastDeployFromEnv(env);
+        if (fastDeploy) {
+          // deco reads it through getProvider (engine/decofile/provider.ts),
+          // with the embedded decofile as the fallback. One per isolate, even
+          // if deco asks more than once.
+          (globalThis as Record<symbol, unknown>)[WRAP_PROVIDER] = (
+            fallback: DecofileProvider,
+          ) => kvDecofile ??= kvDecofileProvider({ ...fastDeploy, fallback });
+        }
         installDenoShim({
           env: {
             ...env,
@@ -133,9 +153,13 @@ export function createWorker(
       if (pageCache === false || env.DECO_WORKER_PAGE_CACHE === "false") {
         return sendAsIs(await render());
       }
+      const build = firstNonEmpty(env.BUILD_HASH, env.DENO_DEPLOYMENT_ID) ?? "";
+      // With fast deploy the content changes without a build: the decofile
+      // revision is part of the version, so a publish never serves old pages.
+      const content = kvDecofile?.kvRevision();
       return sendAsIs(
         await servePage(req, ctx, render, {
-          version: firstNonEmpty(env.BUILD_HASH, env.DENO_DEPLOYMENT_ID) ?? "",
+          version: build && content ? `${build}:${content}` : build,
           keyCookies: pageCache?.keyCookies ??
             listFromEnv(env.DECO_PAGE_CACHE_KEY_COOKIES),
           bypassCookies: pageCache?.bypassCookies ??
@@ -196,6 +220,30 @@ export function freshForWorkerd<
     } as any,
   };
 }
+
+/**
+ * Fast deploy (runtime/workerd/kvDecofile.ts) is on when the Worker has
+ * `DECO_FAST_DEPLOY=1` (or `true`), a `DECO_KV` binding and a deployment id
+ * (`DECO_DEPLOYMENT_ID`, else the builder's `BUILD_HASH`). The explicit flag
+ * means binding a namespace alone never moves a site onto KV.
+ */
+export const fastDeployFromEnv = (
+  env: Record<string, unknown>,
+): { kv: KVLike; deploymentId: string } | null => {
+  if (env.DECO_FAST_DEPLOY !== "1" && env.DECO_FAST_DEPLOY !== "true") {
+    return null;
+  }
+  const kv = env.DECO_KV as KVLike | undefined;
+  const deploymentId = firstNonEmpty(env.DECO_DEPLOYMENT_ID, env.BUILD_HASH);
+  if (typeof kv?.get !== "function" || !deploymentId) {
+    console.warn(
+      "[deco/kv] DECO_FAST_DEPLOY is set without a DECO_KV binding or a " +
+        "deployment id (BUILD_HASH): serving the embedded decofile",
+    );
+    return null;
+  }
+  return { kv, deploymentId };
+};
 
 /** Lazy files for the shim: sizes up front, content from `ASSETS`. */
 const fromAssets = (

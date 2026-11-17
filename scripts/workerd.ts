@@ -91,6 +91,9 @@ const readSiteConfig = async () => {
   };
 };
 
+/** The `DECO_KV` id `init` writes; the builder replaces it. */
+const KV_PLACEHOLDER_ID = "deco-kv-local";
+
 const wranglerConfig = (name: string) =>
   `{
   // Cloudflare Worker for this deco site. Build: dist/worker (see
@@ -111,8 +114,13 @@ const wranglerConfig = (name: string) =>
   "workers_dev": false,
   "preview_urls": false,
   "observability": { "enabled": true },
+  // Fast deploy: content from KV, no rebuild on a publish (see
+  // runtime/workerd/README.md in deco). The control-plane builder replaces
+  // this id with the site's own namespace; locally, wrangler dev simulates it.
+  "kv_namespaces": [{ "binding": "DECO_KV", "id": "${KV_PLACEHOLDER_ID}" }],
   "vars": {
-    "DECO_SITE_NAME": ${JSON.stringify(name)}
+    "DECO_SITE_NAME": ${JSON.stringify(name)},
+    "DECO_FAST_DEPLOY": "1"
   }
 }
 `;
@@ -267,7 +275,9 @@ async function build() {
     JSON.stringify({
       ...siteConfig,
       nodeModulesDir: "none",
-      ...(link ? { links: [link] } : {}),
+      // Relative to the config: on Windows an absolute `C:\...` link loads, but
+      // Deno then resolves the linked package's exports one directory up.
+      ...(link ? { links: [relative(ROOT, link).replaceAll("\\", "/")] } : {}),
     }),
   );
   try {
@@ -294,6 +304,16 @@ async function build() {
         );
       }
     }
+    // The control-plane builder replaces it; a hand-made `wrangler deploy`
+    // would fail on a namespace that doesn't exist.
+    if (text.includes(`"${KV_PLACEHOLDER_ID}"`)) {
+      console.warn(
+        `warning: DECO_KV still has the placeholder id "${KV_PLACEHOLDER_ID}". ` +
+          "Fine with wrangler dev and the control-plane builder; for a " +
+          "hand-made deploy, set your namespace id (`npx wrangler kv namespace " +
+          "create`) or remove the binding and DECO_FAST_DEPLOY.",
+      );
+    }
   }
 }
 
@@ -316,7 +336,10 @@ async function buildServer(
   if (await exists(blocks)) {
     for await (const entry of walk(blocks, { includeDirs: false })) {
       const text = await Deno.readTextFile(entry.path);
-      files[`${APP_ROOT}/${relative(ROOT, entry.path)}`] = text;
+      // POSIX separators: a build on Windows would embed `.deco\blocks\x`,
+      // and the shim (always POSIX) would find no blocks folder.
+      files[`${APP_ROOT}/${relative(ROOT, entry.path).replaceAll("\\", "/")}`] =
+        text;
       if (entry.path.endsWith(".json")) {
         try {
           decofile.push(JSON.parse(text));
