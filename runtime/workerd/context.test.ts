@@ -66,3 +66,31 @@ Deno.test("a settled flight is dropped, per request", async () => {
   );
   assertEquals([first, second], [1, 2]);
 });
+
+Deno.test("every copy of this module shares the request (entry + app bundle)", async () => {
+  // The Worker entry and the site bundle each embed this module; the app copy
+  // is evaluated last and must still see the request the entry runs.
+  const copy: typeof import("./context.ts") = await import(
+    "./context.ts?copy=app"
+  );
+  const scope = () =>
+    (globalThis as unknown as Record<symbol, () => unknown>)[
+      Symbol.for("deco.requestScope")
+    ]();
+  const kept: Promise<unknown>[] = [];
+  const request = { waitUntil: (p: Promise<unknown>) => void kept.push(p) };
+  runWithExecutionContext(request, () => {
+    assertEquals(scope(), request);
+    copy.waitUntil(Promise.resolve());
+  });
+  assertEquals(kept.length, 1);
+  assertEquals(scope(), undefined);
+
+  const sf = singleFlight<string>();
+  const g = gate();
+  const a = runWithExecutionContext(ctx(), () => sf.do("k", g.f));
+  const b = copy.runWithExecutionContext(ctx(), () => sf.do("k", g.f));
+  g.release("v");
+  assertEquals(await Promise.all([a, b]), ["v", "v"]);
+  assertEquals(g.calls(), 2);
+});
