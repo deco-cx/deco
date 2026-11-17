@@ -655,20 +655,52 @@ export function nodeModeInterop(body: string): string {
  * of its imports. Deno evaluates a cycle of such modules; in the bundle, two
  * inits of a cycle end up waiting on each other's promise, and the Worker
  * hangs on boot ("code had hung") on every request. Returns each cycle as its
- * module paths.
+ * module paths, in import order (the last imports the first).
+ *
+ * `__esm` hands out an init's promise only once the init has suspended: an
+ * init called while it still runs synchronously (it awaits nothing yet)
+ * returns `undefined`, so that import doesn't wait. That happens only to the
+ * first await of an init, when the first awaits of a chain of inits lead back
+ * to it; such a chain never hangs by itself, so its imports are left out.
  */
 export function asyncImportCycles(body: string): string[][] {
   const paths = new Map<string, string>();
-  const deps = new Map<string, string[]>();
+  const imports = new Map<string, string[]>();
+  const firstImport = new Map<string, string>();
   const decl = /^var (init_[\w$]+) = __esm\(\{\n {2}async "([^"]+)"\(\) \{\n/gm;
   for (const m of body.matchAll(decl)) {
     const start = m.index + m[0].length;
     const end = body.indexOf("\n});", start);
-    const code = body.slice(start, end === -1 ? body.length : end);
+    // Top-level awaits of the init, at its statement indent: not those of
+    // nested functions, comments or strings.
+    const awaits = body.slice(start, end === -1 ? body.length : end)
+      .split("\n")
+      .filter((line) => /^ {4}\S/.test(line) && /\bawait\b/.test(line));
     paths.set(m[1], m[2]);
+    imports.set(m[1], []);
+    awaits.forEach((line, i) => {
+      const dep = line.match(/^ {4}await (init_[\w$]+)\(\)/)?.[1];
+      if (!dep) return;
+      imports.get(m[1])!.push(dep);
+      if (i === 0) firstImport.set(m[1], dep);
+    });
+  }
+  const leadsBack = (from: string, to: string) => {
+    let v: string | undefined = from;
+    for (let n = 0; v && n <= paths.size; n++, v = firstImport.get(v)) {
+      if (v === to) return true;
+    }
+    return false;
+  };
+  // What each init waits on.
+  const deps = new Map<string, string[]>();
+  for (const [v, ws] of imports) {
     deps.set(
-      m[1],
-      [...code.matchAll(/\bawait (init_[\w$]+)\(\)/g)].map((d) => d[1]),
+      v,
+      ws.filter((w, i) =>
+        paths.has(w) && !(i === 0 && firstImport.get(v) === w &&
+          leadsBack(w, v))
+      ),
     );
   }
 
@@ -683,8 +715,7 @@ export function asyncImportCycles(body: string): string[][] {
     low.set(v, index.get(v)!);
     stack.push(v);
     onStack.add(v);
-    for (const w of deps.get(v) ?? []) {
-      if (!paths.has(w)) continue;
+    for (const w of deps.get(v)!) {
       if (!index.has(w)) {
         visit(w);
         low.set(v, Math.min(low.get(v)!, low.get(w)!));
@@ -693,15 +724,39 @@ export function asyncImportCycles(body: string): string[][] {
       }
     }
     if (low.get(v) !== index.get(v)) return;
-    const component: string[] = [];
+    const component = new Set<string>();
     let w: string;
     do {
       w = stack.pop()!;
       onStack.delete(w);
-      component.push(paths.get(w)!);
+      component.add(w);
     } while (w !== v);
-    if (component.length > 1) cycles.push(component.reverse());
+    const cycle = shortestCycle(v, component, deps);
+    if (cycle) cycles.push(cycle.map((w) => paths.get(w)!));
   };
   for (const v of paths.keys()) if (!index.has(v)) visit(v);
   return cycles;
+}
+
+/** The shortest path from `v` back to `v` inside `component`, if any. */
+function shortestCycle(
+  v: string,
+  component: Set<string>,
+  deps: Map<string, string[]>,
+): string[] | undefined {
+  const from = new Map<string, string>();
+  const queue = [v];
+  for (const u of queue) {
+    for (const w of deps.get(u)!) {
+      if (w === v) {
+        const cycle = [u];
+        while (cycle[0] !== v) cycle.unshift(from.get(cycle[0])!);
+        return cycle;
+      }
+      if (component.has(w) && !from.has(w)) {
+        from.set(w, u);
+        queue.push(w);
+      }
+    }
+  }
 }

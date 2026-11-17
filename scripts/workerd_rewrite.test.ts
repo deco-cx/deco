@@ -540,6 +540,15 @@ Deno.test("nodeModeInterop: an unknown __esModule check fails the build", () => 
   assertThrows(() => nodeModeInterop(other), Error, "__toESM2");
 });
 
+const asyncInit = (name: string, path: string, lines: string[]) =>
+  [
+    `var ${name} = __esm({`,
+    `  async "${path}"() {`,
+    ...lines.map((l) => `    ${l}`),
+    "  }",
+    "});",
+  ].join("\n");
+
 Deno.test("asyncImportCycles: async modules that import each other", () => {
   const init = (name: string, path: string, deps: string[], async = true) =>
     [
@@ -570,4 +579,74 @@ Deno.test("asyncImportCycles: async modules that import each other", () => {
     "islands/SelectorIsland.tsx",
   ]]);
   assertEquals(asyncImportCycles(init("init_a", "a.ts", ["init_a2"])), []);
+});
+
+Deno.test("asyncImportCycles: a cycle reached by first awaits doesn't wait", () => {
+  // The init each one awaits first still runs synchronously and gets
+  // `undefined`, so the two never wait on each other (checked on deno bundle).
+  const tla = asyncInit("init_tla", "tla.ts", ["v = await f();"]);
+  assertEquals(
+    asyncImportCycles([
+      tla,
+      asyncInit("init_x", "x.ts", ["await init_y();", "await init_tla();"]),
+      asyncInit("init_y", "y.ts", ["await init_x();", "await init_tla();"]),
+    ].join("\n")),
+    [],
+  );
+  // Once an init has awaited something, the cycle hangs: x.ts waits on y.ts,
+  // which then waits on x.ts.
+  assertEquals(
+    asyncImportCycles([
+      tla,
+      asyncInit("init_x", "x.ts", ["await init_y();", "await init_tla();"]),
+      asyncInit("init_y", "y.ts", ["await init_tla();", "await init_x();"]),
+    ].join("\n")),
+    [["x.ts", "y.ts"]],
+  );
+  // Its own top-level await counts too.
+  assertEquals(
+    asyncImportCycles([
+      asyncInit("init_x", "x.ts", ["v = await f();", "await init_y();"]),
+      asyncInit("init_y", "y.ts", ["await init_x();"]),
+    ].join("\n")),
+    [["x.ts", "y.ts"]],
+  );
+});
+
+Deno.test("asyncImportCycles: only top-level awaits of an init", () => {
+  assertEquals(
+    asyncImportCycles([
+      asyncInit("init_x", "x.ts", ["v = await f();", "await init_y();"]),
+      asyncInit("init_y", "y.ts", [
+        "v = await f();",
+        "// await init_x();",
+        's = "await init_x()";',
+        "load = async () => {",
+        "  await init_x();",
+        "};",
+      ]),
+    ].join("\n")),
+    [],
+  );
+});
+
+Deno.test("asyncImportCycles: reports an actual cycle, in import order", () => {
+  // a <-> b and a <-> c: one component, but b doesn't import c.
+  const cycles = asyncImportCycles([
+    asyncInit("init_a", "a.ts", [
+      "v = await f();",
+      "await init_b();",
+      "await init_c();",
+    ]),
+    asyncInit("init_b", "b.ts", ["v = await f();", "await init_a();"]),
+    asyncInit("init_c", "c.ts", ["v = await f();", "await init_a();"]),
+  ].join("\n"));
+  assertEquals(cycles, [["a.ts", "b.ts"]]);
+  // A module awaiting itself after it suspended.
+  assertEquals(
+    asyncImportCycles(
+      asyncInit("init_x", "x.ts", ["v = await f();", "await init_x();"]),
+    ),
+    [["x.ts"]],
+  );
 });
