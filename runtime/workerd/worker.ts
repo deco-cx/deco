@@ -78,48 +78,77 @@ interface AssetsBinding {
   fetch(req: Request): Promise<Response>;
 }
 
+/**
+ * The app boot, shared by the isolate's requests.
+ *
+ * The boot runs inside the request that starts it (workerd forbids I/O outside
+ * a request). If that request is cancelled before the boot settles (its client
+ * disconnected), workerd fails every other request waiting on it with "This
+ * promise was created by a request that has since ended". So the request that
+ * starts the boot keeps itself alive until the boot settles (`waitUntil`), and
+ * a request whose wait fails on a boot another request started boots again,
+ * once, in its own context. A failed boot is never cached.
+ */
+export function sharedBoot<T>(): (
+  ctx: ExecutionContextLike,
+  start: () => Promise<T>,
+) => Promise<T> {
+  let current: Promise<T> | undefined;
+  return async (ctx, start) => {
+    for (let attempt = 0;; attempt++) {
+      let startedHere = false;
+      if (!current) {
+        current = start();
+        startedHere = true;
+        ctx.waitUntil(current.catch(() => {}));
+      }
+      const booting = current;
+      try {
+        return await booting;
+      } catch (err) {
+        if (current === booting) current = undefined;
+        if (startedHere || attempt > 0) throw err;
+      }
+    }
+  };
+}
+
 export function createWorker(
   { files, boot, lazyFiles, pageCache }: WorkerOptions,
 ): Worker {
-  let app: Promise<FreshHandler> | undefined;
+  const app = sharedBoot<FreshHandler>();
   return {
     async fetch(
       req: Request,
       env: Record<string, unknown>,
       ctx: ExecutionContextLike,
     ): Promise<Response> {
-      app ??= runWithExecutionContext(ctx, () => {
-        installDenoShim({
-          env: {
-            ...env,
-            // A Worker is always a deploy: without a deployment id deco runs in
-            // dev mode (section errors rendered to visitors, a missing site
-            // name tolerated). The control-plane builder passes the commit as
-            // BUILD_HASH; fall back to a fixed id for hand-made deploys.
-            DENO_DEPLOYMENT_ID: firstNonEmpty(
-              env.DENO_DEPLOYMENT_ID,
-              env.BUILD_HASH,
-            ) ?? "workerd",
-            // /deco/meta reads the build-time schemas (no TS parsing on workerd).
-            ...(SCHEMAS_FILE in files
-              ? { DECO_SCHEMAS_FILE: SCHEMAS_FILE }
-              : {}),
-          },
-          files,
-          ...fromAssets(lazyFiles, env.ASSETS),
+      const start = () =>
+        runWithExecutionContext(ctx, () => {
+          installDenoShim({
+            env: {
+              ...env,
+              // A Worker is always a deploy: without a deployment id deco runs in
+              // dev mode (section errors rendered to visitors, a missing site
+              // name tolerated). The control-plane builder passes the commit as
+              // BUILD_HASH; fall back to a fixed id for hand-made deploys.
+              DENO_DEPLOYMENT_ID: firstNonEmpty(
+                env.DENO_DEPLOYMENT_ID,
+                env.BUILD_HASH,
+              ) ?? "workerd",
+              // /deco/meta reads the build-time schemas (no TS parsing on workerd).
+              ...(SCHEMAS_FILE in files
+                ? { DECO_SCHEMAS_FILE: SCHEMAS_FILE }
+                : {}),
+            },
+            files,
+            ...fromAssets(lazyFiles, env.ASSETS),
+          });
+          keepCacheWritesAlive();
+          installDenoFetch();
+          return boot();
         });
-        keepCacheWritesAlive();
-        installDenoFetch();
-        return boot();
-      });
-      let handler: FreshHandler;
-      try {
-        handler = await app;
-      } catch (err) {
-        // Let the next request retry instead of caching the failure.
-        app = undefined;
-        throw err;
-      }
+      const handler = await app(ctx, start);
       const render = () =>
         runWithExecutionContext(ctx, () =>
           handler(req, {
