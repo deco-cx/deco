@@ -10,6 +10,8 @@ export const handler = createHandler(async (
     {
       headers: {
         "Content-Type": "application/json",
+        // The CORS headers below depend on the request's origin.
+        "Vary": "Origin",
         ...releaseCorsHeaders(
           req.raw.headers.get("origin"),
           Context.active().platform === "localhost",

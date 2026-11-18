@@ -12,10 +12,11 @@ const STUDIO_HOSTNAMES = ["studio.decocms.com", "studio-stg.decocms.com"];
 export const releaseCorsHeaders = (
   origin: string | null,
   runtimeIsLocal: boolean,
+  trustedAuthorities: string[] = getAllowedAuthorities(),
 ): Record<string, string> => {
   if (!origin || !URL.canParse(origin)) return {};
   const { hostname } = new URL(origin);
-  const allowed = getAllowedAuthorities().includes(hostname) ||
+  const allowed = trustedAuthorities.includes(hostname) ||
     (runtimeIsLocal && STUDIO_HOSTNAMES.includes(hostname));
   return allowed ? allowCorsForOrigin(origin) : {};
 };
