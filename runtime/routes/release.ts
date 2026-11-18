@@ -1,3 +1,4 @@
+import { Context } from "../../deco.ts";
 import { createHandler } from "../middleware.ts";
 import { releaseCorsHeaders } from "../releaseCors.ts";
 
@@ -9,7 +10,10 @@ export const handler = createHandler(async (
     {
       headers: {
         "Content-Type": "application/json",
-        ...releaseCorsHeaders(req.raw.headers.get("origin")),
+        ...releaseCorsHeaders(
+          req.raw.headers.get("origin"),
+          Context.active().platform === "localhost",
+        ),
       },
     },
   );

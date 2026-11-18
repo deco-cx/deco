@@ -1,35 +1,44 @@
 import { assertEquals } from "@std/assert";
 import { releaseCorsHeaders } from "./releaseCors.ts";
 
-const allowOrigin = (origin: string | null) =>
-  releaseCorsHeaders(origin)["Access-Control-Allow-Origin"];
+const allowOrigin = (origin: string | null, runtimeIsLocal: boolean) =>
+  releaseCorsHeaders(origin, runtimeIsLocal)["Access-Control-Allow-Origin"];
 
 Deno.test("releaseCorsHeaders", async (t) => {
-  await t.step("allows Studio's editor origins", () => {
+  await t.step("a local runtime allows any origin", () => {
+    for (
+      const origin of [
+        "https://studio.decocms.com",
+        "https://studio-stg.decocms.com",
+        "https://example.com",
+      ]
+    ) {
+      assertEquals(allowOrigin(origin, true), origin);
+    }
+  });
+
+  await t.step("a deployed runtime allows only the trusted authorities", () => {
     assertEquals(
-      allowOrigin("https://studio.decocms.com"),
-      "https://studio.decocms.com",
+      allowOrigin("https://admin.deco.cx", false),
+      "https://admin.deco.cx",
     );
     assertEquals(
-      allowOrigin("https://studio-stg.decocms.com"),
-      "https://studio-stg.decocms.com",
+      allowOrigin("http://localhost:3000", false),
+      "http://localhost:3000",
+    );
+    assertEquals(releaseCorsHeaders("https://studio.decocms.com", false), {});
+    assertEquals(releaseCorsHeaders("https://example.com", false), {});
+    assertEquals(
+      releaseCorsHeaders("https://admin.deco.cx.evil.io", false),
+      {},
     );
   });
 
-  await t.step("keeps allowing the trusted authorities", () => {
-    assertEquals(allowOrigin("https://admin.deco.cx"), "https://admin.deco.cx");
-    assertEquals(allowOrigin("http://localhost:3000"), "http://localhost:3000");
-  });
-
-  await t.step("sends no CORS headers to other origins", () => {
-    assertEquals(releaseCorsHeaders("https://example.com"), {});
-    assertEquals(releaseCorsHeaders("https://evil.studio.decocms.com"), {});
-    assertEquals(releaseCorsHeaders("https://studio.decocms.com.evil.io"), {});
-  });
-
-  await t.step("sends no CORS headers without a parseable origin", () => {
-    assertEquals(releaseCorsHeaders(null), {});
-    assertEquals(releaseCorsHeaders("null"), {});
-    assertEquals(releaseCorsHeaders("not a url"), {});
+  await t.step("no CORS headers without a parseable origin", () => {
+    for (const local of [true, false]) {
+      assertEquals(releaseCorsHeaders(null, local), {});
+      assertEquals(releaseCorsHeaders("null", local), {});
+      assertEquals(releaseCorsHeaders("not a url", local), {});
+    }
   });
 });
