@@ -2,17 +2,20 @@ import { getAllowedAuthorities } from "../engine/trustedAuthority.ts";
 import { allowCorsForOrigin } from "../utils/http.ts";
 
 /**
- * On a local runtime any origin may read the release cross-origin, the same
- * as `/live/_meta`: Studio's "Local" mode reads `/.decofile` from the
- * developer's dev server in the browser. Elsewhere only the trusted
- * authorities may.
+ * Studio's "Local" mode reads `/.decofile` from the developer's dev server in
+ * the browser, so a local runtime also lets Studio's app origins read it.
+ * They stay off the trusted authorities: that list also decides where a
+ * release may be fetched from.
  */
+const STUDIO_HOSTNAMES = ["studio.decocms.com", "studio-stg.decocms.com"];
+
 export const releaseCorsHeaders = (
   origin: string | null,
   runtimeIsLocal: boolean,
 ): Record<string, string> => {
   if (!origin || !URL.canParse(origin)) return {};
-  const allowed = runtimeIsLocal ||
-    getAllowedAuthorities().includes(new URL(origin).hostname);
+  const { hostname } = new URL(origin);
+  const allowed = getAllowedAuthorities().includes(hostname) ||
+    (runtimeIsLocal && STUDIO_HOSTNAMES.includes(hostname));
   return allowed ? allowCorsForOrigin(origin) : {};
 };
