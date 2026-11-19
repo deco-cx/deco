@@ -18,6 +18,8 @@ import { caches as lruCache } from "./lrucache.ts";
 
 import { caches as fileSystem } from "./fileSystem.ts";
 
+import { caches as inMemoryCache } from "./inMemoryCache.ts";
+
 export const ENABLE_LOADER_CACHE: boolean =
   Deno.env.get("ENABLE_LOADER_CACHE") !== "false";
 const DEFAULT_CACHE_ENGINE = "CACHE_API";
@@ -41,7 +43,9 @@ export const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
     isAvailable: typeof globalThis.caches !== "undefined",
   },
   FILE_SYSTEM: {
-    implementation: headersCache(lruCache(fileSystem)),
+    implementation: headersCache(
+      lruCache(createTieredCache(inMemoryCache, fileSystem)),
+    ),
     isAvailable: isFileSystemAvailable,
   },
   REDIS: {
