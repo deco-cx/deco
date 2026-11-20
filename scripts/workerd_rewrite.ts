@@ -30,9 +30,9 @@ import {
   type Token,
   tokenizer,
   tokTypes as tt,
-} from "npm:acorn@^8.14.0";
+} from "npm:acorn@^8.19.0";
 // deno-lint-ignore no-import-prefix
-import ts from "npm:typescript@^5.8.3";
+import ts from "npm:typescript@^5.9.3";
 
 /** Global the Worker entry fills with the site modules a runtime `import()`
  *  may ask for: path from the site root (`/components/Session.tsx`) to the
