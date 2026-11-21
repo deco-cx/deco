@@ -8,6 +8,7 @@ import type { AppManifest } from "./types.ts";
 import { randId } from "./utils/rand.ts";
 import type { BlockKeys } from "./engine/block.ts";
 import type { GateKeeperAccess } from "./blocks/utils.tsx";
+import type { Vary } from "./utils/vary.ts";
 
 export interface DecoRuntimeState<
   TAppManifest extends AppManifest = AppManifest,
@@ -30,6 +31,11 @@ export type RequestContext = {
   framework?: "fresh" | "htmx";
   /** The current block (loader/action) being executed */
   blockId?: string;
+  /**
+   * Vary scoped to a cacheable loader's handler run. Loaders invoked inside it
+   * push keys and cache vetoes here instead of into the page's vary.
+   */
+  vary?: Vary;
 };
 
 export type WellKnownHostingPlatform =
