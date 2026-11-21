@@ -96,6 +96,35 @@ const createStableHref = (href: string): string => {
   return hrefUrl.href;
 };
 
+// Block objects are stable within a release state, so hash each one once.
+const blockHashes = new WeakMap<object, string>();
+const blockHash = (block: unknown): string => {
+  if (typeof block !== "object" || block === null) return `${block}`;
+  let hash = blockHashes.get(block);
+  if (hash === undefined) {
+    hasher.hash(JSON.stringify(block));
+    hash = `${hasher.result()}`;
+    hasher.reset();
+    blockHashes.set(block, hash);
+  }
+  return hash;
+};
+
+/**
+ * Content version of the section: a hash of the named blocks on its resolve
+ * chain (e.g. the page it lives in). Unlike the release revision, it only
+ * changes when one of those blocks changes, so publishing one page doesn't bust
+ * the lazy-section cache of every other page. Falls back to the revision when
+ * the chain has no named block.
+ */
+const contentVersion = (ctx: SectionContext): string => {
+  const named = ctx.resolveChain.filter((field) => field.type === "resolvable");
+  if (named.length === 0 || !ctx.resolvables) return ctx.revision;
+  return named
+    .map((field) => `${field.value}:${blockHash(ctx.resolvables[field.value])}`)
+    .join(",");
+};
+
 export type Options<P> = {
   /** Section props partially applied */
   props?: Partial<P extends ComponentType<infer K> ? K : P>;
@@ -115,7 +144,7 @@ export const useSection = <P>(
     throw new Error("Missing context in rendering tree");
   }
 
-  const revisionId = ctx?.revision;
+  const version = contentVersion(ctx);
   const vary = ctx?.context.state.vary.build();
   const { request, renderSalt, context: { state: { pathTemplate } } } = ctx;
 
@@ -136,7 +165,7 @@ export const useSection = <P>(
   const hrefParam = href ?? request.url;
   const stableHref = createStableHref(hrefParam);
   const cbString = [
-    revisionId,
+    version,
     vary,
     stableHref,
     ctx?.deploymentId,
