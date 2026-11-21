@@ -8,6 +8,12 @@ import { singleFlight } from "../../utils/mod.ts";
 import { createHandler, DEBUG_QS } from "../middleware.ts";
 import type { PageParams } from "../mod.ts";
 import Render, { type PageData } from "./entrypoint.tsx";
+import {
+  type ResolvedSection,
+  sectionModuleLookup,
+  type SerializeContext,
+  serializeResolvedSection,
+} from "./serialize-section.ts";
 
 interface Options {
   resolveChain?: FieldResolver[];
@@ -91,6 +97,30 @@ export const handler = createHandler(async (
   if (isDebugRequest) {
     return Response.json({ debugData: state.vary.debug.build() });
   }
+
+  if (opts.searchParams.get("format") === "json") {
+    const serializeCtx: SerializeContext = {
+      href: opts.href,
+      pathTemplate: opts.pathTemplate,
+      renderSalt: opts.renderSalt,
+      cb: opts.searchParams.get("__cb") ?? undefined,
+      getSectionModule: await sectionModuleLookup(),
+    };
+    const serialized = serializeResolvedSection(
+      page as ResolvedSection,
+      serializeCtx,
+    );
+    const jsonResponse = Response.json(serialized);
+    const shouldCacheFromVary = ctx?.var?.vary?.shouldCache === true;
+    jsonResponse.headers.set(
+      "cache-control",
+      shouldCache && shouldCacheFromVary
+        ? DECO_RENDER_CACHE_CONTROL
+        : "no-store, no-cache, must-revalidate",
+    );
+    return jsonResponse;
+  }
+
   const props = {
     params: ctx.req.param(),
     url: ctx.var.url,
