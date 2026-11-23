@@ -1,5 +1,10 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { pageCacheVersion, sharedBoot, SNAPSHOT_FILE } from "./worker.ts";
+import {
+  pageCacheVersion,
+  sharedBoot,
+  SNAPSHOT_FILE,
+  snapshotBuildId,
+} from "./worker.ts";
 
 const ctx = () => {
   const kept: Promise<unknown>[] = [];
@@ -100,18 +105,26 @@ Deno.test("pageCacheVersion: a rebuild of the same commit gets a new version", (
   const b = {
     [SNAPSHOT_FILE]: JSON.stringify({ build_id: "a0a909", files: {} }),
   };
-  assertEquals(pageCacheVersion(env, a), "f69f275:564a0f");
-  assertEquals(pageCacheVersion(env, b), "f69f275:a0a909");
+  assertEquals(pageCacheVersion(env, snapshotBuildId(a)), "f69f275:564a0f");
+  assertEquals(pageCacheVersion(env, snapshotBuildId(b)), "f69f275:a0a909");
 });
 
 Deno.test("pageCacheVersion: falls back to the deploy id alone", () => {
-  assertEquals(pageCacheVersion({ BUILD_HASH: "abc" }, {}), "abc");
   assertEquals(
-    pageCacheVersion({ DENO_DEPLOYMENT_ID: "dep" }, {
-      [SNAPSHOT_FILE]: "not json",
-    }),
+    pageCacheVersion({ BUILD_HASH: "abc" }, snapshotBuildId({})),
+    "abc",
+  );
+  assertEquals(
+    pageCacheVersion(
+      { DENO_DEPLOYMENT_ID: "dep" },
+      snapshotBuildId({ [SNAPSHOT_FILE]: "not json" }),
+    ),
     "dep",
   );
-  // No deploy id at all keeps the page cache off (servePage bypasses "no-version").
-  assertEquals(pageCacheVersion({}, {}), "");
+});
+
+Deno.test("pageCacheVersion: no deploy id keeps the page cache off", () => {
+  assertEquals(pageCacheVersion({}, undefined), "");
+  // A snapshot alone doesn't enable it (servePage bypasses "no-version").
+  assertEquals(pageCacheVersion({}, "564a0f"), "");
 });
