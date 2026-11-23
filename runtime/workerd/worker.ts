@@ -59,6 +59,36 @@ export interface Worker {
 const firstNonEmpty = (...values: unknown[]): string | undefined =>
   values.find((v): v is string => typeof v === "string" && v.trim() !== "");
 
+/** Where `scripts/workerd.ts` embeds the Fresh snapshot (islands' build id). */
+export const SNAPSHOT_FILE = "/app/_fresh/snapshot.json";
+
+/** The Fresh build id of the islands bundled in this Worker, if any. */
+export function snapshotBuildId(
+  files: Record<string, string>,
+): string | undefined {
+  try {
+    return firstNonEmpty(JSON.parse(files[SNAPSHOT_FILE] ?? "{}")?.build_id);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The page cache version: the deploy id (the commit, from the builder) plus the
+ * Fresh build id of the islands bundled in this Worker. A rebuild of the same
+ * commit gets new `/_frsh/js/<build_id>/` URLs, so cached pages from the
+ * previous build would point at islands that no longer exist (404, dead UI).
+ * Without a deploy id the version is empty, which keeps the page cache off.
+ */
+export function pageCacheVersion(
+  env: Record<string, unknown>,
+  buildId?: string,
+): string {
+  const deployId = firstNonEmpty(env.BUILD_HASH, env.DENO_DEPLOYMENT_ID);
+  if (!deployId) return "";
+  return buildId ? `${deployId}:${buildId}` : deployId;
+}
+
 /** Where `scripts/workerd.ts` embeds the precomputed editor schemas. */
 export const SCHEMAS_FILE = "/app/.deco/schemas.gen.json";
 
@@ -117,6 +147,7 @@ export function createWorker(
   { files, boot, lazyFiles, pageCache }: WorkerOptions,
 ): Worker {
   const app = sharedBoot<FreshHandler>();
+  const buildId = snapshotBuildId(files);
   return {
     async fetch(
       req: Request,
@@ -164,7 +195,7 @@ export function createWorker(
       }
       return sendAsIs(
         await servePage(req, ctx, render, {
-          version: firstNonEmpty(env.BUILD_HASH, env.DENO_DEPLOYMENT_ID) ?? "",
+          version: pageCacheVersion(env, buildId),
           keyCookies: pageCache?.keyCookies ??
             listFromEnv(env.DECO_PAGE_CACHE_KEY_COOKIES),
           bypassCookies: pageCache?.bypassCookies ??
