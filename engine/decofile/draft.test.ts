@@ -458,6 +458,84 @@ Deno.test("deco-hosted preview domain (setDecoSiteHost)", async (t) => {
   );
 
   await t.step(
+    "infers the pull request preview <site>-pr-<n>-site.deco.site host",
+    () => {
+      setDecoSiteHost("acme-storefront");
+      try {
+        assertEquals(
+          isDraftHostAllowed("acme-storefront-pr-298-site.deco.site", {}),
+          true,
+        );
+        assertEquals(
+          isDraftHostAllowed("acme-storefront-pr-1-site.deco.site", {}),
+          true,
+        );
+        // Another site's pull request.
+        assertEquals(
+          isDraftHostAllowed("other-site-pr-298-site.deco.site", {}),
+          false,
+        );
+        // The number is a positive integer: no label, no leading zero, not 0 or empty.
+        assertEquals(
+          isDraftHostAllowed("acme-storefront-pr-abc-site.deco.site", {}),
+          false,
+        );
+        assertEquals(
+          isDraftHostAllowed("acme-storefront-pr-012-site.deco.site", {}),
+          false,
+        );
+        assertEquals(
+          isDraftHostAllowed("acme-storefront-pr-0-site.deco.site", {}),
+          false,
+        );
+        assertEquals(
+          isDraftHostAllowed("acme-storefront-pr--site.deco.site", {}),
+          false,
+        );
+        assertEquals(
+          isDraftHostAllowed("acme-storefront-pr-1.x-site.deco.site", {}),
+          false,
+        );
+        // Missing the `-site` suffix, or off deco's apex.
+        assertEquals(
+          isDraftHostAllowed("acme-storefront-pr-298.deco.site", {}),
+          false,
+        );
+        assertEquals(
+          isDraftHostAllowed("acme-storefront-pr-298-site.example.com", {}),
+          false,
+        );
+        assertEquals(
+          isDraftHostAllowed(
+            "acme-storefront-pr-298-site.deco.site.evil.com",
+            {},
+          ),
+          false,
+        );
+      } finally {
+        setDecoSiteHost(null);
+      }
+    },
+  );
+
+  await t.step(
+    "the kill switch also disables the pull request preview host",
+    () => {
+      setDecoSiteHost("acme-storefront");
+      try {
+        assertEquals(
+          isDraftHostAllowed("acme-storefront-pr-298-site.deco.site", {
+            DECO_ALLOWED_PREVIEW_HOSTS: "none",
+          }),
+          false,
+        );
+      } finally {
+        setDecoSiteHost(null);
+      }
+    },
+  );
+
+  await t.step(
     "the kill switch also disables the per-deploy preview host",
     () => {
       setDecoSiteHost("als-storefront");
