@@ -47,6 +47,10 @@ import {
   render,
   type RenderResponse,
 } from "./features/render.tsx";
+import {
+  type RenderSignatureInput,
+  renderSigner,
+} from "./features/renderSignature.ts";
 import { styles } from "./features/styles.css.ts";
 import { type Bindings, handlerFor } from "./handler.tsx";
 export { buildImportMap };
@@ -167,6 +171,11 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       state ??
         (await this.prepareState({ req: { raw: req, param: () => ({}) } })),
     );
+  }
+
+  /** Signs a `/deco/render` URL built by `useSection` (see renderSignature.ts). */
+  signRender(input: RenderSignatureInput): string {
+    return renderSigner().sign(input);
   }
 
   invoke(...args: Parameters<typeof invoke>): Promise<unknown> {

@@ -2,9 +2,14 @@
 /** @jsxImportSource preact */
 
 import { FieldResolver } from "../../engine/core/resolver.ts";
-import { badRequest } from "../../engine/errors.ts";
+import { badRequest, forbidden } from "../../engine/errors.ts";
+import { logger } from "../../observability/mod.ts";
 import { stableStringify } from "../../utils/json.ts";
 import { singleFlight } from "../../utils/mod.ts";
+import {
+  RENDER_SIGNATURE_PARAM,
+  renderSigner,
+} from "../features/renderSignature.ts";
 import { createHandler, DEBUG_QS } from "../middleware.ts";
 import type { PageParams } from "../mod.ts";
 import Render, { type PageData } from "./entrypoint.tsx";
@@ -42,6 +47,31 @@ const fromRequest = (req: Request): Options => {
   if (!props) {
     throw badRequest({ code: "400", message: "Missing props" });
   }
+  if (!pathTemplate) {
+    throw badRequest({ code: "400", message: "Missing pathTemplate" });
+  }
+
+  // Before parsing anything: only what useSection built and signed resolves
+  // (see renderSignature.ts for why).
+  const signer = renderSigner();
+  if (signer.mode !== "off") {
+    const check = signer.verify(
+      { props, resolveChain, pathTemplate },
+      params.get(RENDER_SIGNATURE_PARAM),
+    );
+    if (!check.ok) {
+      if (signer.mode === "enforce") {
+        throw forbidden({ code: "403", message: "Invalid render signature" });
+      }
+      // A per-process key fails across pods; only a missing signature means
+      // something there.
+      if (signer.stableKey || check.reason === "missing") {
+        logger.warn(`/deco/render signature ${check.reason}`, {
+          pathTemplate,
+        });
+      }
+    }
+  }
 
   const parsedProps = JSON.parse(props);
 
@@ -53,9 +83,6 @@ const fromRequest = (req: Request): Options => {
   }
   if (!href) {
     throw badRequest({ code: "400", message: "Missing href" });
-  }
-  if (!pathTemplate) {
-    throw badRequest({ code: "400", message: "Missing pathTemplate" });
   }
 
   return {
