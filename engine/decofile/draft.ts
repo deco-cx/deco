@@ -203,8 +203,10 @@ export function setDraftPreviewHosts(hosts: readonly unknown[]): void {
  *   - `envs-<site>--<hash>.decocdn.com` — the per-deploy preview URL, whose
  *     `<hash>` label changes every deploy (so it is matched as a PATTERN, never
  *     a fixed allowlist entry).
+ *   - `<site>-pr-<number>-site.deco.site` — a pull request's preview
+ *     environment, one per pull request (also a PATTERN).
  *
- * Both are MERGED with the site-block/env list rather than replacing it: they
+ * All are MERGED with the site-block/env list rather than replacing it: they
  * are deco-operated infra, so a signed draft grant can preview there out of the
  * box, while a custom production domain — never inferred here — stays inert.
  * Fed from the trusted setup-time site name, never from the request or a draft.
@@ -225,6 +227,10 @@ export function setDecoSiteHost(site: string | null | undefined): void {
 const DEPLOY_PREVIEW_SUFFIX = ".decocdn.com";
 /** A single DNS label — the per-deploy `<hash>`, which carries no dots. */
 const DEPLOY_HASH_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
+/** Suffix of a pull request's preview environment (`<site>-pr-<n>-site.deco.site`). */
+const PULL_REQUEST_PREVIEW_SUFFIX = "-site.deco.site";
+/** A pull request number: digits only, no leading zero. */
+const PULL_REQUEST_NUMBER_RE = /^[1-9][0-9]*$/;
 
 /**
  * Whether `host` is a local dev origin — `localhost`, either loopback IP
@@ -255,7 +261,8 @@ function isLocalDevHost(host: string): boolean {
  * deploy, add a machine-specific port) — not the primary configuration.
  *
  * The deco-hosted domains inferred from the site name (`<site>.deco.site` as an
- * exact host and `envs-<site>--<hash>.decocdn.com` as `deployPreviewPrefix`) are
+ * exact host, `envs-<site>--<hash>.decocdn.com` as `deployPreviewPrefix` and
+ * `<site>-pr-<n>-site.deco.site` as `pullRequestPreviewPrefix`) are
  * always ADDED on top, so a signed draft grant can preview on deco-operated
  * infra without any per-site config.
  *
@@ -266,6 +273,7 @@ function isLocalDevHost(host: string): boolean {
 function previewConfig(env: EnvLike): {
   hosts: string[];
   deployPreviewPrefix: string | null;
+  pullRequestPreviewPrefix: string | null;
   /** Whether local dev hosts (see `isLocalDevHost`) may render drafts. Always
    * true except under the `none` kill switch. */
   localAllowed: boolean;
@@ -275,7 +283,12 @@ function previewConfig(env: EnvLike): {
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
   if (fromEnv.includes("none")) {
-    return { hosts: [], deployPreviewPrefix: null, localAllowed: false };
+    return {
+      hosts: [],
+      deployPreviewPrefix: null,
+      pullRequestPreviewPrefix: null,
+      localAllowed: false,
+    };
   }
   const configured = fromEnv.length > 0 ? fromEnv : (G.__decoDraftHosts ?? []);
   const site = G.__decoSite;
@@ -283,6 +296,7 @@ function previewConfig(env: EnvLike): {
     return {
       hosts: configured,
       deployPreviewPrefix: null,
+      pullRequestPreviewPrefix: null,
       localAllowed: true,
     };
   }
@@ -292,6 +306,7 @@ function previewConfig(env: EnvLike): {
       ? configured
       : [...configured, decoSite],
     deployPreviewPrefix: `envs-${site}--`,
+    pullRequestPreviewPrefix: `${site}-pr-`,
     localAllowed: true,
   };
 }
@@ -313,12 +328,30 @@ function matchesDeployPreview(host: string, prefix: string | null): boolean {
 }
 
 /**
+ * Whether `host` is a pull request's preview environment
+ * `<site>-pr-<number>-site.deco.site`. The number is digits only, so the match
+ * stays a single label under deco's own `deco.site`.
+ */
+function matchesPullRequestPreview(
+  host: string,
+  prefix: string | null,
+): boolean {
+  if (!prefix) return false;
+  if (!host.startsWith(prefix) || !host.endsWith(PULL_REQUEST_PREVIEW_SUFFIX)) {
+    return false;
+  }
+  const number = host.slice(prefix.length, -PULL_REQUEST_PREVIEW_SUFFIX.length);
+  return PULL_REQUEST_NUMBER_RE.test(number);
+}
+
+/**
  * Whether `host` (as seen on the request) may render drafts.
  *
  * Local dev hosts are always allowed (see `isLocalDevHost`) so a dev server
  * previews with no config. Otherwise the host is exact-matched
  * against the allowlist (port included — a configured `localhost:3100` is
- * matched here, not by the local rule) and the per-deploy preview pattern. The
+ * matched here, not by the local rule), the per-deploy preview pattern and the
+ * pull request preview pattern. The
  * header is spoofable by a direct-to-origin request, but the draft id is the
  * actual capability; host-scoping bounds blast radius (production domains stay
  * inert), it is not a secret.
@@ -332,14 +365,16 @@ export function isDraftHostAllowed(
   const cfg = previewConfig(envOrDeno(env));
   return (cfg.localAllowed && isLocalDevHost(h)) ||
     cfg.hosts.includes(h) ||
-    matchesDeployPreview(h, cfg.deployPreviewPrefix);
+    matchesDeployPreview(h, cfg.deployPreviewPrefix) ||
+    matchesPullRequestPreview(h, cfg.pullRequestPreviewPrefix);
 }
 
 /**
  * True when any host is allowed to preview. A cheap read callers use to gate
  * BEFORE touching the network. Local dev hosts are always allowed, so this is
  * effectively always on (a site with a resolved name additionally enables its
- * inferred `<site>.deco.site` / `envs-<site>--*.decocdn.com` hosts);
+ * inferred `<site>.deco.site` / `envs-<site>--*.decocdn.com` /
+ * `<site>-pr-*-site.deco.site` hosts);
  * `DECO_ALLOWED_PREVIEW_HOSTS=none` forces it back to fully inert. The
  * per-request host match happens later, in `isDraftHostAllowed`.
  */
