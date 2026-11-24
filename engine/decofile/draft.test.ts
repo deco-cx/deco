@@ -475,13 +475,17 @@ Deno.test("deco-hosted preview domain (setDecoSiteHost)", async (t) => {
           isDraftHostAllowed("other-site-pr-298-site.deco.site", {}),
           false,
         );
-        // The number is digits only: no label, no leading zero, not empty.
+        // The number is a positive integer: no label, no leading zero, not 0 or empty.
         assertEquals(
           isDraftHostAllowed("acme-storefront-pr-abc-site.deco.site", {}),
           false,
         );
         assertEquals(
           isDraftHostAllowed("acme-storefront-pr-012-site.deco.site", {}),
+          false,
+        );
+        assertEquals(
+          isDraftHostAllowed("acme-storefront-pr-0-site.deco.site", {}),
           false,
         );
         assertEquals(
