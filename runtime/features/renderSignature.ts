@@ -21,10 +21,9 @@ export {
  * the block and its props are signed: `href`, `renderSalt`, `partialMode` and
  * `__cb` are left free, as clients and caches rewrite them.
  *
- * Key: derived from the site's `DECO_CRYPTO_KEY` (never used as is), or from
- * `DECO_RENDER_SIGNING_KEY` when set, to rotate signing on its own. Without
- * either, the key is random per process, which does not survive across pods,
- * so the default mode drops to `report`.
+ * Key: derived from the site's `DECO_CRYPTO_KEY` (never used as is). Without
+ * it, the key is random per process, which does not survive across pods, so
+ * the default mode drops to `report`.
  *
  * Mode (`DECO_RENDER_SIGNATURE`):
  * - `enforce`: unsigned or tampered requests get a 403. Default with a stable key.
@@ -52,8 +51,6 @@ export interface RenderSigner {
 }
 
 const CRYPTO_KEY_ENV = "DECO_CRYPTO_KEY";
-// Optional: rotates render signing without touching DECO_CRYPTO_KEY.
-const SIGNING_KEY_ENV = "DECO_RENDER_SIGNING_KEY";
 const MODE_ENV = "DECO_RENDER_SIGNATURE";
 // Domain separation: the signing key never equals DECO_CRYPTO_KEY itself.
 const KEY_INFO = "deco:render-signature:v1";
@@ -108,7 +105,7 @@ let signer: RenderSigner | undefined;
 export const renderSigner = (): RenderSigner => {
   if (signer) return signer;
   signer = createRenderSigner({
-    secret: Deno.env.get(SIGNING_KEY_ENV) || Deno.env.get(CRYPTO_KEY_ENV),
+    secret: Deno.env.get(CRYPTO_KEY_ENV),
     mode: Deno.env.get(MODE_ENV),
   });
   if (!signer.stableKey && signer.mode !== "off") {
