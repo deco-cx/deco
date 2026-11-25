@@ -1,6 +1,7 @@
 import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
 import { type DotNestedKeys, pickPaths } from "../../utils/object.ts";
 import type { ResolveOptions } from "../core/mod.ts";
+import { forbidden } from "../errors.ts";
 import {
   type BaseContext,
   type FieldResolver,
@@ -15,6 +16,47 @@ export const PREVIEW_PREFIX_KEY = "Preview@";
 export const INVOKE_PREFIX_KEY = "Invoke@";
 
 const MAX_SELECT_BLOCK_DEPTH = 10;
+
+/**
+ * Block types `invoke` may call. Invoke props come straight from the request
+ * (`/deco/invoke`), and the other block types do things with their props a
+ * caller must not choose: a section runs its loader, an app builds its runtime
+ * from them.
+ */
+export const INVOCABLE_BLOCK_TYPES: ReadonlySet<string> = new Set([
+  "loaders",
+  "actions",
+  "functions",
+  "workflows",
+]);
+
+const MAX_SAVED_BLOCK_DEPTH = 10;
+// Not a block type: what blockTypeOf answers when it cannot tell.
+const UNRESOLVED_BLOCK_TYPE = "unresolved";
+
+/**
+ * The block type `resolveType` runs as, following saved blocks to the resolver
+ * they point at. `undefined` for built-in resolvers (`resolved`, `invoke`, ...)
+ * and for names that resolve to nothing.
+ */
+export const blockTypeOf = (
+  resolveType: string,
+  resolvers: ResolverMap,
+  resolvables: Record<string, Resolvable>,
+): string | undefined => {
+  let current = resolveType;
+  for (let depth = 0; depth < MAX_SAVED_BLOCK_DEPTH; depth++) {
+    if (current in resolvers) return resolvers[current]?.type;
+    const saved = resolvables[current]?.__resolveType;
+    if (typeof saved !== "string") return undefined;
+    current = saved;
+  }
+  return UNRESOLVED_BLOCK_TYPE;
+};
+
+export const isInvocableBlockType = (type: string | undefined): boolean =>
+  type === undefined || INVOCABLE_BLOCK_TYPES.has(type);
+
 // deno-lint-ignore no-explicit-any
 export interface BlockInvocation<TProps = any> {
   block: string;
@@ -185,6 +227,11 @@ export default {
         resolvers[block],
         block,
       ];
+    if (
+      !isInvocableBlockType(blockTypeOf(__resolveType, resolvers, resolvables))
+    ) {
+      throw forbidden({ code: "403", message: "Block is not invocable" });
+    }
     if (!resolver) {
       const resolvable = resolvables[block];
       if (!resolvable) {

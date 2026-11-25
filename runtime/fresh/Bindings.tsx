@@ -38,7 +38,14 @@ const bindings: Framework = {
   ErrorFallback: ({ isDeploy, debugEnabled, name, error }) => {
     return (
       <div style={isDeploy && !debugEnabled ? "display: none" : undefined}>
-        <p>Error happened rendering {name}: {error.message}</p>
+        {
+          /* Not in production: an error message can carry request input
+            or server details. */
+        }
+        <p>
+          Error happened rendering {name}
+          {isDeploy && !debugEnabled ? null : `: ${error.message}`}
+        </p>
         <button {...usePartialSection()}>Retry</button>
       </div>
     );

@@ -4,6 +4,11 @@ import { SectionContext } from "../components/section.tsx";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { DRAFT_QUERY_PARAM } from "../engine/decofile/draft.ts";
 import { DRAFT_PREVIEW_KEY } from "../runtime/draftBadge.ts";
+// Not renderSignature.ts: the signer (node:crypto) stays out of this graph.
+import {
+  RENDER_SIGNATURE_PARAM,
+  type RenderSignatureInput,
+} from "../runtime/features/renderSignatureParam.ts";
 
 import { Murmurhash3 } from "../deps.ts";
 
@@ -157,6 +162,21 @@ export const useSection = <P>(
     params.set(
       "resolveChain",
       JSON.stringify(FieldResolver.minify(ctx.resolveChain.slice(0, -1))),
+    );
+  }
+
+  // `/deco/render` only resolves what the server signed (renderSignature.ts).
+  const { deco } = ctx.context.state as {
+    deco?: { signRender?(input: RenderSignatureInput): string };
+  };
+  if (deco?.signRender) {
+    params.set(
+      RENDER_SIGNATURE_PARAM,
+      deco.signRender({
+        props: params.get("props")!,
+        resolveChain: params.get("resolveChain"),
+        pathTemplate: params.get("pathTemplate")!,
+      }),
     );
   }
 
