@@ -27,7 +27,6 @@ import { handler as releaseHandler } from "./routes/release.ts";
 import { handler as reloadHandler } from "./routes/reload.ts";
 import { handler as renderHandler } from "./routes/render.tsx";
 import { styles } from "./routes/styles.css.ts";
-import { handler as workflowHandler } from "./routes/workflow.ts";
 export interface RendererOpts {
   Layout?: ComponentType<
     { req: Request; children: ComponentChildren; revision: string }
@@ -89,10 +88,6 @@ const routes: Array<
   {
     paths: ["/live/previews/*", "/deco/previews/*"],
     handler: previewHandler,
-  },
-  {
-    paths: ["/live/workflows/run", "/deco/workflows/run"],
-    handler: workflowHandler,
   },
   {
     paths: ["/deco/render"],
