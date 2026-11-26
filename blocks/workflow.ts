@@ -30,6 +30,10 @@ import {
 export interface WorkflowMetadata extends Metadata {
   defaultInvokeHeaders?: Record<string, string>;
 }
+/**
+ * @deprecated Workflows were removed: the durable service that ran them is
+ * retired and the run route no longer exists. Kept for type compatibility only.
+ */
 export class WorkflowContext<
   TManifest extends AppManifest = AppManifest,
   TMetadata extends WorkflowMetadata = WorkflowMetadata,
@@ -84,8 +88,16 @@ export class WorkflowContext<
   }
 }
 
+/**
+ * @deprecated Workflows were removed: the durable service that ran them is
+ * retired and the run route no longer exists. Kept for type compatibility only.
+ */
 export type Workflow = InstanceOf<typeof workflowBlock, "#/root/workflows">;
 
+/**
+ * @deprecated Workflows were removed: the durable service that ran them is
+ * retired and the run route no longer exists. Kept for type compatibility only.
+ */
 export type WorkflowFn<
   TProps = any,
   // deno-lint-ignore ban-types
