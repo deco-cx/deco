@@ -89,6 +89,31 @@ export function pageCacheVersion(
   return buildId ? `${deployId}:${buildId}` : deployId;
 }
 
+/** The Deco Analytics tag's first-party path: `/_dq/a.js` and its events. */
+export const ANALYTICS_PATH = "/_dq/";
+
+/** The service binding to the `deco-analytics` Worker (wrangler.jsonc). */
+export const ANALYTICS_BINDING = "DECO_ANALYTICS";
+
+interface ServiceBinding {
+  fetch(req: Request): Promise<Response>;
+}
+
+/**
+ * The `deco-analytics` service binding, if the Worker has one.
+ *
+ * The site's Worker route (`www.<store>/*`) is more specific than the
+ * collector's `*\/_dq/*` route, so Cloudflare sends the tag's requests here.
+ * Forwarding them over a service binding keeps the request as it is: the
+ * collector reads the store from its Host, as it does with its own route.
+ */
+export function analyticsBinding(
+  env: Record<string, unknown>,
+): ServiceBinding | undefined {
+  const binding = env[ANALYTICS_BINDING] as ServiceBinding | undefined;
+  return typeof binding?.fetch === "function" ? binding : undefined;
+}
+
 /** Where `scripts/workerd.ts` embeds the precomputed editor schemas. */
 export const SCHEMAS_FILE = "/app/.deco/schemas.gen.json";
 
@@ -102,7 +127,9 @@ export const SCHEMAS_FILE = "/app/.deco/schemas.gen.json";
  * - makes loader cache writes part of the request's `waitUntil`;
  * - handles Content-Encoding as Deno does (`encoding.ts`);
  * - caches the pages deco marks public (`pageCache.ts`), as the CDN does on
- *   Deno: a Worker route runs before Cloudflare's own cache.
+ *   Deno: a Worker route runs before Cloudflare's own cache;
+ * - forwards the Deco Analytics tag (`/_dq/*`) to the `deco-analytics` Worker
+ *   when the `DECO_ANALYTICS` service binding is set.
  */
 interface AssetsBinding {
   fetch(req: Request): Promise<Response>;
@@ -154,6 +181,11 @@ export function createWorker(
       env: Record<string, unknown>,
       ctx: ExecutionContextLike,
     ): Promise<Response> {
+      // Before the boot: the analytics tag never needs the site.
+      const analytics = analyticsBinding(env);
+      if (analytics && new URL(req.url).pathname.startsWith(ANALYTICS_PATH)) {
+        return analytics.fetch(req);
+      }
       const start = () =>
         runWithExecutionContext(ctx, () => {
           installDenoShim({

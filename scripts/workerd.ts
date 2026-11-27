@@ -111,6 +111,9 @@ const wranglerConfig = (name: string) =>
   "workers_dev": false,
   "preview_urls": false,
   "observability": { "enabled": true },
+  // The site's route (www.<store>/*) wins over the collector's */_dq/* route,
+  // so the Worker forwards the Deco Analytics tag (/_dq/*) over this binding.
+  "services": [{ "binding": "DECO_ANALYTICS", "service": "deco-analytics" }],
   "vars": {
     "DECO_SITE_NAME": ${JSON.stringify(name)}
   }
@@ -283,8 +286,15 @@ async function build() {
   if (!(await exists(WRANGLER_CONFIG))) {
     console.log("no wrangler.jsonc yet: run the `init` command");
   } else {
-    // An existing config is not rewritten by `init`: flag the WAF bypass.
+    // An existing config is not rewritten by `init`: flag what it misses.
     const text = await Deno.readTextFile(WRANGLER_CONFIG);
+    if (!text.includes('"DECO_ANALYTICS"')) {
+      console.warn(
+        'warning: wrangler.jsonc has no "DECO_ANALYTICS" service binding to ' +
+          '"deco-analytics". Without it the site\'s route answers /_dq/* with ' +
+          "the site, and Deco Analytics collects nothing.",
+      );
+    }
     for (const key of ["workers_dev", "preview_urls"]) {
       if (!new RegExp(`"${key}"\\s*:\\s*false`).test(text)) {
         console.warn(

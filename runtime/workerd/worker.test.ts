@@ -1,5 +1,7 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import {
+  analyticsBinding,
+  createWorker,
   pageCacheVersion,
   sharedBoot,
   SNAPSHOT_FILE,
@@ -127,4 +129,65 @@ Deno.test("pageCacheVersion: no deploy id keeps the page cache off", () => {
   assertEquals(pageCacheVersion({}, undefined), "");
   // A snapshot alone doesn't enable it (servePage bypasses "no-version").
   assertEquals(pageCacheVersion({}, "564a0f"), "");
+});
+
+const files = {};
+const fresh = () => {
+  const seen: string[] = [];
+  const boot = () => {
+    seen.push("boot");
+    return Promise.resolve(() => Promise.resolve(new Response("site")));
+  };
+  return { seen, boot };
+};
+
+Deno.test("createWorker: forwards /_dq/* to the analytics binding without booting", async () => {
+  const { seen, boot } = fresh();
+  const forwarded: Request[] = [];
+  const env = {
+    DECO_ANALYTICS: {
+      fetch: (req: Request) => {
+        forwarded.push(req);
+        return Promise.resolve(new Response("tag"));
+      },
+    },
+  };
+  const worker = createWorker({ files, boot, pageCache: false });
+  const req = new Request("https://www.store.com/_dq/a.js?k=1");
+  const res = await worker.fetch(req, env, ctx());
+  assertEquals(await res.text(), "tag");
+  assertEquals(forwarded.length, 1);
+  assertEquals(forwarded[0].url, "https://www.store.com/_dq/a.js?k=1");
+  assertEquals(seen, []);
+});
+
+Deno.test("createWorker: other paths, and /_dq/* without the binding, go to the site", async () => {
+  const env = {
+    DECO_ANALYTICS: {
+      fetch: () => Promise.resolve(new Response("tag")),
+    },
+  };
+  for (
+    const [url, workerEnv] of [
+      ["https://www.store.com/_dqx", env],
+      ["https://www.store.com/p/_dq/a.js", env],
+      ["https://www.store.com/_dq/a.js", {}],
+    ] as const
+  ) {
+    const { seen, boot } = fresh();
+    const worker = createWorker({ files, boot, pageCache: false });
+    const res = await worker.fetch(new Request(url), workerEnv, ctx());
+    assertEquals(await res.text(), "site", url);
+    assertEquals(seen, ["boot"], url);
+  }
+});
+
+Deno.test("analyticsBinding: only a binding with fetch", () => {
+  assertEquals(analyticsBinding({}), undefined);
+  assertEquals(
+    analyticsBinding({ DECO_ANALYTICS: "deco-analytics" }),
+    undefined,
+  );
+  const binding = { fetch: () => Promise.resolve(new Response()) };
+  assertEquals(analyticsBinding({ DECO_ANALYTICS: binding }), binding);
 });
