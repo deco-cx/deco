@@ -139,6 +139,24 @@ before Cloudflare's cache, so without help every visit would render the page.
 
 Turn it off with `DECO_WORKER_PAGE_CACHE=false` (or `pageCache: false`).
 
+## Deco Analytics
+
+The Deco Analytics tag loads from the site's own host (`/_dq/a.js`) and posts
+its events to `/_dq/e`. On Deno, the collector's zone route `*/_dq/*` catches
+them. On a Worker, the site's route (`www.<store>/*`) has the more specific
+hostname and wins, so without help the tag gets the site's HTML.
+
+The Worker forwards every `/_dq/*` request, before booting the site, to the
+`deco-analytics` Worker over a service binding. The request is unchanged, so the
+collector still reads the store from its Host:
+
+```jsonc
+// wrangler.jsonc (written by `init`)
+"services": [{ "binding": "DECO_ANALYTICS", "service": "deco-analytics" }]
+```
+
+Without the binding, `/_dq/*` goes to the site as before; `build` warns.
+
 ## Constraints a site bundle has to respect
 
 - workerd runs every module body in "global scope", where timers, random values
